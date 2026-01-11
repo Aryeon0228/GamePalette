@@ -6,8 +6,8 @@ import { Save, Download, RefreshCw, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ImageUploader } from "@/components/ImageUploader"
+import { ImageSelector } from "@/components/ImageSelector"
 import { PaletteDisplay } from "@/components/PaletteDisplay"
-import { ColorCard } from "@/components/ColorCard"
 import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
@@ -45,12 +45,14 @@ export default function CreatePage() {
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  // Track the actual image used for extraction (could be cropped region)
+  const [extractionImageUrl, setExtractionImageUrl] = useState<string | null>(null)
 
   const displayColors = getDisplayColors()
 
-  const handleImageLoad = async (imageUrl: string) => {
+  // Extract colors from an image URL
+  const extractFromImage = async (imageUrl: string, isRegionSelection = false) => {
     setIsExtracting(true)
-    setSourceImageUrl(imageUrl)
 
     try {
       const colors = await extractColors(imageUrl, colorCount)
@@ -60,13 +62,18 @@ export default function CreatePage() {
         id: generateId(),
         name: paletteName,
         colors,
-        sourceImageUrl: imageUrl,
+        sourceImageUrl: sourceImageUrl || imageUrl,
         style: currentStyle,
         tags: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
       setSelectedColorIndex(null)
+      setExtractionImageUrl(imageUrl)
+
+      if (isRegionSelection) {
+        addToast("Colors extracted from selected region", "success")
+      }
     } catch (error) {
       console.error("Failed to extract colors:", error)
       addToast("Failed to extract colors from image", "error")
@@ -75,12 +82,33 @@ export default function CreatePage() {
     }
   }
 
+  // Handle initial image upload
+  const handleImageLoad = async (imageUrl: string) => {
+    setSourceImageUrl(imageUrl)
+    setExtractionImageUrl(imageUrl)
+    await extractFromImage(imageUrl)
+  }
+
+  // Handle region selection
+  const handleSelectionComplete = async (croppedImageUrl: string | null) => {
+    if (croppedImageUrl) {
+      // Extract from the selected region
+      await extractFromImage(croppedImageUrl, true)
+    } else {
+      // Reset to full image
+      if (sourceImageUrl) {
+        await extractFromImage(sourceImageUrl)
+      }
+    }
+  }
+
   const handleReextract = async () => {
-    if (!sourceImageUrl) return
+    const imageToUse = extractionImageUrl || sourceImageUrl
+    if (!imageToUse) return
 
     setIsExtracting(true)
     try {
-      const colors = await extractColors(sourceImageUrl, colorCount)
+      const colors = await extractColors(imageToUse, colorCount)
       setOriginalColors(colors)
       setCurrentPalette({
         ...currentPalette!,
@@ -105,6 +133,7 @@ export default function CreatePage() {
 
   const handleClearImage = () => {
     setSourceImageUrl(null)
+    setExtractionImageUrl(null)
     setOriginalColors([])
     setCurrentPalette(null)
     setSelectedColorIndex(null)
@@ -112,7 +141,8 @@ export default function CreatePage() {
 
   // Update color count effect - only trigger on colorCount change
   useEffect(() => {
-    if (sourceImageUrl && originalColors.length > 0 && originalColors.length !== colorCount) {
+    const imageToUse = extractionImageUrl || sourceImageUrl
+    if (imageToUse && originalColors.length > 0 && originalColors.length !== colorCount) {
       handleReextract()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,27 +189,39 @@ export default function CreatePage() {
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-semibold mb-4">Source Image</h2>
-            <ImageUploader
-              onImageLoad={handleImageLoad}
-              currentImage={sourceImageUrl}
-              onClear={handleClearImage}
-            />
 
-            {sourceImageUrl && (
-              <div className="mt-4 flex items-center justify-between">
-                <ColorCountSelector
-                  value={colorCount}
-                  onChange={setColorCount}
+            {!sourceImageUrl ? (
+              <ImageUploader onImageLoad={handleImageLoad} />
+            ) : (
+              <>
+                <ImageSelector
+                  imageUrl={sourceImageUrl}
+                  onSelectionComplete={handleSelectionComplete}
+                  onClear={handleClearImage}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReextract}
-                  disabled={isExtracting}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
-                  Re-extract
-                </Button>
+
+                <div className="mt-4 flex items-center justify-between">
+                  <ColorCountSelector
+                    value={colorCount}
+                    onChange={setColorCount}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReextract}
+                    disabled={isExtracting}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
+                    Re-extract
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {isExtracting && (
+              <div className="mt-4 text-center text-muted-foreground">
+                <div className="inline-block animate-spin mr-2">⏳</div>
+                Extracting colors...
               </div>
             )}
           </div>
