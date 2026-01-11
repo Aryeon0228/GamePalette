@@ -133,7 +133,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
       {/* Info Text */}
       <p className="text-xs text-muted-foreground">
         {style === "stylized" ? (
-          <>Shadows shift to cool (+Hue), Highlights shift to warm (-Hue)</>
+          <>Shadows → Red (-Hue), Highlights → Yellow (+Hue)</>
         ) : (
           <>Pure lightness changes only, no hue shifting</>
         )}
