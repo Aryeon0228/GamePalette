@@ -57,7 +57,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
             )}
             onClick={() => setStyle("stylized")}
           >
-            Stylized
+            Hue Shift
           </button>
           <button
             className={cn(
@@ -68,7 +68,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
             )}
             onClick={() => setStyle("realistic")}
           >
-            Realistic
+            OFF
           </button>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
       {/* Info Text */}
       <p className="text-xs text-muted-foreground">
         {style === "stylized" ? (
-          <>Shadows → Red (-Hue), Highlights → Yellow (+Hue)</>
+          <>Shadows → Blue, Highlights → Yellow (shortest path)</>
         ) : (
           <>Pure lightness changes only, no hue shifting</>
         )}
