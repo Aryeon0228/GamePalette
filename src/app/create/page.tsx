@@ -155,7 +155,7 @@ export default function CreatePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column - Image */}
+        {/* Left Column - Image & Style */}
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-semibold mb-4">Source Image</h2>
@@ -184,36 +184,6 @@ export default function CreatePage() {
             )}
           </div>
 
-          {/* Selected Color Details */}
-          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
-            <div className="space-y-6">
-              <div className="rounded-lg border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold mb-4">Selected Color</h2>
-                <ColorCard
-                  color={displayColors[selectedColorIndex]}
-                  showDetails
-                />
-              </div>
-
-              {/* Color Variations with Hue Shifting */}
-              <div className="rounded-lg border border-border bg-card p-6">
-                <ColorVariations color={displayColors[selectedColorIndex]} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Palette */}
-        <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Extracted Palette</h2>
-            <PaletteDisplay
-              colors={displayColors}
-              selectedIndex={selectedColorIndex ?? undefined}
-              onColorSelect={(_, index) => setSelectedColorIndex(index)}
-            />
-          </div>
-
           <div className="rounded-lg border border-border bg-card p-6">
             <StyleFilter
               currentStyle={currentStyle}
@@ -224,6 +194,55 @@ export default function CreatePage() {
               onValueCheckToggle={toggleValueCheck}
             />
           </div>
+        </div>
+
+        {/* Right Column - Palette & Variations */}
+        <div className="space-y-6">
+          {/* Palette */}
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-lg font-semibold mb-4">Extracted Palette</h2>
+            <PaletteDisplay
+              colors={displayColors}
+              selectedIndex={selectedColorIndex ?? undefined}
+              onColorSelect={(_, index) => setSelectedColorIndex(index)}
+            />
+          </div>
+
+          {/* Color Variations - directly below palette */}
+          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="flex items-start gap-4 mb-4">
+                {/* Selected Color Preview */}
+                <div
+                  className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
+                  style={{ backgroundColor: displayColors[selectedColorIndex].hex }}
+                />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold">
+                    {displayColors[selectedColorIndex].name || 'Selected Color'}
+                  </h2>
+                  <p className="text-sm font-mono text-muted-foreground">
+                    {displayColors[selectedColorIndex].hex}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    HSL: {displayColors[selectedColorIndex].hsl.h}°, {displayColors[selectedColorIndex].hsl.s}%, {displayColors[selectedColorIndex].hsl.l}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Color Variations */}
+              <ColorVariations color={displayColors[selectedColorIndex]} />
+            </div>
+          )}
+
+          {/* Hint when no color selected */}
+          {displayColors.length > 0 && selectedColorIndex === null && (
+            <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+              <p className="text-muted-foreground">
+                Click a color above to see value variations with hue shifting
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

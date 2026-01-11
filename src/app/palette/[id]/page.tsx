@@ -136,8 +136,9 @@ export default function PaletteDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Palette Display */}
+        {/* Main Content - Palette & Variations */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Palette Display */}
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Colors</h2>
@@ -166,6 +167,42 @@ export default function PaletteDetailPage() {
             />
           </div>
 
+          {/* Color Variations - directly below palette */}
+          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="flex items-start gap-4 mb-4">
+                {/* Selected Color Preview */}
+                <div
+                  className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
+                  style={{ backgroundColor: displayColors[selectedColorIndex].hex }}
+                />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold">
+                    {displayColors[selectedColorIndex].name || 'Selected Color'}
+                  </h2>
+                  <p className="text-sm font-mono text-muted-foreground">
+                    {displayColors[selectedColorIndex].hex}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    HSL: {displayColors[selectedColorIndex].hsl.h}°, {displayColors[selectedColorIndex].hsl.s}%, {displayColors[selectedColorIndex].hsl.l}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Color Variations */}
+              <ColorVariations color={displayColors[selectedColorIndex]} />
+            </div>
+          )}
+
+          {/* Hint when no color selected */}
+          {displayColors.length > 0 && selectedColorIndex === null && (
+            <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+              <p className="text-muted-foreground">
+                Click a color above to see value variations with hue shifting
+              </p>
+            </div>
+          )}
+
           {/* Source Image */}
           {palette.sourceImageUrl && (
             <div className="rounded-lg border border-border bg-card p-6">
@@ -188,24 +225,6 @@ export default function PaletteDetailPage() {
               onStyleChange={handleStyleChange}
             />
           </div>
-
-          {/* Selected Color Details */}
-          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
-            <>
-              <div className="rounded-lg border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold mb-4">Color Details</h2>
-                <ColorCard
-                  color={displayColors[selectedColorIndex]}
-                  showDetails
-                />
-              </div>
-
-              {/* Color Variations with Hue Shifting */}
-              <div className="rounded-lg border border-border bg-card p-6">
-                <ColorVariations color={displayColors[selectedColorIndex]} />
-              </div>
-            </>
-          )}
 
           {/* Palette Info */}
           <div className="rounded-lg border border-border bg-card p-6 space-y-3">
