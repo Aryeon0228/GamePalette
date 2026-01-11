@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -19,6 +19,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isPremium: boolean;
+  isConfigured: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -32,9 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
+  const isConfigured = isSupabaseConfigured();
+  const supabase = useMemo(() => isConfigured ? createClient() : null, [isConfigured]);
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return null;
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -57,6 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -75,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -93,9 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -110,6 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
@@ -126,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isPremium: profile?.is_premium ?? false,
+    isConfigured,
     signInWithGoogle,
     signOut,
     refreshProfile,
