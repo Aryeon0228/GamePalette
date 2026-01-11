@@ -130,8 +130,8 @@ export const defaultCustomSettings: CustomStyleSettings = {
  * Generate color variations with optional hue shifting
  *
  * Stylized: Uses hue shifting for more vibrant/artistic look
- *   - Shadows shift toward cool/purple (higher hue)
- *   - Highlights shift toward warm/yellow (lower hue)
+ *   - Shadows shift toward Blue (240°) via shortest path
+ *   - Highlights shift toward Yellow (60°) via shortest path
  *
  * Realistic: No hue shifting, only lightness changes
  */
@@ -145,15 +145,18 @@ export function generateColorVariations(
   const useHueShift = style === 'stylized';
 
   // Calculate hue shift amount based on the color
-  // Warm colors (red/orange/yellow) shift more than cool colors
   const baseHueShift = useHueShift ? calculateOptimalHueShift(h, s) : 0;
 
-  // Generate each variation
-  // CORRECT DIRECTION: Shadows → toward Red (decrease hue), Highlights → toward Yellow (increase hue)
-  const shadow2 = createVariation(h, s, l, -30, useHueShift ? -baseHueShift * 1.5 : 0);   // Darkest shadow → Red
-  const shadow1 = createVariation(h, s, l, -15, useHueShift ? -baseHueShift * 0.75 : 0); // Shadow → Red
-  const highlight1 = createVariation(h, s, l, 15, useHueShift ? baseHueShift * 0.75 : 0); // Highlight → Yellow
-  const highlight2 = createVariation(h, s, l, 30, useHueShift ? baseHueShift * 1.5 : 0);  // Brightest → Yellow
+  // Calculate direction based on color position
+  // Shadows → toward Blue (240°), Highlights → toward Yellow (60°)
+  const shadowDirection = useHueShift ? getShortestHueDirection(h, 240) : 0; // toward Blue
+  const highlightDirection = useHueShift ? getShortestHueDirection(h, 60) : 0; // toward Yellow
+
+  // Generate each variation with color-dependent direction
+  const shadow2 = createVariation(h, s, l, -30, useHueShift ? shadowDirection * baseHueShift * 1.5 : 0);
+  const shadow1 = createVariation(h, s, l, -15, useHueShift ? shadowDirection * baseHueShift * 0.75 : 0);
+  const highlight1 = createVariation(h, s, l, 15, useHueShift ? highlightDirection * baseHueShift * 0.75 : 0);
+  const highlight2 = createVariation(h, s, l, 30, useHueShift ? highlightDirection * baseHueShift * 1.5 : 0);
 
   return {
     shadow2,
@@ -163,6 +166,20 @@ export function generateColorVariations(
     highlight2,
     hueShiftAmount: baseHueShift,
   };
+}
+
+/**
+ * Get the direction (+1 or -1) to reach target hue via shortest path
+ */
+function getShortestHueDirection(fromHue: number, toHue: number): number {
+  let diff = toHue - fromHue;
+
+  // Normalize to -180 to +180 range (shortest path)
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+
+  // Return direction: +1 for clockwise, -1 for counter-clockwise
+  return diff >= 0 ? 1 : -1;
 }
 
 /**
@@ -238,12 +255,12 @@ export function getVariationInfo(variation: ColorVariation, style: VariationStyl
 } {
   if (style === 'stylized') {
     return {
-      title: 'Stylized (Hue Shifting)',
-      description: `Shadows → Red (-${Math.round(variation.hueShiftAmount * 0.75)}°~${Math.round(variation.hueShiftAmount * 1.5)}°), Highlights → Yellow (+${Math.round(variation.hueShiftAmount * 0.75)}°~${Math.round(variation.hueShiftAmount * 1.5)}°)`,
+      title: 'Hue Shift ON',
+      description: `Shadows → Blue, Highlights → Yellow (±${Math.round(variation.hueShiftAmount * 0.75)}°~${Math.round(variation.hueShiftAmount * 1.5)}°)`,
     };
   } else {
     return {
-      title: 'Realistic (No Hue Shift)',
+      title: 'Hue Shift OFF',
       description: 'Pure lightness changes only, no hue shifting applied',
     };
   }
