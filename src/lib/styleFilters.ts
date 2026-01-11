@@ -148,11 +148,12 @@ export function generateColorVariations(
   // Warm colors (red/orange/yellow) shift more than cool colors
   const baseHueShift = useHueShift ? calculateOptimalHueShift(h, s) : 0;
 
-  // Generate each variation (reduced hue shift multipliers for more subtle effect)
-  const shadow2 = createVariation(h, s, l, -30, useHueShift ? baseHueShift * 1 : 0);    // Darkest shadow
-  const shadow1 = createVariation(h, s, l, -15, useHueShift ? baseHueShift * 0.5 : 0);  // Shadow
-  const highlight1 = createVariation(h, s, l, 15, useHueShift ? -baseHueShift * 0.5 : 0); // Highlight
-  const highlight2 = createVariation(h, s, l, 30, useHueShift ? -baseHueShift * 0.75 : 0); // Brightest highlight
+  // Generate each variation
+  // CORRECT DIRECTION: Shadows → toward Red (decrease hue), Highlights → toward Yellow (increase hue)
+  const shadow2 = createVariation(h, s, l, -30, useHueShift ? -baseHueShift * 1.5 : 0);   // Darkest shadow → Red
+  const shadow1 = createVariation(h, s, l, -15, useHueShift ? -baseHueShift * 0.75 : 0); // Shadow → Red
+  const highlight1 = createVariation(h, s, l, 15, useHueShift ? baseHueShift * 0.75 : 0); // Highlight → Yellow
+  const highlight2 = createVariation(h, s, l, 30, useHueShift ? baseHueShift * 1.5 : 0);  // Brightest → Yellow
 
   return {
     shadow2,
@@ -172,8 +173,8 @@ function calculateOptimalHueShift(h: number, s: number): number {
   // Low saturation colors need less hue shift
   const saturationFactor = Math.min(s / 100, 1);
 
-  // Base shift amount (8 degrees - subtle but noticeable)
-  const baseShift = 8;
+  // Base shift amount (12 degrees - visible but not extreme)
+  const baseShift = 12;
 
   // Adjust based on hue position
   // Warm colors (0-60, 300-360) can handle more shift
@@ -238,7 +239,7 @@ export function getVariationInfo(variation: ColorVariation, style: VariationStyl
   if (style === 'stylized') {
     return {
       title: 'Stylized (Hue Shifting)',
-      description: `Shadows → +${Math.round(variation.hueShiftAmount * 0.5)}°~${variation.hueShiftAmount}° (cool), Highlights → -${Math.round(variation.hueShiftAmount * 0.5)}°~${Math.round(variation.hueShiftAmount * 0.75)}° (warm)`,
+      description: `Shadows → Red (-${Math.round(variation.hueShiftAmount * 0.75)}°~${Math.round(variation.hueShiftAmount * 1.5)}°), Highlights → Yellow (+${Math.round(variation.hueShiftAmount * 0.75)}°~${Math.round(variation.hueShiftAmount * 1.5)}°)`,
     };
   } else {
     return {
