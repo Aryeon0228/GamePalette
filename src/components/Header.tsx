@@ -2,14 +2,16 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Palette, Library, CreditCard, Menu, X } from "lucide-react"
+import { Palette, Library, CreditCard, Menu, X, User, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isPremium, loading } = useAuth()
 
   const navItems = [
     { href: "/", label: "Home", icon: Palette },
@@ -49,9 +51,34 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/login">Login</Link>
-          </Button>
+          {loading ? (
+            <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+          ) : user ? (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
+            >
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="Profile"
+                  className="w-6 h-6 rounded-full"
+                />
+              ) : (
+                <User className="w-5 h-5 text-muted-foreground" />
+              )}
+              <span className="text-sm font-medium">
+                {user.user_metadata?.full_name?.split(" ")[0] || "Account"}
+              </span>
+              {isPremium && (
+                <Crown className="w-4 h-4 text-yellow-500" />
+              )}
+            </Link>
+          ) : (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
           <Button size="sm" asChild>
             <Link href="/create">Create Palette</Link>
           </Button>
@@ -93,11 +120,39 @@ export function Header() {
               </Link>
             ))}
             <div className="pt-4 border-t border-border flex flex-col space-y-2">
-              <Button variant="ghost" asChild className="justify-start">
-                <Link href="/login">Login</Link>
-              </Button>
+              {user ? (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors"
+                >
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full"
+                    />
+                  ) : (
+                    <User className="w-5 h-5 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {user.user_metadata?.full_name || "Account"}
+                  </span>
+                  {isPremium && (
+                    <Crown className="w-4 h-4 text-yellow-500" />
+                  )}
+                </Link>
+              ) : (
+                <Button variant="ghost" asChild className="justify-start">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    Login
+                  </Link>
+                </Button>
+              )}
               <Button asChild>
-                <Link href="/create">Create Palette</Link>
+                <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
+                  Create Palette
+                </Link>
               </Button>
             </div>
           </nav>
