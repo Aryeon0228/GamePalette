@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { ImageUploader } from "@/components/ImageUploader"
 import { PaletteDisplay } from "@/components/PaletteDisplay"
 import { ColorCard } from "@/components/ColorCard"
+import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { ColorCountSelector } from "@/components/ColorCountSelector"
@@ -185,12 +186,19 @@ export default function CreatePage() {
 
           {/* Selected Color Details */}
           {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold mb-4">Selected Color</h2>
-              <ColorCard
-                color={displayColors[selectedColorIndex]}
-                showDetails
-              />
+            <div className="space-y-6">
+              <div className="rounded-lg border border-border bg-card p-6">
+                <h2 className="text-lg font-semibold mb-4">Selected Color</h2>
+                <ColorCard
+                  color={displayColors[selectedColorIndex]}
+                  showDetails
+                />
+              </div>
+
+              {/* Color Variations with Hue Shifting */}
+              <div className="rounded-lg border border-border bg-card p-6">
+                <ColorVariations color={displayColors[selectedColorIndex]} />
+              </div>
             </div>
           )}
         </div>
