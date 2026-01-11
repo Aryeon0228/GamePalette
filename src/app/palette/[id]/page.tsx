@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PaletteDisplay } from "@/components/PaletteDisplay"
 import { ColorCard } from "@/components/ColorCard"
+import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { usePaletteStore } from "@/stores/paletteStore"
@@ -190,13 +191,20 @@ export default function PaletteDetailPage() {
 
           {/* Selected Color Details */}
           {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold mb-4">Color Details</h2>
-              <ColorCard
-                color={displayColors[selectedColorIndex]}
-                showDetails
-              />
-            </div>
+            <>
+              <div className="rounded-lg border border-border bg-card p-6">
+                <h2 className="text-lg font-semibold mb-4">Color Details</h2>
+                <ColorCard
+                  color={displayColors[selectedColorIndex]}
+                  showDetails
+                />
+              </div>
+
+              {/* Color Variations with Hue Shifting */}
+              <div className="rounded-lg border border-border bg-card p-6">
+                <ColorVariations color={displayColors[selectedColorIndex]} />
+              </div>
+            </>
           )}
 
           {/* Palette Info */}

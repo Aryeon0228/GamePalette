@@ -45,3 +45,14 @@ export interface CustomStyleSettings {
 }
 
 export type ExportFormat = 'png' | 'json' | 'css' | 'scss' | 'unity' | 'unreal';
+
+export interface ColorVariation {
+  shadow2: Color;      // 가장 어두운 그림자
+  shadow1: Color;      // 그림자
+  midtone: Color;      // 중간톤 (원본)
+  highlight1: Color;   // 하이라이트
+  highlight2: Color;   // 가장 밝은 하이라이트
+  hueShiftAmount: number;  // 적용된 Hue Shift 양 (도)
+}
+
+export type VariationStyle = 'stylized' | 'realistic';

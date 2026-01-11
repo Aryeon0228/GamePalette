@@ -1,4 +1,4 @@
-import { Color, StyleType, CustomStyleSettings } from '@/types';
+import { Color, StyleType, CustomStyleSettings, ColorVariation, VariationStyle } from '@/types';
 import { hslToRgb, rgbToHex, getColorName } from './utils';
 
 export function applyStyleFilter(
@@ -125,3 +125,125 @@ export const defaultCustomSettings: CustomStyleSettings = {
   lightnessMultiplier: 1.0,
   hueShift: 0,
 };
+
+/**
+ * Generate color variations with optional hue shifting
+ *
+ * Stylized: Uses hue shifting for more vibrant/artistic look
+ *   - Shadows shift toward cool/purple (higher hue)
+ *   - Highlights shift toward warm/yellow (lower hue)
+ *
+ * Realistic: No hue shifting, only lightness changes
+ */
+export function generateColorVariations(
+  color: Color,
+  style: VariationStyle = 'stylized'
+): ColorVariation {
+  const { h, s, l } = color.hsl;
+
+  // Stylized uses hue shifting, realistic doesn't
+  const useHueShift = style === 'stylized';
+
+  // Calculate hue shift amount based on the color
+  // Warm colors (red/orange/yellow) shift more than cool colors
+  const baseHueShift = useHueShift ? calculateOptimalHueShift(h, s) : 0;
+
+  // Generate each variation
+  const shadow2 = createVariation(h, s, l, -30, useHueShift ? baseHueShift * 2 : 0);   // Darkest shadow
+  const shadow1 = createVariation(h, s, l, -15, useHueShift ? baseHueShift : 0);       // Shadow
+  const highlight1 = createVariation(h, s, l, 15, useHueShift ? -baseHueShift : 0);    // Highlight
+  const highlight2 = createVariation(h, s, l, 30, useHueShift ? -baseHueShift * 1.5 : 0); // Brightest highlight
+
+  return {
+    shadow2,
+    shadow1,
+    midtone: color,
+    highlight1,
+    highlight2,
+    hueShiftAmount: baseHueShift,
+  };
+}
+
+/**
+ * Calculate optimal hue shift based on the base color
+ * Generally: 10-30 degrees depending on saturation and hue position
+ */
+function calculateOptimalHueShift(h: number, s: number): number {
+  // Low saturation colors need less hue shift
+  const saturationFactor = Math.min(s / 100, 1);
+
+  // Base shift amount (15 degrees is a good starting point)
+  const baseShift = 15;
+
+  // Adjust based on hue position
+  // Warm colors (0-60, 300-360) can handle more shift
+  // Cool colors (180-240) need less shift to avoid looking unnatural
+  let hueFactor = 1;
+  if (h >= 180 && h <= 240) {
+    hueFactor = 0.7; // Cool colors - less shift
+  } else if ((h >= 0 && h <= 60) || h >= 300) {
+    hueFactor = 1.2; // Warm colors - more shift
+  }
+
+  return Math.round(baseShift * saturationFactor * hueFactor);
+}
+
+/**
+ * Create a single color variation
+ */
+function createVariation(
+  h: number,
+  s: number,
+  l: number,
+  lightnessOffset: number,
+  hueOffset: number
+): Color {
+  // Apply lightness change
+  let newL = l + lightnessOffset;
+  newL = Math.min(Math.max(newL, 5), 95);
+
+  // Apply hue shift (shadows go toward purple/blue, highlights go toward yellow)
+  let newH = (h + hueOffset + 360) % 360;
+
+  // Adjust saturation slightly
+  // Shadows often benefit from slightly higher saturation
+  // Highlights often need slightly lower saturation
+  let newS = s;
+  if (lightnessOffset < 0) {
+    // Shadows: boost saturation slightly
+    newS = Math.min(s * 1.1, 100);
+  } else if (lightnessOffset > 0) {
+    // Highlights: reduce saturation slightly
+    newS = s * 0.9;
+  }
+
+  const rgb = hslToRgb(newH, newS, newL);
+  const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+  return {
+    hex,
+    rgb,
+    hsl: { h: Math.round(newH), s: Math.round(newS), l: Math.round(newL) },
+    name: getColorName(hex),
+  };
+}
+
+/**
+ * Get variation info text for display
+ */
+export function getVariationInfo(variation: ColorVariation, style: VariationStyle): {
+  title: string;
+  description: string;
+} {
+  if (style === 'stylized') {
+    return {
+      title: 'Stylized (Hue Shifting)',
+      description: `Shadows → +${variation.hueShiftAmount}° (cool), Highlights → -${Math.round(variation.hueShiftAmount * 1.5)}° (warm)`,
+    };
+  } else {
+    return {
+      title: 'Realistic (No Hue Shift)',
+      description: 'Pure lightness changes only, no hue shifting applied',
+    };
+  }
+}
