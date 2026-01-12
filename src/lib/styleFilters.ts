@@ -219,21 +219,22 @@ function createVariation(
   const MIN_L = 5;
   const MAX_L = 95;
   const MAX_OFFSET = 30; // Maximum offset value used in generateColorVariations
+  const SPACE_USAGE = 0.5; // Use only 50% of available space for usable game colors
 
   // Apply lightness change using proportional distribution
-  // This prevents clipping when the base color is near the edges
+  // This prevents clipping and keeps colors in usable range for games
   let newL: number;
 
   if (lightnessOffset < 0) {
     // Shadow: distribute into available dark space
     const availableSpace = l - MIN_L;
     const ratio = Math.abs(lightnessOffset) / MAX_OFFSET;
-    newL = l - (availableSpace * ratio);
+    newL = l - (availableSpace * ratio * SPACE_USAGE);
   } else if (lightnessOffset > 0) {
     // Highlight: distribute into available light space
     const availableSpace = MAX_L - l;
     const ratio = lightnessOffset / MAX_OFFSET;
-    newL = l + (availableSpace * ratio);
+    newL = l + (availableSpace * ratio * SPACE_USAGE);
   } else {
     newL = l;
   }
