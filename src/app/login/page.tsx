@@ -24,9 +24,13 @@ function LoginContent() {
     try {
       setIsSigningIn(true)
       setError(null)
+      console.log('Starting Google login...')
       await signInWithGoogle()
-    } catch {
-      setError("Failed to sign in. Please try again.")
+      console.log('Google login initiated successfully')
+    } catch (err) {
+      console.error('Google login error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      setError(`Failed to sign in: ${errorMessage}`)
       setIsSigningIn(false)
     }
   }
