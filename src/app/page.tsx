@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Palette, Eye, Download, Sparkles, Info } from "lucide-react"
@@ -38,6 +38,12 @@ export default function HomePage() {
   const router = useRouter()
   const { savedPalettes, setCurrentPalette, setOriginalColors, setSourceImageUrl, colorCount, extractionMethod, setExtractionMethod } = usePaletteStore()
   const [isExtracting, setIsExtracting] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Wait for Zustand hydration to complete
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const recentPalettes = savedPalettes.slice(-3).reverse()
 
@@ -111,7 +117,7 @@ export default function HomePage() {
               <button
                 onClick={() => setExtractionMethod('histogram')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  extractionMethod === 'histogram'
+                  isHydrated && extractionMethod === 'histogram'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background hover:bg-muted text-muted-foreground'
                 }`}
@@ -121,7 +127,7 @@ export default function HomePage() {
               <button
                 onClick={() => setExtractionMethod('kmeans')}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  extractionMethod === 'kmeans'
+                  isHydrated && extractionMethod === 'kmeans'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background hover:bg-muted text-muted-foreground'
                 }`}
