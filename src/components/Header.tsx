@@ -63,12 +63,15 @@ export function Header() {
                   src={user.user_metadata.avatar_url}
                   alt="Profile"
                   className="w-6 h-6 rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <User className="w-5 h-5 text-muted-foreground" />
-              )}
+              ) : null}
+              <User className={cn("w-5 h-5 text-muted-foreground", user.user_metadata?.avatar_url && "hidden")} />
               <span className="text-sm font-medium">
-                {user.user_metadata?.full_name?.split(" ")[0] || "Account"}
+                {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0] || "Account"}
               </span>
               {isPremium && (
                 <Crown className="w-4 h-4 text-yellow-500" />
