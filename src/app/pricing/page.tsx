@@ -1,8 +1,11 @@
 "use client"
 
-import { Check, X } from "lucide-react"
+import { Suspense, useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Check, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
 
 const features = [
   { name: "Palette Extraction", free: true, pro: true },
@@ -18,7 +21,83 @@ const features = [
   { name: "Ads", free: "Small banner", pro: "None" },
 ]
 
-export default function PricingPage() {
+function PricingContent() {
+  const { user, isPremium, loading: authLoading } = useAuth()
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setMessage({ type: 'success', text: 'Payment successful! Welcome to Pro.' })
+    }
+    if (searchParams.get('canceled') === 'true') {
+      setMessage({ type: 'error', text: 'Payment canceled. You can try again anytime.' })
+    }
+  }, [searchParams])
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      router.push('/login?redirect=/pricing')
+      return
+    }
+
+    setCheckoutLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      setMessage({ type: 'error', text: 'Failed to start checkout. Please try again.' })
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create portal session')
+      }
+
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Portal error:', error)
+      setMessage({ type: 'error', text: 'Failed to open billing portal. Please try again.' })
+    } finally {
+      setPortalLoading(false)
+    }
+  }
+
   return (
     <div className="container py-16">
       <div className="text-center space-y-4 mb-12">
@@ -28,6 +107,15 @@ export default function PricingPage() {
           All Pro features included for one low monthly price.
         </p>
       </div>
+
+      {message && (
+        <div className={cn(
+          "max-w-md mx-auto mb-8 p-4 rounded-lg text-center",
+          message.type === 'success' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+        )}>
+          {message.text}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {/* Free Plan */}
@@ -42,8 +130,8 @@ export default function PricingPage() {
             <div className="text-sm text-muted-foreground">Forever free</div>
           </div>
 
-          <Button variant="outline" className="w-full" size="lg">
-            Get Started
+          <Button variant="outline" className="w-full" size="lg" asChild>
+            <a href="/create">Get Started</a>
           </Button>
 
           <div className="space-y-3">
@@ -61,7 +149,7 @@ export default function PricingPage() {
         <div className="relative rounded-xl border-2 border-primary bg-card p-8 space-y-6">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <span className="px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-sm font-medium">
-              Most Popular
+              {isPremium ? "Current Plan" : "Most Popular"}
             </span>
           </div>
 
@@ -78,9 +166,40 @@ export default function PricingPage() {
             <div className="text-sm text-muted-foreground">Billed monthly</div>
           </div>
 
-          <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600" size="lg">
-            Upgrade to Pro
-          </Button>
+          {isPremium ? (
+            <Button
+              className="w-full"
+              size="lg"
+              variant="outline"
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+            >
+              {portalLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Manage Subscription"
+              )}
+            </Button>
+          ) : (
+            <Button
+              className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600"
+              size="lg"
+              onClick={handleUpgrade}
+              disabled={checkoutLoading || authLoading}
+            >
+              {checkoutLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Upgrade to Pro"
+              )}
+            </Button>
+          )}
 
           <div className="space-y-3">
             {features.map((feature) => (
@@ -123,6 +242,18 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="container py-16 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <PricingContent />
+    </Suspense>
   )
 }
 
