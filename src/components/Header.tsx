@@ -58,17 +58,9 @@ export function Header() {
               href="/login"
               className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
             >
-              {user.user_metadata?.avatar_url ? (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="Profile"
-                  className="w-6 h-6 rounded-full"
-                />
-              ) : (
-                <User className="w-5 h-5 text-muted-foreground" />
-              )}
+              <User className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm font-medium">
-                {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0] || "Account"}
+                {user.email?.split("@")[0] || "Account"}
               </span>
               {isPremium && (
                 <Crown className="w-4 h-4 text-yellow-500" />
