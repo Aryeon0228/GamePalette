@@ -216,9 +216,30 @@ function createVariation(
   lightnessOffset: number,
   hueOffset: number
 ): Color {
-  // Apply lightness change
-  let newL = l + lightnessOffset;
-  newL = Math.min(Math.max(newL, 5), 95);
+  const MIN_L = 5;
+  const MAX_L = 95;
+  const MAX_OFFSET = 30; // Maximum offset value used in generateColorVariations
+
+  // Apply lightness change using proportional distribution
+  // This prevents clipping when the base color is near the edges
+  let newL: number;
+
+  if (lightnessOffset < 0) {
+    // Shadow: distribute into available dark space
+    const availableSpace = l - MIN_L;
+    const ratio = Math.abs(lightnessOffset) / MAX_OFFSET;
+    newL = l - (availableSpace * ratio);
+  } else if (lightnessOffset > 0) {
+    // Highlight: distribute into available light space
+    const availableSpace = MAX_L - l;
+    const ratio = lightnessOffset / MAX_OFFSET;
+    newL = l + (availableSpace * ratio);
+  } else {
+    newL = l;
+  }
+
+  // Ensure bounds (should already be within bounds, but just in case)
+  newL = Math.min(Math.max(newL, MIN_L), MAX_L);
 
   // Apply hue shift (shadows go toward purple/blue, highlights go toward yellow)
   let newH = (h + hueOffset + 360) % 360;
