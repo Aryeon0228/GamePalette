@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowLeft, Save, Download, Trash2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -207,10 +208,13 @@ export default function PaletteDetailPage() {
           {palette.sourceImageUrl && (
             <div className="rounded-lg border border-border bg-card p-6">
               <h2 className="text-lg font-semibold mb-4">Source Image</h2>
-              <img
+              <Image
                 src={palette.sourceImageUrl}
                 alt="Source"
+                width={800}
+                height={320}
                 className="w-full max-h-80 object-contain rounded-lg"
+                unoptimized
               />
             </div>
           )}

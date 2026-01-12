@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowLeft, Loader2, LogOut, Crown, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
@@ -67,10 +68,13 @@ function LoginContent() {
         <div className="rounded-xl border border-border bg-card p-8 space-y-6">
           <div className="text-center space-y-4">
             {user.user_metadata?.avatar_url && (
-              <img
+              <Image
                 src={user.user_metadata.avatar_url}
                 alt="Profile"
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full mx-auto"
+                unoptimized
               />
             )}
             <div>

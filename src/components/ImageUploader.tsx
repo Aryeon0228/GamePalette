@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { Upload, Link as LinkIcon, Image as ImageIcon, X } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -130,10 +131,13 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
   if (currentImage) {
     return (
       <div className="relative rounded-lg overflow-hidden border border-border">
-        <img
+        <Image
           src={currentImage}
           alt="Uploaded"
+          width={800}
+          height={320}
           className="w-full h-auto max-h-80 object-contain bg-black/20"
+          unoptimized
         />
         {onClear && (
           <Button
