@@ -193,14 +193,29 @@ export default function CreatePage() {
             {!sourceImageUrl ? (
               <ImageUploader onImageLoad={handleImageLoad} />
             ) : (
-              <>
-                <ImageSelector
-                  imageUrl={sourceImageUrl}
-                  onSelectionComplete={handleSelectionComplete}
-                  onClear={handleClearImage}
-                />
+              <ImageSelector
+                imageUrl={sourceImageUrl}
+                onSelectionComplete={handleSelectionComplete}
+                onClear={handleClearImage}
+              />
+            )}
 
-                <div className="mt-4 flex items-center justify-between">
+            {isExtracting && (
+              <div className="mt-4 text-center text-muted-foreground">
+                <div className="inline-block animate-spin mr-2">⏳</div>
+                Extracting colors...
+              </div>
+            )}
+          </div>
+
+          {/* Quick Settings - 이미지 로드 후 항상 표시 */}
+          {sourceImageUrl && (
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h3 className="text-sm font-medium mb-4">Quick Settings</h3>
+
+              <div className="space-y-4">
+                {/* K-means Color Count */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <ColorCountSelector
                     value={colorCount}
                     onChange={setColorCount}
@@ -215,16 +230,34 @@ export default function CreatePage() {
                     Re-extract
                   </Button>
                 </div>
-              </>
-            )}
 
-            {isExtracting && (
-              <div className="mt-4 text-center text-muted-foreground">
-                <div className="inline-block animate-spin mr-2">⏳</div>
-                Extracting colors...
+                {/* Quick Hue Shift */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm text-muted-foreground">Hue Shift</label>
+                    <span className="text-sm font-mono">{customSettings.hueShift}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-180"
+                    max="180"
+                    step="5"
+                    value={customSettings.hueShift}
+                    onChange={(e) => {
+                      setCustomSettings({ ...customSettings, hueShift: parseInt(e.target.value) })
+                      if (currentStyle !== 'custom') setCurrentStyle('custom')
+                    }}
+                    className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>-180°</span>
+                    <span>0°</span>
+                    <span>+180°</span>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="rounded-lg border border-border bg-card p-6">
             <StyleFilter
