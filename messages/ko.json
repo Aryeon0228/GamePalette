@@ -1,0 +1,51 @@
+{
+  "common": {
+    "home": "홈",
+    "library": "라이브러리",
+    "pricing": "요금제",
+    "login": "로그인",
+    "logout": "로그아웃",
+    "createPalette": "팔레트 만들기",
+    "account": "계정"
+  },
+  "home": {
+    "title": "컬러 팔레트 도구",
+    "subtitle": "게임 아티스트를 위한",
+    "description": "레퍼런스 이미지에서 색상을 추출하고, 게임 스타일에 맞게 변환한 후, Unity 또는 Unreal Engine으로 바로 내보내세요.",
+    "dropImage": "이미지를 여기에 드롭하거나 클릭하여 업로드",
+    "pasteHint": "또는 Ctrl+V를 눌러 클립보드에서 붙여넣기",
+    "fileTypes": "PNG, JPG, GIF 최대 10MB",
+    "or": "또는",
+    "loadFromUrl": "URL에서 불러오기"
+  },
+  "login": {
+    "welcome": "GamePalette에 오신 것을 환영합니다",
+    "syncDescription": "로그인하여 모든 기기에서 팔레트를 동기화하세요",
+    "continueWithGoogle": "Google로 계속하기",
+    "failedToSignIn": "로그인에 실패했습니다. 다시 시도해주세요.",
+    "authFailed": "인증에 실패했습니다. 다시 시도해주세요.",
+    "whySignIn": "왜 로그인하나요?",
+    "freeFeature": "무료: 이 기기에 팔레트를 로컬 저장",
+    "premiumFeature": "프리미엄: 모든 기기에서 팔레트 동기화",
+    "terms": "계속하면 다음에 동의하는 것입니다:",
+    "termsOfService": "서비스 약관",
+    "and": "및",
+    "privacyPolicy": "개인정보 처리방침",
+    "backToHome": "홈으로 돌아가기",
+    "plan": "플랜",
+    "free": "무료",
+    "premium": "프리미엄",
+    "upgradeHint": "프리미엄으로 업그레이드하여 모든 기기에서 팔레트를 동기화하세요",
+    "upgradeToPremium": "프리미엄으로 업그레이드"
+  },
+  "library": {
+    "title": "내 라이브러리",
+    "empty": "저장된 팔레트가 없습니다",
+    "emptyHint": "첫 번째 팔레트를 만들어 여기서 확인하세요"
+  },
+  "pricing": {
+    "title": "요금제",
+    "free": "무료",
+    "premium": "프리미엄"
+  }
+}

@@ -3,6 +3,7 @@ import "./globals.css"
 import { Header } from "@/components/Header"
 import { ToastProvider } from "@/components/ui/toast"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 
 export const metadata: Metadata = {
   title: "GamePalette - Color Palette Tool for Game Artists",
@@ -24,8 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="font-sans antialiased">
-        <AuthProvider>
-          <ToastProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <ToastProvider>
             <div className="relative min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">{children}</main>
@@ -36,8 +38,9 @@ export default function RootLayout({
                 </div>
               </footer>
             </div>
-          </ToastProvider>
-        </AuthProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   )
