@@ -10,7 +10,6 @@ import { PalettePreview } from "@/components/PaletteDisplay"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { extractColors } from "@/lib/colorExtractor"
 import { generateId } from "@/lib/utils"
-import { useLanguage } from "@/contexts/LanguageContext"
 
 const features = [
   {
@@ -39,7 +38,6 @@ export default function HomePage() {
   const router = useRouter()
   const { savedPalettes, setCurrentPalette, setOriginalColors, setSourceImageUrl, colorCount } = usePaletteStore()
   const [isExtracting, setIsExtracting] = useState(false)
-  const { t } = useLanguage()
 
   const recentPalettes = savedPalettes.slice(-3).reverse()
 
@@ -75,12 +73,13 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="text-center space-y-6">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold">
-          <span className="gradient-text">{t('home.title')}</span>
+          <span className="gradient-text">Color Palette Tool</span>
           <br />
-          {t('home.subtitle')}
+          for Game Artists
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          {t('home.description')}
+          Extract colors from reference images, transform them to match your game&apos;s style,
+          and export directly to Unity or Unreal Engine.
         </p>
       </section>
 
