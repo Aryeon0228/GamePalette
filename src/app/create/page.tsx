@@ -156,12 +156,15 @@ export default function CreatePage() {
   }
 
   // Re-extract when colorCount changes (only if we already have colors)
+  const prevColorCountRef = useRef(colorCount)
   useEffect(() => {
     const imageToUse = extractionImageUrl || sourceImageUrl
-    if (imageToUse && originalColors.length > 0 && originalColors.length !== colorCount) {
+    if (imageToUse && originalColors.length > 0 && prevColorCountRef.current !== colorCount) {
+      prevColorCountRef.current = colorCount
       handleReextract()
     }
-  }, [colorCount, extractionImageUrl, sourceImageUrl, originalColors.length, handleReextract])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colorCount])
 
   // Re-extract when extractionMethod changes (only if we already have colors)
   const prevExtractionMethodRef = useRef(extractionMethod)
@@ -171,7 +174,8 @@ export default function CreatePage() {
       prevExtractionMethodRef.current = extractionMethod
       handleReextract()
     }
-  }, [extractionMethod, extractionImageUrl, sourceImageUrl, originalColors.length, handleReextract])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractionMethod])
 
   return (
     <div className="container py-8">
