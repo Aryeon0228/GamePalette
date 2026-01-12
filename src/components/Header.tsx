@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Palette, Library, CreditCard, Menu, X, User, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -117,10 +118,13 @@ export function Header() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
                   {user.user_metadata?.avatar_url ? (
-                    <img
+                    <Image
                       src={user.user_metadata.avatar_url}
                       alt="Profile"
+                      width={24}
+                      height={24}
                       className="w-6 h-6 rounded-full"
+                      unoptimized
                     />
                   ) : (
                     <User className="w-5 h-5 text-muted-foreground" />
