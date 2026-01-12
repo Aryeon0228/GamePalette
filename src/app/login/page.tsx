@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Loader2, LogOut } from "lucide-react"
+import { ArrowLeft, Loader2, LogOut, Crown, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -82,22 +82,30 @@ function LoginContent() {
           </div>
 
           <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Plan</span>
-              <span className={isPremium ? "text-primary font-medium" : ""}>
-                {isPremium ? "Premium" : "Free"}
+              <span className={isPremium ? "text-primary font-medium flex items-center gap-1" : ""}>
+                {isPremium && <Crown className="h-4 w-4 text-yellow-500" />}
+                {isPremium ? "Pro" : "Free"}
               </span>
             </div>
             {!isPremium && (
               <p className="text-xs text-muted-foreground">
-                Upgrade to Premium to sync palettes across devices
+                Upgrade to Pro for cloud sync and premium features
               </p>
             )}
           </div>
 
-          {!isPremium && (
-            <Button className="w-full" asChild>
-              <Link href="/pricing">Upgrade to Premium</Link>
+          {isPremium ? (
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/pricing">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Manage Subscription
+              </Link>
+            </Button>
+          ) : (
+            <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600" asChild>
+              <Link href="/pricing">Upgrade to Pro</Link>
             </Button>
           )}
 
