@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Save, Download, RefreshCw, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -47,6 +47,8 @@ export default function CreatePage() {
   const [showExportModal, setShowExportModal] = useState(false)
   // Track the actual image used for extraction (could be cropped region)
   const [extractionImageUrl, setExtractionImageUrl] = useState<string | null>(null)
+  // Track extraction request to prevent race conditions
+  const extractionIdRef = useRef(0)
 
   const displayColors = getDisplayColors()
 
@@ -102,13 +104,20 @@ export default function CreatePage() {
     }
   }
 
-  const handleReextract = async () => {
+  const handleReextract = useCallback(async () => {
     const imageToUse = extractionImageUrl || sourceImageUrl
     if (!imageToUse) return
+
+    // Increment extraction ID to track this specific request
+    const currentExtractionId = ++extractionIdRef.current
 
     setIsExtracting(true)
     try {
       const colors = await extractColors(imageToUse, colorCount)
+
+      // Only update state if this is still the latest extraction request
+      if (currentExtractionId !== extractionIdRef.current) return
+
       setOriginalColors(colors)
       setCurrentPalette({
         ...currentPalette!,
@@ -116,12 +125,17 @@ export default function CreatePage() {
         updatedAt: new Date().toISOString(),
       })
     } catch (error) {
+      // Only show error if this is still the latest extraction request
+      if (currentExtractionId !== extractionIdRef.current) return
       console.error("Failed to re-extract colors:", error)
       addToast("Failed to re-extract colors", "error")
     } finally {
-      setIsExtracting(false)
+      // Only clear loading state if this is still the latest extraction request
+      if (currentExtractionId === extractionIdRef.current) {
+        setIsExtracting(false)
+      }
     }
-  }
+  }, [extractionImageUrl, sourceImageUrl, colorCount, currentPalette, setOriginalColors, setCurrentPalette, addToast])
 
   const handleSave = () => {
     const id = savePalette(paletteName)
@@ -139,14 +153,13 @@ export default function CreatePage() {
     setSelectedColorIndex(null)
   }
 
-  // Update color count effect - only trigger on colorCount change
+  // Re-extract when colorCount changes (only if we already have colors)
   useEffect(() => {
     const imageToUse = extractionImageUrl || sourceImageUrl
     if (imageToUse && originalColors.length > 0 && originalColors.length !== colorCount) {
       handleReextract()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colorCount])
+  }, [colorCount, extractionImageUrl, sourceImageUrl, originalColors.length, handleReextract])
 
   return (
     <div className="container py-8">

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isConfigured = isSupabaseConfigured();
   const supabase = useMemo(() => isConfigured ? createClient() : null, [isConfigured]);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     if (!supabase) return null;
 
     const { data, error } = await supabase
@@ -51,14 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return data as UserProfile;
-  };
+  }, [supabase]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       const profileData = await fetchProfile(user.id);
       setProfile(profileData);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
     if (!supabase) {
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, fetchProfile]);
 
   const signInWithGoogle = async () => {
     if (!supabase) {

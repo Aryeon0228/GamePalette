@@ -6,8 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 15) +
-         Math.random().toString(36).substring(2, 15);
+  // Use crypto.randomUUID for secure, collision-resistant IDs
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older environments (still better than pure Math.random)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> (c === 'x' ? 0 : 3);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
