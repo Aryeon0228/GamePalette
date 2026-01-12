@@ -24,13 +24,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="font-sans antialiased">
+      <head>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2165224388421574"
           crossOrigin="anonymous"
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
         />
+      </head>
+      <body className="font-sans antialiased">
         <AuthProvider>
           <ToastProvider>
             <div className="relative min-h-screen flex flex-col">
