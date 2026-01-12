@@ -7,19 +7,16 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { useLanguage } from "@/contexts/LanguageContext"
-import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isPremium, loading } = useAuth()
-  const { t } = useLanguage()
 
   const navItems = [
-    { href: "/", label: t('common.home'), icon: Palette },
-    { href: "/library", label: t('common.library'), icon: Library },
-    { href: "/pricing", label: t('common.pricing'), icon: CreditCard },
+    { href: "/", label: "Home", icon: Palette },
+    { href: "/library", label: "Library", icon: Library },
+    { href: "/pricing", label: "Pricing", icon: CreditCard },
   ]
 
   return (
@@ -66,13 +63,10 @@ export function Header() {
                   src={user.user_metadata.avatar_url}
                   alt="Profile"
                   className="w-6 h-6 rounded-full"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
                 />
-              ) : null}
-              <User className={cn("w-5 h-5 text-muted-foreground", user.user_metadata?.avatar_url && "hidden")} />
+              ) : (
+                <User className="w-5 h-5 text-muted-foreground" />
+              )}
               <span className="text-sm font-medium">
                 {user.user_metadata?.full_name?.split(" ")[0] || user.email?.split("@")[0] || "Account"}
               </span>
@@ -82,12 +76,11 @@ export function Header() {
             </Link>
           ) : (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">{t('common.login')}</Link>
+              <Link href="/login">Login</Link>
             </Button>
           )}
-          <LanguageSwitcher />
           <Button size="sm" asChild>
-            <Link href="/create">{t('common.createPalette')}</Link>
+            <Link href="/create">Create Palette</Link>
           </Button>
         </div>
 
@@ -143,7 +136,7 @@ export function Header() {
                     <User className="w-5 h-5 text-muted-foreground" />
                   )}
                   <span className="text-sm font-medium">
-                    {user.user_metadata?.full_name || "Account"}
+                    {user.user_metadata?.full_name || user.email?.split("@")[0] || "Account"}
                   </span>
                   {isPremium && (
                     <Crown className="w-4 h-4 text-yellow-500" />
@@ -152,14 +145,13 @@ export function Header() {
               ) : (
                 <Button variant="ghost" asChild className="justify-start">
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    {t('common.login')}
+                    Login
                   </Link>
                 </Button>
               )}
-              <LanguageSwitcher />
               <Button asChild>
                 <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-                  {t('common.createPalette')}
+                  Create Palette
                 </Link>
               </Button>
             </div>
