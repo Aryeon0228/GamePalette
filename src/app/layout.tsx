@@ -30,9 +30,14 @@ export default function RootLayout({
               <Header />
               <main className="flex-1">{children}</main>
               <footer className="border-t border-border py-6 mt-auto">
-                <div className="container text-center text-sm text-muted-foreground">
+                <div className="container text-center text-sm text-muted-foreground space-y-2">
                   <p>GamePalette - Color Palette Tool for Game Artists</p>
-                  <p className="mt-1">Made with care for the game dev community</p>
+                  <p>
+                    문의: <a href="mailto:cloudysnowyday@gmail.com" className="hover:text-foreground transition-colors">cloudysnowyday@gmail.com</a>
+                    {" | "}
+                    Discord: <span className="hover:text-foreground">@cloudysnowyday</span>
+                  </p>
+                  <p className="mt-1">개인적으로 쓰려고 만들었어요 :)</p>
                 </div>
               </footer>
             </div>
