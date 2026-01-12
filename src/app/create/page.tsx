@@ -30,6 +30,7 @@ export default function CreatePage() {
     valueCheckEnabled,
     colorCount,
     sourceImageUrl,
+    extractionMethod,
     setCurrentPalette,
     setOriginalColors,
     setCurrentStyle,
@@ -37,6 +38,7 @@ export default function CreatePage() {
     toggleValueCheck,
     setColorCount,
     setSourceImageUrl,
+    setExtractionMethod,
     savePalette,
     getDisplayColors,
   } = usePaletteStore()
@@ -57,7 +59,7 @@ export default function CreatePage() {
     setIsExtracting(true)
 
     try {
-      const colors = await extractColors(imageUrl, colorCount)
+      const colors = await extractColors(imageUrl, colorCount, extractionMethod)
 
       setOriginalColors(colors)
       setCurrentPalette({
@@ -113,7 +115,7 @@ export default function CreatePage() {
 
     setIsExtracting(true)
     try {
-      const colors = await extractColors(imageToUse, colorCount)
+      const colors = await extractColors(imageToUse, colorCount, extractionMethod)
 
       // Only update state if this is still the latest extraction request
       if (currentExtractionId !== extractionIdRef.current) return
@@ -135,7 +137,7 @@ export default function CreatePage() {
         setIsExtracting(false)
       }
     }
-  }, [extractionImageUrl, sourceImageUrl, colorCount, currentPalette, setOriginalColors, setCurrentPalette, addToast])
+  }, [extractionImageUrl, sourceImageUrl, colorCount, extractionMethod, currentPalette, setOriginalColors, setCurrentPalette, addToast])
 
   const handleSave = () => {
     const id = savePalette(paletteName)
@@ -201,7 +203,28 @@ export default function CreatePage() {
         {/* Left Column - Image & Style */}
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Source Image</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Source Image</h2>
+              {/* Extraction Method Selector */}
+              <div className="flex gap-1">
+                <Button
+                  variant={extractionMethod === 'histogram' ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setExtractionMethod('histogram')}
+                  className="text-xs"
+                >
+                  Hue Histogram
+                </Button>
+                <Button
+                  variant={extractionMethod === 'kmeans' ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setExtractionMethod('kmeans')}
+                  className="text-xs"
+                >
+                  K-Means
+                </Button>
+              </div>
+            </div>
 
             {!sourceImageUrl ? (
               <ImageUploader onImageLoad={handleImageLoad} />
@@ -226,48 +249,20 @@ export default function CreatePage() {
             <div className="rounded-lg border border-border bg-card p-6">
               <h3 className="text-sm font-medium mb-4">Quick Settings</h3>
 
-              <div className="space-y-4">
-                {/* K-means Color Count */}
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <ColorCountSelector
-                    value={colorCount}
-                    onChange={setColorCount}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReextract}
-                    disabled={isExtracting}
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
-                    Re-extract
-                  </Button>
-                </div>
-
-                {/* Quick Hue Shift */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm text-muted-foreground">Hue Shift</label>
-                    <span className="text-sm font-mono">{customSettings.hueShift}°</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="-180"
-                    max="180"
-                    step="5"
-                    value={customSettings.hueShift}
-                    onChange={(e) => {
-                      setCustomSettings({ ...customSettings, hueShift: parseInt(e.target.value) })
-                      if (currentStyle !== 'custom') setCurrentStyle('custom')
-                    }}
-                    className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>-180°</span>
-                    <span>0°</span>
-                    <span>+180°</span>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <ColorCountSelector
+                  value={colorCount}
+                  onChange={setColorCount}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReextract}
+                  disabled={isExtracting}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
+                  Re-extract
+                </Button>
               </div>
             </div>
           )}
