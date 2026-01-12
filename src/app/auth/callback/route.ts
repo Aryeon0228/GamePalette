@@ -7,15 +7,23 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/';
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     if (supabase) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
+      if (error) {
+        console.error('Auth callback error:', error.message, error);
+      }
+
       if (!error) {
         return NextResponse.redirect(`${origin}${next}`);
       }
+    } else {
+      console.error('Auth callback error: Supabase client is not configured');
     }
+  } else {
+    console.error('Auth callback error: No code parameter in URL');
   }
 
   // Return the user to an error page with instructions
