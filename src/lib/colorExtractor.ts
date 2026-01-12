@@ -294,7 +294,8 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
 
   for (const pixel of pixels) {
     // Low saturation or extreme lightness = achromatic (grayscale)
-    if (pixel.hsl.s < 15 || pixel.hsl.l < 10 || pixel.hsl.l > 90) {
+    // Increased threshold from 15 to 25 to better filter out desaturated colors
+    if (pixel.hsl.s < 25 || pixel.hsl.l < 10 || pixel.hsl.l > 90) {
       achromaticPixels.push(pixel);
     } else {
       chromaticPixels.push(pixel);
@@ -479,12 +480,15 @@ function getRepresentativeColor(pixels: PixelData[]): RgbColor {
   }
 
   // Weight by saturation - more saturated colors are more "representative"
+  // Using squared saturation for stronger preference toward vivid colors
   let totalWeight = 0;
   let sumR = 0, sumG = 0, sumB = 0;
 
   for (const pixel of pixels) {
-    // Weight: saturation gives more weight to vivid colors
-    const weight = 1 + (pixel.hsl.s / 100);
+    // Weight: squared saturation gives much more weight to vivid colors
+    // s=100 → weight=101, s=50 → weight=26, s=25 → weight=7.25
+    const satNormalized = pixel.hsl.s / 100;
+    const weight = 1 + (satNormalized * satNormalized * 100);
     totalWeight += weight;
     sumR += pixel.rgb.r * weight;
     sumG += pixel.rgb.g * weight;
