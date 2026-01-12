@@ -344,7 +344,8 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   const minThreshold = totalChromatic * 0.02; // 2% minimum threshold
 
   // Select colors: prioritize high-frequency peaks, ensure minimum threshold inclusion
-  const selectedBins: HueBin[] = [];
+  type ScoredBin = HueBin & { avgSaturation: number; score: number };
+  const selectedBins: ScoredBin[] = [];
   const usedHues: number[] = [];
 
   // First pass: include all peaks above minimum threshold
@@ -394,30 +395,51 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   }
 
   // Convert selected bins to representative colors
-  const colors: RgbColor[] = selectedBins.map(bin => {
-    return getRepresentativeColor(bin.pixels);
-  });
+  // Track if we already have an achromatic color
+  let hasAchromatic = false;
+  const ACHROMATIC_THRESHOLD = 25; // Same as the filter threshold
 
-  // Add achromatic color if we have space and significant achromatic pixels
-  if (colors.length < colorCount && achromaticPixels.length > pixels.length * 0.1) {
-    const achromaticColor = getRepresentativeColor(achromaticPixels);
-    colors.push(achromaticColor);
+  const colors: RgbColor[] = [];
+  for (const bin of selectedBins) {
+    const color = getRepresentativeColor(bin.pixels);
+    // Check if this color is achromatic
+    const saturation = bin.avgSaturation || 0;
+    if (saturation < ACHROMATIC_THRESHOLD) {
+      if (hasAchromatic) continue; // Skip if we already have one
+      hasAchromatic = true;
+    }
+    colors.push(color);
   }
 
-  // Fill remaining slots with variance-based subdivision
+  // Add achromatic color if we have space, don't have one yet, and significant achromatic pixels
+  if (colors.length < colorCount && !hasAchromatic && achromaticPixels.length > pixels.length * 0.1) {
+    const achromaticColor = getRepresentativeColor(achromaticPixels);
+    colors.push(achromaticColor);
+    hasAchromatic = true;
+  }
+
+  // Fill remaining slots with chromatic colors only (skip low saturation)
   while (colors.length < colorCount) {
     if (chromaticPixels.length > 0) {
-      // Find the bin with highest score that hasn't been selected
-      const remainingPeaks = peaksWithScore.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
+      // Find the bin with highest score that hasn't been selected and has good saturation
+      const remainingPeaks = peaksWithScore.filter(p =>
+        !selectedBins.includes(p) &&
+        p.pixels.length > 0 &&
+        (p.avgSaturation >= ACHROMATIC_THRESHOLD || !hasAchromatic) // Only allow low-sat if no achromatic yet
+      );
       if (remainingPeaks.length > 0) {
         const nextPeak = remainingPeaks[0];
-        colors.push(getRepresentativeColor(nextPeak.pixels));
+        const color = getRepresentativeColor(nextPeak.pixels);
+        if (nextPeak.avgSaturation < ACHROMATIC_THRESHOLD) {
+          hasAchromatic = true;
+        }
+        colors.push(color);
         selectedBins.push(nextPeak);
       } else {
-        colors.push({ r: 128, g: 128, b: 128 });
+        break; // No more suitable colors
       }
     } else {
-      colors.push({ r: 128, g: 128, b: 128 });
+      break;
     }
   }
 
