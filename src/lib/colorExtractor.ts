@@ -323,8 +323,21 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   // Find peaks in the histogram
   const peaks = findPeaks(smoothedCounts, histogram);
 
-  // Sort peaks by count (descending)
-  peaks.sort((a, b) => b.count - a.count);
+  // Calculate average saturation for each peak and create a score
+  // Score = count × (avgSaturation / 100) to prioritize vibrant colors
+  const peaksWithScore = peaks.map(peak => {
+    const avgSat = peak.pixels.length > 0
+      ? peak.pixels.reduce((sum, p) => sum + p.hsl.s, 0) / peak.pixels.length
+      : 0;
+    return {
+      ...peak,
+      avgSaturation: avgSat,
+      score: peak.count * (0.3 + avgSat / 100) // Base 0.3 + saturation bonus
+    };
+  });
+
+  // Sort peaks by score (prioritizes both frequency and saturation)
+  peaksWithScore.sort((a, b) => b.score - a.score);
 
   // Calculate total chromatic pixels
   const totalChromatic = chromaticPixels.length;
@@ -335,7 +348,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   const usedHues: number[] = [];
 
   // First pass: include all peaks above minimum threshold
-  for (const peak of peaks) {
+  for (const peak of peaksWithScore) {
     if (peak.count >= minThreshold && selectedBins.length < colorCount) {
       // Check if this hue is too close to already selected hues
       let tooClose = false;
@@ -358,7 +371,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   }
 
   // Second pass: fill remaining slots with weighted selection
-  for (const peak of peaks) {
+  for (const peak of peaksWithScore) {
     if (selectedBins.length >= colorCount) break;
     if (selectedBins.includes(peak)) continue;
 
@@ -394,8 +407,8 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   // Fill remaining slots with variance-based subdivision
   while (colors.length < colorCount) {
     if (chromaticPixels.length > 0) {
-      // Find the bin with highest variance and split it
-      const remainingPeaks = peaks.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
+      // Find the bin with highest score that hasn't been selected
+      const remainingPeaks = peaksWithScore.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
       if (remainingPeaks.length > 0) {
         const nextPeak = remainingPeaks[0];
         colors.push(getRepresentativeColor(nextPeak.pixels));
