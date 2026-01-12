@@ -7,16 +7,19 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useLanguage } from "@/contexts/LanguageContext"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isPremium, loading } = useAuth()
+  const { t } = useLanguage()
 
   const navItems = [
-    { href: "/", label: "Home", icon: Palette },
-    { href: "/library", label: "Library", icon: Library },
-    { href: "/pricing", label: "Pricing", icon: CreditCard },
+    { href: "/", label: t('common.home'), icon: Palette },
+    { href: "/library", label: t('common.library'), icon: Library },
+    { href: "/pricing", label: t('common.pricing'), icon: CreditCard },
   ]
 
   return (
@@ -79,11 +82,12 @@ export function Header() {
             </Link>
           ) : (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Login</Link>
+              <Link href="/login">{t('common.login')}</Link>
             </Button>
           )}
+          <LanguageSwitcher />
           <Button size="sm" asChild>
-            <Link href="/create">Create Palette</Link>
+            <Link href="/create">{t('common.createPalette')}</Link>
           </Button>
         </div>
 
@@ -148,13 +152,14 @@ export function Header() {
               ) : (
                 <Button variant="ghost" asChild className="justify-start">
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    Login
+                    {t('common.login')}
                   </Link>
                 </Button>
               )}
+              <LanguageSwitcher />
               <Button asChild>
                 <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-                  Create Palette
+                  {t('common.createPalette')}
                 </Link>
               </Button>
             </div>
