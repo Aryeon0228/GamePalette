@@ -7,7 +7,24 @@ interface RgbColor {
   b: number;
 }
 
-// K-means clustering for color extraction
+interface HslColor {
+  h: number;
+  s: number;
+  l: number;
+}
+
+interface PixelData {
+  rgb: RgbColor;
+  hsl: HslColor;
+}
+
+interface HueBin {
+  hue: number;
+  count: number;
+  pixels: PixelData[];
+}
+
+// Hue histogram-based color extraction
 export async function extractColors(imageUrl: string, colorCount: number = 5): Promise<Color[]> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -45,8 +62,10 @@ export async function extractColors(imageUrl: string, colorCount: number = 5): P
         ctx.drawImage(img, 0, 0, width, height);
 
         const imageData = ctx.getImageData(0, 0, width, height);
-        const pixels = getPixelArray(imageData.data);
-        const dominantColors = kMeansClustering(pixels, colorCount);
+        const pixels = getPixelDataArray(imageData.data);
+
+        // Use Hue histogram-based extraction
+        const dominantColors = extractColorsFromHueHistogram(pixels, colorCount);
 
         const colors: Color[] = dominantColors.map(rgb => {
           const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -73,8 +92,8 @@ export async function extractColors(imageUrl: string, colorCount: number = 5): P
   });
 }
 
-function getPixelArray(data: Uint8ClampedArray): RgbColor[] {
-  const pixels: RgbColor[] = [];
+function getPixelDataArray(data: Uint8ClampedArray): PixelData[] {
+  const pixels: PixelData[] = [];
 
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
@@ -87,135 +106,265 @@ function getPixelArray(data: Uint8ClampedArray): RgbColor[] {
 
     // Sample every 4th pixel for performance
     if (i % 16 === 0) {
-      pixels.push({ r, g, b });
+      const hsl = rgbToHslInternal(r, g, b);
+      pixels.push({
+        rgb: { r, g, b },
+        hsl
+      });
     }
   }
 
   return pixels;
 }
 
-function kMeansClustering(pixels: RgbColor[], k: number, maxIterations: number = 20): RgbColor[] {
+function rgbToHslInternal(r: number, g: number, b: number): HslColor {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
+    }
+  }
+
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100)
+  };
+}
+
+function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number): RgbColor[] {
   if (pixels.length === 0) {
-    return Array(k).fill({ r: 128, g: 128, b: 128 });
+    return Array(colorCount).fill({ r: 128, g: 128, b: 128 });
   }
 
-  if (pixels.length < k) {
-    return pixels.concat(Array(k - pixels.length).fill(pixels[0] || { r: 128, g: 128, b: 128 }));
+  // Separate chromatic and achromatic pixels
+  const chromaticPixels: PixelData[] = [];
+  const achromaticPixels: PixelData[] = [];
+
+  for (const pixel of pixels) {
+    // Low saturation or extreme lightness = achromatic (grayscale)
+    if (pixel.hsl.s < 15 || pixel.hsl.l < 10 || pixel.hsl.l > 90) {
+      achromaticPixels.push(pixel);
+    } else {
+      chromaticPixels.push(pixel);
+    }
   }
 
-  // Initialize centroids using k-means++ algorithm
-  const centroids: RgbColor[] = initializeCentroids(pixels, k);
+  // Build Hue histogram (36 bins, each covering 10 degrees)
+  const binCount = 36;
+  const binSize = 360 / binCount;
+  const histogram: HueBin[] = Array.from({ length: binCount }, (_, i) => ({
+    hue: i * binSize + binSize / 2,
+    count: 0,
+    pixels: []
+  }));
 
-  for (let iteration = 0; iteration < maxIterations; iteration++) {
-    // Assign pixels to clusters
-    const clusters: RgbColor[][] = Array.from({ length: k }, () => []);
+  for (const pixel of chromaticPixels) {
+    const binIndex = Math.floor(pixel.hsl.h / binSize) % binCount;
+    histogram[binIndex].count++;
+    histogram[binIndex].pixels.push(pixel);
+  }
 
-    for (const pixel of pixels) {
-      let minDistance = Infinity;
-      let closestCentroid = 0;
+  // Smooth histogram to reduce noise (moving average)
+  const smoothedCounts = smoothHistogram(histogram.map(b => b.count));
 
-      for (let i = 0; i < centroids.length; i++) {
-        const distance = colorDistance(pixel, centroids[i]);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestCentroid = i;
+  // Find peaks in the histogram
+  const peaks = findPeaks(smoothedCounts, histogram);
+
+  // Sort peaks by count (descending)
+  peaks.sort((a, b) => b.count - a.count);
+
+  // Calculate total chromatic pixels
+  const totalChromatic = chromaticPixels.length;
+  const minThreshold = totalChromatic * 0.02; // 2% minimum threshold
+
+  // Select colors: prioritize high-frequency peaks, ensure minimum threshold inclusion
+  const selectedBins: HueBin[] = [];
+  const usedHues: number[] = [];
+
+  // First pass: include all peaks above minimum threshold
+  for (const peak of peaks) {
+    if (peak.count >= minThreshold && selectedBins.length < colorCount) {
+      // Check if this hue is too close to already selected hues
+      let tooClose = false;
+      for (const usedHue of usedHues) {
+        const hueDiff = Math.min(
+          Math.abs(peak.hue - usedHue),
+          360 - Math.abs(peak.hue - usedHue)
+        );
+        if (hueDiff < 30) {
+          tooClose = true;
+          break;
         }
       }
 
-      clusters[closestCentroid].push(pixel);
-    }
-
-    // Update centroids
-    let converged = true;
-    for (let i = 0; i < k; i++) {
-      if (clusters[i].length === 0) continue;
-
-      const newCentroid = averageColor(clusters[i]);
-      if (colorDistance(newCentroid, centroids[i]) > 1) {
-        converged = false;
+      if (!tooClose) {
+        selectedBins.push(peak);
+        usedHues.push(peak.hue);
       }
-      centroids[i] = newCentroid;
+    }
+  }
+
+  // Second pass: fill remaining slots with weighted selection
+  for (const peak of peaks) {
+    if (selectedBins.length >= colorCount) break;
+    if (selectedBins.includes(peak)) continue;
+
+    let tooClose = false;
+    for (const usedHue of usedHues) {
+      const hueDiff = Math.min(
+        Math.abs(peak.hue - usedHue),
+        360 - Math.abs(peak.hue - usedHue)
+      );
+      if (hueDiff < 20) {
+        tooClose = true;
+        break;
+      }
     }
 
-    if (converged) break;
+    if (!tooClose && peak.pixels.length > 0) {
+      selectedBins.push(peak);
+      usedHues.push(peak.hue);
+    }
+  }
+
+  // Convert selected bins to representative colors
+  const colors: RgbColor[] = selectedBins.map(bin => {
+    return getRepresentativeColor(bin.pixels);
+  });
+
+  // Add achromatic color if we have space and significant achromatic pixels
+  if (colors.length < colorCount && achromaticPixels.length > pixels.length * 0.1) {
+    const achromaticColor = getRepresentativeColor(achromaticPixels);
+    colors.push(achromaticColor);
+  }
+
+  // Fill remaining slots with variance-based subdivision
+  while (colors.length < colorCount) {
+    if (chromaticPixels.length > 0) {
+      // Find the bin with highest variance and split it
+      const remainingPeaks = peaks.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
+      if (remainingPeaks.length > 0) {
+        const nextPeak = remainingPeaks[0];
+        colors.push(getRepresentativeColor(nextPeak.pixels));
+        selectedBins.push(nextPeak);
+      } else {
+        // Fallback: use K-means on remaining pixels
+        colors.push({ r: 128, g: 128, b: 128 });
+      }
+    } else {
+      colors.push({ r: 128, g: 128, b: 128 });
+    }
   }
 
   // Sort by luminance (brightness)
-  return centroids.sort((a, b) => {
+  return colors.slice(0, colorCount).sort((a, b) => {
     const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
     const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
     return lumB - lumA;
   });
 }
 
-function initializeCentroids(pixels: RgbColor[], k: number): RgbColor[] {
-  const centroids: RgbColor[] = [];
+function smoothHistogram(counts: number[]): number[] {
+  const smoothed: number[] = [];
+  const windowSize = 3;
 
-  // Choose first centroid randomly
-  centroids.push(pixels[Math.floor(Math.random() * pixels.length)]);
+  for (let i = 0; i < counts.length; i++) {
+    let sum = 0;
+    let count = 0;
 
-  // Choose remaining centroids with probability proportional to distance
-  while (centroids.length < k) {
-    const distances: number[] = pixels.map(pixel => {
-      let minDist = Infinity;
-      for (const centroid of centroids) {
-        const dist = colorDistance(pixel, centroid);
-        if (dist < minDist) minDist = dist;
-      }
-      return minDist;
-    });
-
-    const totalDistance = distances.reduce((a, b) => a + b, 0);
-    if (totalDistance === 0) {
-      centroids.push(pixels[Math.floor(Math.random() * pixels.length)]);
-      continue;
+    for (let j = -windowSize; j <= windowSize; j++) {
+      const idx = (i + j + counts.length) % counts.length;
+      sum += counts[idx];
+      count++;
     }
 
-    let random = Math.random() * totalDistance;
-    for (let i = 0; i < pixels.length; i++) {
-      random -= distances[i];
-      if (random <= 0) {
-        centroids.push(pixels[i]);
-        break;
+    smoothed.push(sum / count);
+  }
+
+  return smoothed;
+}
+
+function findPeaks(smoothedCounts: number[], histogram: HueBin[]): HueBin[] {
+  const peaks: HueBin[] = [];
+  const n = smoothedCounts.length;
+
+  for (let i = 0; i < n; i++) {
+    const prev = smoothedCounts[(i - 1 + n) % n];
+    const curr = smoothedCounts[i];
+    const next = smoothedCounts[(i + 1) % n];
+
+    // Local maximum: current is greater than or equal to neighbors
+    if (curr >= prev && curr >= next && curr > 0) {
+      // Merge nearby bins for this peak
+      const peakBin: HueBin = {
+        hue: histogram[i].hue,
+        count: histogram[i].count,
+        pixels: [...histogram[i].pixels]
+      };
+
+      // Include adjacent bins if they're part of the same peak
+      const prevIdx = (i - 1 + n) % n;
+      const nextIdx = (i + 1) % n;
+
+      if (smoothedCounts[prevIdx] > smoothedCounts[i] * 0.5) {
+        peakBin.count += histogram[prevIdx].count;
+        peakBin.pixels.push(...histogram[prevIdx].pixels);
       }
+      if (smoothedCounts[nextIdx] > smoothedCounts[i] * 0.5) {
+        peakBin.count += histogram[nextIdx].count;
+        peakBin.pixels.push(...histogram[nextIdx].pixels);
+      }
+
+      peaks.push(peakBin);
     }
   }
 
-  return centroids;
+  return peaks;
 }
 
-function colorDistance(c1: RgbColor, c2: RgbColor): number {
-  // Weighted Euclidean distance for perceptual similarity
-  const rmean = (c1.r + c2.r) / 2;
-  const dr = c1.r - c2.r;
-  const dg = c1.g - c2.g;
-  const db = c1.b - c2.b;
-
-  return Math.sqrt(
-    (2 + rmean / 256) * dr * dr +
-    4 * dg * dg +
-    (2 + (255 - rmean) / 256) * db * db
-  );
-}
-
-function averageColor(colors: RgbColor[]): RgbColor {
-  if (colors.length === 0) {
+function getRepresentativeColor(pixels: PixelData[]): RgbColor {
+  if (pixels.length === 0) {
     return { r: 128, g: 128, b: 128 };
   }
 
-  const sum = colors.reduce(
-    (acc, color) => ({
-      r: acc.r + color.r,
-      g: acc.g + color.g,
-      b: acc.b + color.b,
-    }),
-    { r: 0, g: 0, b: 0 }
-  );
+  // Weight by saturation - more saturated colors are more "representative"
+  let totalWeight = 0;
+  let sumR = 0, sumG = 0, sumB = 0;
+
+  for (const pixel of pixels) {
+    // Weight: saturation gives more weight to vivid colors
+    const weight = 1 + (pixel.hsl.s / 100);
+    totalWeight += weight;
+    sumR += pixel.rgb.r * weight;
+    sumG += pixel.rgb.g * weight;
+    sumB += pixel.rgb.b * weight;
+  }
 
   return {
-    r: Math.round(sum.r / colors.length),
-    g: Math.round(sum.g / colors.length),
-    b: Math.round(sum.b / colors.length),
+    r: Math.round(sumR / totalWeight),
+    g: Math.round(sumG / totalWeight),
+    b: Math.round(sumB / totalWeight)
   };
 }
 
