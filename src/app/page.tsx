@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Palette, Eye, Download, Sparkles } from "lucide-react"
+import { ArrowRight, Palette, Eye, Download, Sparkles, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ImageUploader } from "@/components/ImageUploader"
 import { PalettePreview } from "@/components/PaletteDisplay"
@@ -92,7 +92,21 @@ export default function HomePage() {
 
           {/* Extraction Method Selection */}
           <div className="mt-4 flex items-center justify-center gap-4">
-            <span className="text-sm text-muted-foreground">Extraction Method:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground">Extraction Method:</span>
+              <div className="relative group">
+                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover border border-border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <p className="text-xs text-popover-foreground mb-2">
+                    <strong>Hue Histogram:</strong> Analyzes color distribution by hue values. Better for images with distinct color regions and produces more vibrant results.
+                  </p>
+                  <p className="text-xs text-popover-foreground">
+                    <strong>K-Means:</strong> Groups similar pixels using clustering algorithm. Better for photos with subtle color variations and gradients.
+                  </p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-border"></div>
+                </div>
+              </div>
+            </div>
             <div className="flex rounded-lg border border-border overflow-hidden">
               <button
                 onClick={() => setExtractionMethod('histogram')}
