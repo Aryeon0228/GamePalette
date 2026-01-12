@@ -51,9 +51,7 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
-          {loading ? (
-            <div className="h-8 w-20 bg-muted animate-pulse rounded" />
-          ) : user ? (
+          {user ? (
             <Link
               href="/login"
               className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
@@ -66,7 +64,7 @@ export function Header() {
                 <Crown className="w-4 h-4 text-yellow-500" />
               )}
             </Link>
-          ) : (
+          ) : !loading && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">Login</Link>
             </Button>
