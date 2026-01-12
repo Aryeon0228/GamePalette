@@ -190,8 +190,8 @@ function calculateOptimalHueShift(h: number, s: number): number {
   // Low saturation colors need less hue shift
   const saturationFactor = Math.min(s / 100, 1);
 
-  // Base shift amount (12 degrees - visible but not extreme)
-  const baseShift = 12;
+  // Base shift amount (15 degrees - visible but not extreme)
+  const baseShift = 15;
 
   // Adjust based on hue position
   // Warm colors (0-60, 300-360) can handle more shift
