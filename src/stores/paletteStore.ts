@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Palette, Color, StyleType, CustomStyleSettings, Folder } from '@/types';
 import { generateId } from '@/lib/utils';
 import { applyStyleFilter, toGrayscale, defaultCustomSettings } from '@/lib/styleFilters';
+import { ExtractionMethod } from '@/lib/colorExtractor';
 
 interface PaletteState {
   // Current editing state
@@ -13,6 +14,7 @@ interface PaletteState {
   valueCheckEnabled: boolean;
   colorCount: number;
   sourceImageUrl: string | null;
+  extractionMethod: ExtractionMethod;
 
   // Library
   savedPalettes: Palette[];
@@ -26,6 +28,7 @@ interface PaletteState {
   toggleValueCheck: () => void;
   setColorCount: (count: number) => void;
   setSourceImageUrl: (url: string | null) => void;
+  setExtractionMethod: (method: ExtractionMethod) => void;
 
   // Color manipulation
   updateColors: (colors: Color[]) => void;
@@ -58,6 +61,7 @@ export const usePaletteStore = create<PaletteState>()(
       valueCheckEnabled: false,
       colorCount: 5,
       sourceImageUrl: null,
+      extractionMethod: 'histogram',
       savedPalettes: [],
       folders: [],
 
@@ -100,6 +104,8 @@ export const usePaletteStore = create<PaletteState>()(
       setColorCount: (count) => set({ colorCount: count }),
 
       setSourceImageUrl: (url) => set({ sourceImageUrl: url }),
+
+      setExtractionMethod: (method) => set({ extractionMethod: method }),
 
       // Color manipulation
       updateColors: (colors) => {
@@ -225,6 +231,7 @@ export const usePaletteStore = create<PaletteState>()(
         savedPalettes: state.savedPalettes,
         folders: state.folders,
         colorCount: state.colorCount,
+        extractionMethod: state.extractionMethod,
       }),
     }
   )
