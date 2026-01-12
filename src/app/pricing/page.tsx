@@ -24,7 +24,6 @@ const features = [
 function PricingContent() {
   const { user, isPremium, loading: authLoading } = useAuth()
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [portalLoading, setPortalLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -48,7 +47,7 @@ function PricingContent() {
     setMessage(null)
 
     try {
-      const response = await fetch('/api/stripe/checkout', {
+      const response = await fetch('/api/lemonsqueezy/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
@@ -59,7 +58,7 @@ function PricingContent() {
         throw new Error(data.error || 'Failed to create checkout session')
       }
 
-      // Redirect to Stripe Checkout
+      // Redirect to Lemon Squeezy Checkout
       if (data.url) {
         window.location.href = data.url
       }
@@ -71,31 +70,10 @@ function PricingContent() {
     }
   }
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true)
-    setMessage(null)
-
-    try {
-      const response = await fetch('/api/stripe/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create portal session')
-      }
-
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (error) {
-      console.error('Portal error:', error)
-      setMessage({ type: 'error', text: 'Failed to open billing portal. Please try again.' })
-    } finally {
-      setPortalLoading(false)
-    }
+  const handleManageSubscription = () => {
+    // Lemon Squeezy customer portal - users manage subscriptions via email link
+    // or we can open the Lemon Squeezy billing page
+    window.open('https://app.lemonsqueezy.com/my-orders', '_blank')
   }
 
   return (
@@ -172,16 +150,8 @@ function PricingContent() {
               size="lg"
               variant="outline"
               onClick={handleManageSubscription}
-              disabled={portalLoading}
             >
-              {portalLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Manage Subscription"
-              )}
+              Manage Subscription
             </Button>
           ) : (
             <Button
@@ -225,7 +195,7 @@ function PricingContent() {
           />
           <FAQItem
             question="What payment methods do you accept?"
-            answer="We accept all major credit cards (Visa, MasterCard, American Express) through our secure payment partner, Stripe."
+            answer="We accept all major credit cards (Visa, MasterCard, American Express) and PayPal through our secure payment partner, Lemon Squeezy."
           />
           <FAQItem
             question="Do you offer refunds?"

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripeServer } from '@/lib/stripe/server';
 import { createClient } from '@/lib/supabase/server';
+import { createCheckout, getLemonSqueezyConfig } from '@/lib/lemonsqueezy/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const stripe = getStripeServer();
-    if (!stripe) {
+    const config = getLemonSqueezyConfig();
+    if (!config.isConfigured) {
       return NextResponse.json(
-        { error: 'Stripe is not configured' },
+        { error: 'Payment system is not configured' },
         { status: 500 }
       );
     }
@@ -29,33 +29,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the user's Stripe customer ID
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.stripe_customer_id) {
-      return NextResponse.json(
-        { error: 'No subscription found' },
-        { status: 400 }
-      );
-    }
-
-    // Create customer portal session
     const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const redirectUrl = `${origin}/pricing?success=true`;
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
-      return_url: `${origin}/pricing`,
+    // Create checkout session
+    const checkoutUrl = await createCheckout({
+      variantId: config.variantId!,
+      userId: user.id,
+      userEmail: user.email!,
+      userName: user.user_metadata?.full_name,
+      redirectUrl,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: checkoutUrl });
   } catch (error) {
-    console.error('Portal error:', error);
+    console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: 'Failed to create portal session' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }
