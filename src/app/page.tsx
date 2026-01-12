@@ -36,7 +36,7 @@ const features = [
 
 export default function HomePage() {
   const router = useRouter()
-  const { savedPalettes, setCurrentPalette, setOriginalColors, setSourceImageUrl, colorCount } = usePaletteStore()
+  const { savedPalettes, setCurrentPalette, setOriginalColors, setSourceImageUrl, colorCount, extractionMethod, setExtractionMethod } = usePaletteStore()
   const [isExtracting, setIsExtracting] = useState(false)
 
   const recentPalettes = savedPalettes.slice(-3).reverse()
@@ -46,7 +46,7 @@ export default function HomePage() {
     setSourceImageUrl(imageUrl)
 
     try {
-      const colors = await extractColors(imageUrl, colorCount)
+      const colors = await extractColors(imageUrl, colorCount, extractionMethod)
 
       setOriginalColors(colors)
       setCurrentPalette({
@@ -89,6 +89,33 @@ export default function HomePage() {
           <ImageUploader
             onImageLoad={handleImageLoad}
           />
+
+          {/* Extraction Method Selection */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <span className="text-sm text-muted-foreground">Extraction Method:</span>
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              <button
+                onClick={() => setExtractionMethod('histogram')}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  extractionMethod === 'histogram'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background hover:bg-muted text-muted-foreground'
+                }`}
+              >
+                Hue Histogram
+              </button>
+              <button
+                onClick={() => setExtractionMethod('kmeans')}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  extractionMethod === 'kmeans'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background hover:bg-muted text-muted-foreground'
+                }`}
+              >
+                K-Means
+              </button>
+            </div>
+          </div>
           {isExtracting && (
             <div className="mt-4 text-center text-muted-foreground">
               <div className="inline-block animate-spin mr-2">
