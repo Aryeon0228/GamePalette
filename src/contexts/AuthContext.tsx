@@ -66,21 +66,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    let isMounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false); // End loading immediately after session check
 
+        // Load profile in background (don't block UI)
         if (session?.user) {
-          const profileData = await fetchProfile(session.user.id);
-          setProfile(profileData);
+          fetchProfile(session.user.id).then(profileData => {
+            if (isMounted) setProfile(profileData);
+          });
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
-      } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -88,26 +94,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (!isMounted) return;
 
-          if (session?.user) {
-            const profileData = await fetchProfile(session.user.id);
-            setProfile(profileData);
-          } else {
-            setProfile(null);
-          }
-        } catch (error) {
-          console.error('Error on auth state change:', error);
-        } finally {
-          setLoading(false);
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          // Load profile in background
+          fetchProfile(session.user.id).then(profileData => {
+            if (isMounted) setProfile(profileData);
+          });
+        } else {
+          setProfile(null);
         }
       }
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile]);
