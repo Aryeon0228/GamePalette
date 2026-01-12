@@ -32,7 +32,6 @@ interface PaletteState {
 
   // Color manipulation
   updateColors: (colors: Color[]) => void;
-  applyStyle: (style: StyleType) => void;
   getDisplayColors: () => Color[];
 
   // Library actions
@@ -114,17 +113,6 @@ export const usePaletteStore = create<PaletteState>()(
           originalColors: colors,
           currentPalette: state.currentPalette
             ? { ...state.currentPalette, colors: applyStyleFilter(colors, state.currentStyle, state.customSettings) }
-            : null,
-        });
-      },
-
-      applyStyle: (style) => {
-        const state = get();
-        const newColors = applyStyleFilter(state.originalColors, style, state.customSettings);
-        set({
-          currentStyle: style,
-          currentPalette: state.currentPalette
-            ? { ...state.currentPalette, colors: newColors, style }
             : null,
         });
       },
