@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Save, Download, RefreshCw, ArrowLeft } from "lucide-react"
+import { Save, Download, RefreshCw, ArrowLeft, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ImageUploader } from "@/components/ImageUploader"
@@ -278,8 +278,6 @@ export default function CreatePage() {
               onStyleChange={setCurrentStyle}
               customSettings={customSettings}
               onCustomSettingsChange={setCustomSettings}
-              valueCheckEnabled={valueCheckEnabled}
-              onValueCheckToggle={toggleValueCheck}
             />
           </div>
         </div>
@@ -316,6 +314,16 @@ export default function CreatePage() {
                     HSL: {displayColors[selectedColorIndex].hsl.h}°, {displayColors[selectedColorIndex].hsl.s}%, {displayColors[selectedColorIndex].hsl.l}%
                   </p>
                 </div>
+                {/* Value Check Button */}
+                <Button
+                  variant={valueCheckEnabled ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={toggleValueCheck}
+                  className="shrink-0"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Value Check
+                </Button>
               </div>
 
               {/* Color Variations */}
