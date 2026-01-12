@@ -139,6 +139,12 @@ export default function CreatePage() {
     }
   }, [extractionImageUrl, sourceImageUrl, colorCount, extractionMethod, currentPalette, setOriginalColors, setCurrentPalette, addToast])
 
+  // Keep a ref to the latest handleReextract for use in effects
+  const handleReextractRef = useRef(handleReextract)
+  useEffect(() => {
+    handleReextractRef.current = handleReextract
+  }, [handleReextract])
+
   const handleSave = () => {
     const id = savePalette(paletteName)
     if (id) {
@@ -158,23 +164,19 @@ export default function CreatePage() {
   // Re-extract when colorCount changes (only if we already have colors)
   const prevColorCountRef = useRef(colorCount)
   useEffect(() => {
-    const imageToUse = extractionImageUrl || sourceImageUrl
-    if (imageToUse && originalColors.length > 0 && prevColorCountRef.current !== colorCount) {
+    if (prevColorCountRef.current !== colorCount) {
       prevColorCountRef.current = colorCount
-      handleReextract()
+      handleReextractRef.current()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colorCount])
 
   // Re-extract when extractionMethod changes (only if we already have colors)
   const prevExtractionMethodRef = useRef(extractionMethod)
   useEffect(() => {
-    const imageToUse = extractionImageUrl || sourceImageUrl
-    if (imageToUse && originalColors.length > 0 && prevExtractionMethodRef.current !== extractionMethod) {
+    if (prevExtractionMethodRef.current !== extractionMethod) {
       prevExtractionMethodRef.current = extractionMethod
-      handleReextract()
+      handleReextractRef.current()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractionMethod])
 
   return (
