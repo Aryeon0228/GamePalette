@@ -163,6 +163,16 @@ export default function CreatePage() {
     }
   }, [colorCount, extractionImageUrl, sourceImageUrl, originalColors.length, handleReextract])
 
+  // Re-extract when extractionMethod changes (only if we already have colors)
+  const prevExtractionMethodRef = useRef(extractionMethod)
+  useEffect(() => {
+    const imageToUse = extractionImageUrl || sourceImageUrl
+    if (imageToUse && originalColors.length > 0 && prevExtractionMethodRef.current !== extractionMethod) {
+      prevExtractionMethodRef.current = extractionMethod
+      handleReextract()
+    }
+  }, [extractionMethod, extractionImageUrl, sourceImageUrl, originalColors.length, handleReextract])
+
   return (
     <div className="container py-8">
       <div className="flex items-center justify-between mb-8">
