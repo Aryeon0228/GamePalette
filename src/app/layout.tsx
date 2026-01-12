@@ -16,6 +16,9 @@ export const metadata: Metadata = {
     description: "Extract, transform, and export color palettes optimized for game development.",
     type: "website",
   },
+  other: {
+    "google-adsense-account": "ca-pub-2165224388421574",
+  },
 }
 
 export default function RootLayout({
