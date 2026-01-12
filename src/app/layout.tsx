@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Script from "next/script"
 import "./globals.css"
 import { Header } from "@/components/Header"
 import { ToastProvider } from "@/components/ui/toast"
@@ -23,6 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2165224388421574"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="font-sans antialiased">
         <AuthProvider>
           <ToastProvider>
