@@ -16,7 +16,7 @@ export function Header() {
   const navItems = [
     { href: "/", label: "Home", icon: Palette },
     { href: "/library", label: "Library", icon: Library },
-    { href: "/pricing", label: "Pricing", icon: CreditCard },
+    // { href: "/pricing", label: "Pricing", icon: CreditCard }, // 임시 비활성화
   ]
 
   return (
