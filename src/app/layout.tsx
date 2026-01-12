@@ -37,7 +37,7 @@ export default function RootLayout({
                     {" | "}
                     Discord: <span className="hover:text-foreground">@cloudysnowyday</span>
                   </p>
-                  <p className="mt-1">개인적으로 쓰려고 만들었어요 :)</p>
+                  <p className="mt-1">Twitter: <a href="https://twitter.com/TomatoO_O" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">@TomatoO_O</a></p>
                 </div>
               </footer>
             </div>

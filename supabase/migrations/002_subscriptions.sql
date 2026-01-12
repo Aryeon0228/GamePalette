@@ -1,11 +1,11 @@
--- Subscription table for tracking Stripe subscriptions
+-- Subscription table for tracking Lemon Squeezy subscriptions
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  stripe_customer_id TEXT UNIQUE,
-  stripe_subscription_id TEXT UNIQUE,
-  stripe_price_id TEXT,
-  status TEXT NOT NULL DEFAULT 'inactive', -- active, canceled, past_due, trialing, etc.
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  lemonsqueezy_subscription_id TEXT UNIQUE,
+  lemonsqueezy_customer_id TEXT,
+  lemonsqueezy_variant_id TEXT,
+  status TEXT NOT NULL DEFAULT 'inactive', -- active, on_trial, paused, past_due, unpaid, cancelled, expired
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
   cancel_at_period_end BOOLEAN DEFAULT FALSE,
@@ -13,13 +13,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add stripe_customer_id to profiles if not exists
-ALTER TABLE profiles
-ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE;
-
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer_id ON subscriptions(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_lemonsqueezy_subscription_id ON subscriptions(lemonsqueezy_subscription_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 
 -- RLS policies
@@ -40,7 +36,7 @@ CREATE OR REPLACE FUNCTION update_premium_status()
 RETURNS TRIGGER AS $$
 BEGIN
   UPDATE profiles
-  SET is_premium = (NEW.status = 'active' OR NEW.status = 'trialing')
+  SET is_premium = (NEW.status = 'active' OR NEW.status = 'on_trial')
   WHERE id = NEW.user_id;
   RETURN NEW;
 END;
