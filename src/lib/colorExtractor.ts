@@ -32,6 +32,7 @@ export async function extractColors(
   colorCount: number = 5,
   method: ExtractionMethod = 'histogram'
 ): Promise<Color[]> {
+  console.log('[extractColors] Called with colorCount:', colorCount, 'method:', method);
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -284,6 +285,7 @@ function getPixelDataArray(data: Uint8ClampedArray): PixelData[] {
 }
 
 function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number): RgbColor[] {
+  console.log('[HueHistogram] extractColorsFromHueHistogram called with colorCount:', colorCount);
   if (pixels.length === 0) {
     return Array(colorCount).fill({ r: 128, g: 128, b: 128 });
   }
@@ -422,11 +424,13 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   }
 
   // Sort by luminance (brightness)
-  return colors.slice(0, colorCount).sort((a, b) => {
+  const result = colors.slice(0, colorCount).sort((a, b) => {
     const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
     const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
     return lumB - lumA;
   });
+  console.log('[HueHistogram] Returning', result.length, 'colors (requested:', colorCount, ')');
+  return result;
 }
 
 function smoothHistogram(counts: number[]): number[] {
