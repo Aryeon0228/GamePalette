@@ -70,6 +70,14 @@ export function rgbToHsl(r: number, g: number, b: number): { h: number; s: numbe
   };
 }
 
+/**
+ * Calculate relative luminance of a color (ITU-R BT.601)
+ * Used for determining text contrast and color brightness
+ */
+export function calculateLuminance(r: number, g: number, b: number): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
 export function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
   h /= 360;
   s /= 100;
@@ -150,10 +158,20 @@ const colorNames: Record<string, string> = {
   '#FAF0E6': 'Linen',
 };
 
+// Cache for color name lookups to avoid repeated expensive calculations
+const colorNameCache = new Map<string, string>();
+
 export function getColorName(hex: string): string {
   const normalized = hex.toUpperCase();
+
+  // Check exact match first
   if (colorNames[normalized]) {
     return colorNames[normalized];
+  }
+
+  // Check cache for previously computed names
+  if (colorNameCache.has(normalized)) {
+    return colorNameCache.get(normalized)!;
   }
 
   // Find closest color
@@ -173,6 +191,9 @@ export function getColorName(hex: string): string {
       closestName = name;
     }
   }
+
+  // Cache the result
+  colorNameCache.set(normalized, closestName);
 
   return closestName;
 }

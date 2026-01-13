@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Copy, Check } from "lucide-react"
 import { Color } from "@/types"
-import { cn, copyToClipboard } from "@/lib/utils"
+import { cn, copyToClipboard, calculateLuminance } from "@/lib/utils"
 
 interface ColorCardProps {
   color: Color
@@ -21,8 +21,18 @@ export function ColorCard({ color, selected, onClick, showDetails = false }: Col
     setTimeout(() => setCopiedField(null), 2000)
   }
 
+  // Pre-compute formatted color strings
+  const rgbString = useMemo(
+    () => `rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`,
+    [color.rgb.r, color.rgb.g, color.rgb.b]
+  )
+  const hslString = useMemo(
+    () => `hsl(${color.hsl.h}, ${color.hsl.s}%, ${color.hsl.l}%)`,
+    [color.hsl.h, color.hsl.s, color.hsl.l]
+  )
+
   // Determine text color based on luminance
-  const luminance = 0.299 * color.rgb.r + 0.587 * color.rgb.g + 0.114 * color.rgb.b
+  const luminance = calculateLuminance(color.rgb.r, color.rgb.g, color.rgb.b)
   const textColor = luminance > 128 ? 'text-black' : 'text-white'
 
   if (showDetails) {
@@ -53,16 +63,16 @@ export function ColorCard({ color, selected, onClick, showDetails = false }: Col
 
           <CopyRow
             label="RGB"
-            value={`rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`}
+            value={rgbString}
             copied={copiedField === 'rgb'}
-            onCopy={() => handleCopy(`rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`, 'rgb')}
+            onCopy={() => handleCopy(rgbString, 'rgb')}
           />
 
           <CopyRow
             label="HSL"
-            value={`hsl(${color.hsl.h}, ${color.hsl.s}%, ${color.hsl.l}%)`}
+            value={hslString}
             copied={copiedField === 'hsl'}
-            onCopy={() => handleCopy(`hsl(${color.hsl.h}, ${color.hsl.s}%, ${color.hsl.l}%)`, 'hsl')}
+            onCopy={() => handleCopy(hslString, 'hsl')}
           />
         </div>
       </div>

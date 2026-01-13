@@ -1,12 +1,12 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient, SupabaseClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export function createClient() {
+export function createClient(): SupabaseClient | null {
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a dummy client during build time when env vars are not available
-    return null as any;
+    // Return null during build time when env vars are not available
+    return null;
   }
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }

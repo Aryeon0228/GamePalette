@@ -1,5 +1,5 @@
 import { Color, StyleType, CustomStyleSettings, ColorVariation, VariationStyle } from '@/types';
-import { hslToRgb, rgbToHex, getColorName } from './utils';
+import { hslToRgb, rgbToHex, getColorName, calculateLuminance } from './utils';
 
 export function applyStyleFilter(
   colors: Color[],
@@ -107,7 +107,7 @@ export function toGrayscale(colors: Color[]): Color[] {
   return colors.map(color => {
     const { r, g, b } = color.rgb;
     // Use luminance formula
-    const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    const gray = Math.round(calculateLuminance(r, g, b));
 
     const hex = rgbToHex(gray, gray, gray);
 

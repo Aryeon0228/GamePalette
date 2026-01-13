@@ -1,5 +1,5 @@
 import { Color } from '@/types';
-import { rgbToHex, rgbToHsl, getColorName } from './utils';
+import { rgbToHex, rgbToHsl, getColorName, calculateLuminance } from './utils';
 
 interface RgbColor {
   r: number;
@@ -177,9 +177,7 @@ function kMeansClustering(pixels: RgbColor[], k: number, maxIterations: number =
 
   // Sort by luminance (brightness)
   return centroids.sort((a, b) => {
-    const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-    const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
-    return lumB - lumA;
+    return calculateLuminance(b.r, b.g, b.b) - calculateLuminance(a.r, a.g, a.b);
   });
 }
 
@@ -444,9 +442,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
 
   // Sort by luminance (brightness) and ensure we return exactly colorCount colors
   return colors.slice(0, colorCount).sort((a, b) => {
-    const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-    const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
-    return lumB - lumA;
+    return calculateLuminance(b.r, b.g, b.b) - calculateLuminance(a.r, a.g, a.b);
   });
 }
 

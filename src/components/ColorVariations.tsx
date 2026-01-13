@@ -34,13 +34,22 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
     setTimeout(() => setCopiedHex(null), 1500)
   }
 
-  const variationSteps = [
-    { key: "shadow2", color: variations.shadow2, label: "S2", fullLabel: "Shadow 2", delta: -30 },
-    { key: "shadow1", color: variations.shadow1, label: "S1", fullLabel: "Shadow 1", delta: -15 },
-    { key: "midtone", color: variations.midtone, label: "Base", fullLabel: "Base", delta: 0 },
-    { key: "highlight1", color: variations.highlight1, label: "L1", fullLabel: "Light 1", delta: 15 },
-    { key: "highlight2", color: variations.highlight2, label: "L2", fullLabel: "Light 2", delta: 30 },
-  ]
+  const variationSteps = useMemo(() => {
+    const steps = [
+      { key: "shadow2", color: variations.shadow2, label: "S2", fullLabel: "Shadow 2", delta: -30 },
+      { key: "shadow1", color: variations.shadow1, label: "S1", fullLabel: "Shadow 1", delta: -15 },
+      { key: "midtone", color: variations.midtone, label: "Base", fullLabel: "Base", delta: 0 },
+      { key: "highlight1", color: variations.highlight1, label: "L1", fullLabel: "Light 1", delta: 15 },
+      { key: "highlight2", color: variations.highlight2, label: "L2", fullLabel: "Light 2", delta: 30 },
+    ]
+
+    // Pre-calculate hueDiff for each step
+    return steps.map(step => {
+      const hueDiff = step.color.hsl.h - color.hsl.h
+      const normalizedDiff = hueDiff > 180 ? hueDiff - 360 : hueDiff < -180 ? hueDiff + 360 : hueDiff
+      return { ...step, normalizedDiff }
+    })
+  }, [variations, color.hsl.h])
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -100,33 +109,28 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
 
         {/* Compact Labels */}
         <div className="flex bg-card/80 border-t border-border text-[10px]">
-          {variationSteps.map((step) => {
-            const hueDiff = step.color.hsl.h - color.hsl.h
-            const normalizedDiff = hueDiff > 180 ? hueDiff - 360 : hueDiff < -180 ? hueDiff + 360 : hueDiff
-
-            return (
-              <div
-                key={step.key}
-                className={cn(
-                  "flex-1 py-1.5 px-1 text-center border-r border-border last:border-r-0",
-                  step.key === "midtone" && "bg-primary/10"
+          {variationSteps.map((step) => (
+            <div
+              key={step.key}
+              className={cn(
+                "flex-1 py-1.5 px-1 text-center border-r border-border last:border-r-0",
+                step.key === "midtone" && "bg-primary/10"
+              )}
+            >
+              <p className="font-medium text-foreground">{step.color.hex}</p>
+              <p className="text-muted-foreground">
+                L:{step.color.hsl.l}%
+                {style === "stylized" && step.key !== "midtone" && step.normalizedDiff !== 0 && (
+                  <span className={cn(
+                    "ml-1",
+                    step.normalizedDiff > 0 ? "text-blue-400" : "text-orange-400"
+                  )}>
+                    H:{step.normalizedDiff > 0 ? "+" : ""}{step.normalizedDiff}°
+                  </span>
                 )}
-              >
-                <p className="font-medium text-foreground">{step.color.hex}</p>
-                <p className="text-muted-foreground">
-                  L:{step.color.hsl.l}%
-                  {style === "stylized" && step.key !== "midtone" && normalizedDiff !== 0 && (
-                    <span className={cn(
-                      "ml-1",
-                      normalizedDiff > 0 ? "text-blue-400" : "text-orange-400"
-                    )}>
-                      H:{normalizedDiff > 0 ? "+" : ""}{normalizedDiff}°
-                    </span>
-                  )}
-                </p>
-              </div>
-            )
-          })}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -186,48 +190,43 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
               </tr>
             </thead>
             <tbody>
-              {variationSteps.map((step) => {
-                const hueDiff = step.color.hsl.h - color.hsl.h
-                const normalizedDiff = hueDiff > 180 ? hueDiff - 360 : hueDiff < -180 ? hueDiff + 360 : hueDiff
-
-                return (
-                  <tr
-                    key={step.key}
-                    className={cn(
-                      "border-t border-border",
-                      step.key === "midtone" && "bg-primary/5"
-                    )}
-                  >
-                    <td className="px-2 py-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <div
-                          className="w-3 h-3 rounded-sm"
-                          style={{ backgroundColor: step.color.hex }}
-                        />
-                        <span>{step.fullLabel}</span>
-                      </div>
-                    </td>
-                    <td className="px-2 py-1.5 font-mono">
-                      {step.color.hsl.l}
-                      <span className="text-muted-foreground text-[10px] ml-0.5">
-                        ({step.delta >= 0 ? "+" : ""}{step.delta})
+              {variationSteps.map((step) => (
+                <tr
+                  key={step.key}
+                  className={cn(
+                    "border-t border-border",
+                    step.key === "midtone" && "bg-primary/5"
+                  )}
+                >
+                  <td className="px-2 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: step.color.hex }}
+                      />
+                      <span>{step.fullLabel}</span>
+                    </div>
+                  </td>
+                  <td className="px-2 py-1.5 font-mono">
+                    {step.color.hsl.l}
+                    <span className="text-muted-foreground text-[10px] ml-0.5">
+                      ({step.delta >= 0 ? "+" : ""}{step.delta})
+                    </span>
+                  </td>
+                  <td className="px-2 py-1.5 font-mono">{step.color.hsl.h}</td>
+                  <td className="px-2 py-1.5 font-mono">
+                    {step.key === "midtone" ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <span className={cn(
+                        step.normalizedDiff > 0 ? "text-blue-400" : step.normalizedDiff < 0 ? "text-orange-400" : ""
+                      )}>
+                        {step.normalizedDiff > 0 ? "+" : ""}{step.normalizedDiff}
                       </span>
-                    </td>
-                    <td className="px-2 py-1.5 font-mono">{step.color.hsl.h}</td>
-                    <td className="px-2 py-1.5 font-mono">
-                      {step.key === "midtone" ? (
-                        <span className="text-muted-foreground">—</span>
-                      ) : (
-                        <span className={cn(
-                          normalizedDiff > 0 ? "text-blue-400" : normalizedDiff < 0 ? "text-orange-400" : ""
-                        )}>
-                          {normalizedDiff > 0 ? "+" : ""}{normalizedDiff}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
