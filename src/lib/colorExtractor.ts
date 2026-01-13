@@ -32,7 +32,6 @@ export async function extractColors(
   colorCount: number = 5,
   method: ExtractionMethod = 'histogram'
 ): Promise<Color[]> {
-  console.log('[extractColors] Called with colorCount:', colorCount, 'method:', method);
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -285,7 +284,6 @@ function getPixelDataArray(data: Uint8ClampedArray): PixelData[] {
 }
 
 function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number): RgbColor[] {
-  console.log('[HueHistogram] extractColorsFromHueHistogram called with colorCount:', colorCount);
   if (pixels.length === 0) {
     return Array(colorCount).fill({ r: 128, g: 128, b: 128 });
   }
@@ -325,16 +323,30 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
   // Find peaks in the histogram
   const peaks = findPeaks(smoothedCounts, histogram);
 
-  // Calculate average saturation for each peak and create a score
-  // Score = count × (avgSaturation / 100) to prioritize vibrant colors
+  // Calculate average saturation and lightness for each peak and create a score
+  // Use sqrt(count) to reduce dominance of large areas, prioritize vivid colors
   const peaksWithScore = peaks.map(peak => {
     const avgSat = peak.pixels.length > 0
       ? peak.pixels.reduce((sum, p) => sum + p.hsl.s, 0) / peak.pixels.length
       : 0;
+    const avgLightness = peak.pixels.length > 0
+      ? peak.pixels.reduce((sum, p) => sum + p.hsl.l, 0) / peak.pixels.length
+      : 50;
+
+    // Lightness penalty: too dark (<20) or too light (>80) colors get lower score
+    const lightnessScore = avgLightness >= 20 && avgLightness <= 80
+      ? 1.0
+      : 0.5 + 0.5 * (1 - Math.abs(avgLightness - 50) / 50);
+
+    // Score: sqrt(count) reduces large area dominance, saturation^2 strongly prefers vivid colors
+    const satNormalized = avgSat / 100;
+    const score = Math.sqrt(peak.count) * (satNormalized * satNormalized) * lightnessScore * 100;
+
     return {
       ...peak,
       avgSaturation: avgSat,
-      score: peak.count * (0.3 + avgSat / 100) // Base 0.3 + saturation bonus
+      avgLightness,
+      score: Math.max(score, peak.count * 0.01) // Ensure minimum score based on count
     };
   });
 
@@ -343,14 +355,14 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
 
   // Calculate total chromatic pixels
   const totalChromatic = chromaticPixels.length;
-  const minThreshold = totalChromatic * 0.02; // 2% minimum threshold
+  const minThreshold = totalChromatic * 0.005; // 0.5% minimum threshold (lowered from 2%)
 
-  // Select colors: prioritize high-frequency peaks, ensure minimum threshold inclusion
-  type ScoredBin = HueBin & { avgSaturation: number; score: number };
+  // Select colors: prioritize high-score peaks (vivid colors)
+  type ScoredBin = HueBin & { avgSaturation: number; avgLightness: number; score: number };
   const selectedBins: ScoredBin[] = [];
   const usedHues: number[] = [];
 
-  // First pass: include all peaks above minimum threshold
+  // First pass: include peaks above minimum threshold with hue distance check
   for (const peak of peaksWithScore) {
     if (peak.count >= minThreshold && selectedBins.length < colorCount) {
       // Check if this hue is too close to already selected hues
@@ -360,7 +372,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
           Math.abs(peak.hue - usedHue),
           360 - Math.abs(peak.hue - usedHue)
         );
-        if (hueDiff < 30) {
+        if (hueDiff < 25) { // Reduced from 30 to allow more color variety
           tooClose = true;
           break;
         }
@@ -373,7 +385,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
     }
   }
 
-  // Second pass: fill remaining slots with weighted selection
+  // Second pass: fill remaining slots with relaxed hue distance
   for (const peak of peaksWithScore) {
     if (selectedBins.length >= colorCount) break;
     if (selectedBins.includes(peak)) continue;
@@ -384,7 +396,7 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
         Math.abs(peak.hue - usedHue),
         360 - Math.abs(peak.hue - usedHue)
       );
-      if (hueDiff < 20) {
+      if (hueDiff < 15) { // Reduced from 20 to allow more color variety
         tooClose = true;
         break;
       }
@@ -401,36 +413,41 @@ function extractColorsFromHueHistogram(pixels: PixelData[], colorCount: number):
     return getRepresentativeColor(bin.pixels);
   });
 
-  // Add achromatic color if we have space and significant achromatic pixels
-  if (colors.length < colorCount && achromaticPixels.length > pixels.length * 0.1) {
-    const achromaticColor = getRepresentativeColor(achromaticPixels);
-    colors.push(achromaticColor);
-  }
-
-  // Fill remaining slots with next best peaks
+  // Fill remaining slots with next best peaks (relaxed hue distance)
   while (colors.length < colorCount) {
-    if (chromaticPixels.length > 0) {
-      const remainingPeaks = peaksWithScore.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
-      if (remainingPeaks.length > 0) {
-        const nextPeak = remainingPeaks[0];
-        colors.push(getRepresentativeColor(nextPeak.pixels));
-        selectedBins.push(nextPeak);
-      } else {
-        break;
-      }
+    const remainingPeaks = peaksWithScore.filter(p => !selectedBins.includes(p) && p.pixels.length > 0);
+    if (remainingPeaks.length > 0) {
+      const nextPeak = remainingPeaks[0];
+      colors.push(getRepresentativeColor(nextPeak.pixels));
+      selectedBins.push(nextPeak);
     } else {
       break;
     }
   }
 
-  // Sort by luminance (brightness)
-  const result = colors.slice(0, colorCount).sort((a, b) => {
+  // Add achromatic colors if we still have space (sorted by luminance to get variety)
+  if (colors.length < colorCount && achromaticPixels.length > 0) {
+    // Sort achromatic pixels by luminance and split into groups
+    const sortedAchromatic = [...achromaticPixels].sort((a, b) => b.hsl.l - a.hsl.l);
+    const slotsNeeded = colorCount - colors.length;
+    const groupSize = Math.ceil(sortedAchromatic.length / slotsNeeded);
+
+    for (let i = 0; i < slotsNeeded && colors.length < colorCount; i++) {
+      const start = i * groupSize;
+      const end = Math.min(start + groupSize, sortedAchromatic.length);
+      const group = sortedAchromatic.slice(start, end);
+      if (group.length > 0) {
+        colors.push(getRepresentativeColor(group));
+      }
+    }
+  }
+
+  // Sort by luminance (brightness) and ensure we return exactly colorCount colors
+  return colors.slice(0, colorCount).sort((a, b) => {
     const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
     const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
     return lumB - lumA;
   });
-  console.log('[HueHistogram] Returning', result.length, 'colors (requested:', colorCount, ')');
-  return result;
 }
 
 function smoothHistogram(counts: number[]): number[] {

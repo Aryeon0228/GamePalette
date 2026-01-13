@@ -110,8 +110,6 @@ export default function CreatePage() {
     const imageToUse = extractionImageUrl || sourceImageUrl
     if (!imageToUse) return
 
-    console.log('[CreatePage] handleReextract called with colorCount:', colorCount, 'method:', extractionMethod)
-
     // Increment extraction ID to track this specific request
     const currentExtractionId = ++extractionIdRef.current
 
@@ -166,9 +164,7 @@ export default function CreatePage() {
   // Re-extract when colorCount changes (only if we already have colors)
   const prevColorCountRef = useRef(colorCount)
   useEffect(() => {
-    console.log('[CreatePage] colorCount useEffect triggered, prev:', prevColorCountRef.current, 'current:', colorCount)
     if (prevColorCountRef.current !== colorCount) {
-      console.log('[CreatePage] colorCount changed, triggering re-extraction')
       prevColorCountRef.current = colorCount
       handleReextractRef.current()
     }
