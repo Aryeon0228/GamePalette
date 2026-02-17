@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckout, getLemonSqueezyConfig } from '@/lib/lemonsqueezy/server';
 
+function getCheckoutRedirectUrl(request: NextRequest): string {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (configuredSiteUrl) {
+    try {
+      return new URL('/pricing?success=true', configuredSiteUrl).toString();
+    } catch (error) {
+      console.error('Invalid NEXT_PUBLIC_SITE_URL:', error);
+    }
+  }
+
+  return new URL('/pricing?success=true', request.nextUrl.origin).toString();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const config = getLemonSqueezyConfig();
@@ -29,14 +43,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
-    const redirectUrl = `${origin}/pricing?success=true`;
+    if (!user.email) {
+      return NextResponse.json(
+        { error: 'User email is missing' },
+        { status: 400 }
+      );
+    }
+
+    const redirectUrl = getCheckoutRedirectUrl(request);
 
     // Create checkout session
     const checkoutUrl = await createCheckout({
       variantId: config.variantId!,
       userId: user.id,
-      userEmail: user.email!,
+      userEmail: user.email,
       userName: user.user_metadata?.full_name,
       redirectUrl,
     });

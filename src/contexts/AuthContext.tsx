@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
@@ -117,6 +117,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, fetchProfile]);
 
+  const getOAuthRedirectUrl = () => {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      try {
+        return new URL('/auth/callback', siteUrl).toString();
+      } catch (error) {
+        console.error('Invalid NEXT_PUBLIC_SITE_URL:', error);
+      }
+    }
+
+    return `${window.location.origin}/auth/callback`;
+  };
+
   const signInWithGoogle = async () => {
     if (!supabase) {
       throw new Error('Supabase is not configured');
@@ -125,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getOAuthRedirectUrl(),
       },
     });
 
