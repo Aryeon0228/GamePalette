@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { Upload, Link as LinkIcon, Image as ImageIcon, X } from "lucide-react"
+import { IoCloudUploadOutline, IoLinkOutline, IoImageOutline, IoCloseOutline } from "react-icons/io5"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -146,7 +146,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
             className="absolute top-2 right-2"
             onClick={onClear}
           >
-            <X className="h-4 w-4" />
+            <IoCloseOutline className="h-4 w-4" />
           </Button>
         )}
       </div>
@@ -178,7 +178,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
 
         <div className="flex flex-col items-center space-y-4">
           <div className="p-4 rounded-full bg-muted">
-            <Upload className="h-8 w-8 text-muted-foreground" />
+            <IoCloudUploadOutline className="h-8 w-8 text-muted-foreground" />
           </div>
 
           <div className="space-y-2">
@@ -191,7 +191,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
           </div>
 
           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-            <ImageIcon className="h-4 w-4" />
+            <IoImageOutline className="h-4 w-4" />
             <span>PNG, JPG, GIF up to 10MB</span>
           </div>
         </div>
@@ -225,7 +225,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
           className="w-full"
           onClick={() => setShowUrlInput(true)}
         >
-          <LinkIcon className="h-4 w-4 mr-2" />
+          <IoLinkOutline className="h-4 w-4 mr-2" />
           Load from URL
         </Button>
       )}

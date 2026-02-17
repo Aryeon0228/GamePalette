@@ -4,6 +4,7 @@ import { Palette, Color, StyleType, CustomStyleSettings, Folder } from '@/types'
 import { generateId } from '@/lib/utils';
 import { applyStyleFilter, toGrayscale, defaultCustomSettings } from '@/lib/styleFilters';
 import { ExtractionMethod } from '@/lib/colorExtractor';
+import { applyColorBlindnessToColors, ColorBlindnessType } from '@/lib/colorVision';
 
 interface PaletteState {
   // Current editing state
@@ -12,6 +13,7 @@ interface PaletteState {
   currentStyle: StyleType;
   customSettings: CustomStyleSettings;
   valueCheckEnabled: boolean;
+  colorBlindMode: ColorBlindnessType;
   colorCount: number;
   sourceImageUrl: string | null;
   extractionMethod: ExtractionMethod;
@@ -26,6 +28,7 @@ interface PaletteState {
   setCurrentStyle: (style: StyleType) => void;
   setCustomSettings: (settings: CustomStyleSettings) => void;
   toggleValueCheck: () => void;
+  setColorBlindMode: (mode: ColorBlindnessType) => void;
   setColorCount: (count: number) => void;
   setSourceImageUrl: (url: string | null) => void;
   setExtractionMethod: (method: ExtractionMethod) => void;
@@ -58,6 +61,7 @@ export const usePaletteStore = create<PaletteState>()(
       currentStyle: 'original',
       customSettings: defaultCustomSettings,
       valueCheckEnabled: false,
+      colorBlindMode: 'none',
       colorCount: 5,
       sourceImageUrl: null,
       extractionMethod: 'histogram',
@@ -100,6 +104,8 @@ export const usePaletteStore = create<PaletteState>()(
 
       toggleValueCheck: () => set((state) => ({ valueCheckEnabled: !state.valueCheckEnabled })),
 
+      setColorBlindMode: (mode) => set({ colorBlindMode: mode }),
+
       setColorCount: (count) => set({ colorCount: count }),
 
       setSourceImageUrl: (url) => set({ sourceImageUrl: url }),
@@ -120,10 +126,8 @@ export const usePaletteStore = create<PaletteState>()(
       getDisplayColors: () => {
         const state = get();
         if (!state.currentPalette) return [];
-        if (state.valueCheckEnabled) {
-          return toGrayscale(state.currentPalette.colors);
-        }
-        return state.currentPalette.colors;
+        const cvdColors = applyColorBlindnessToColors(state.currentPalette.colors, state.colorBlindMode);
+        return state.valueCheckEnabled ? toGrayscale(cvdColors) : cvdColors;
       },
 
       // Library actions
@@ -220,6 +224,7 @@ export const usePaletteStore = create<PaletteState>()(
         folders: state.folders,
         colorCount: state.colorCount,
         extractionMethod: state.extractionMethod,
+        colorBlindMode: state.colorBlindMode,
       }),
     }
   )

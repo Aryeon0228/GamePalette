@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Palette, Eye, Download, Sparkles, Info } from "lucide-react"
+import type { IconType } from "react-icons"
+import {
+  IoArrowForwardOutline,
+  IoColorPaletteOutline,
+  IoEyeOutline,
+  IoDownloadOutline,
+  IoSparklesOutline,
+  IoInformationCircleOutline,
+  IoStatsChartOutline,
+  IoColorFilterOutline,
+} from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { ImageUploader } from "@/components/ImageUploader"
 import { PalettePreview } from "@/components/PaletteDisplay"
@@ -11,36 +21,55 @@ import { usePaletteStore } from "@/stores/paletteStore"
 import { extractColors } from "@/lib/colorExtractor"
 import { generateId } from "@/lib/utils"
 
-const features = [
+interface FeatureItem {
+  icon: IconType
+  title: string
+  description: string
+  accent: string
+}
+
+const features: FeatureItem[] = [
   {
-    icon: Palette,
-    title: "Style Filters",
-    description: "Transform palettes to Hyper-casual, Stylized, or Realistic game art styles",
+    icon: IoColorPaletteOutline,
+    title: "Style Presets",
+    description: "Switch palettes across hyper, stylized, and realistic game-art tones.",
+    accent: "#4f7bb8",
   },
   {
-    icon: Eye,
+    icon: IoEyeOutline,
     title: "Value Check",
-    description: "Preview colors in grayscale to ensure proper contrast and readability",
+    description: "Validate contrast and readability using grayscale previews.",
+    accent: "#34d399",
   },
   {
-    icon: Download,
-    title: "Engine Export",
-    description: "Export to Unity ScriptableObject, Unreal DataTable, or web formats",
+    icon: IoDownloadOutline,
+    title: "Flexible Export",
+    description: "Export moodboards, SNS cards, and engine-ready formats quickly.",
+    accent: "#60a5fa",
   },
   {
-    icon: Sparkles,
+    icon: IoSparklesOutline,
     title: "Smart Extraction",
-    description: "K-means clustering algorithm for accurate dominant color extraction",
+    description: "Use Histogram or K-Means extraction based on your reference art.",
+    accent: "#fbbf24",
   },
 ]
 
 export default function HomePage() {
   const router = useRouter()
-  const { savedPalettes, setCurrentPalette, setOriginalColors, setSourceImageUrl, colorCount, extractionMethod, setExtractionMethod } = usePaletteStore()
+  const {
+    savedPalettes,
+    setCurrentPalette,
+    setOriginalColors,
+    setSourceImageUrl,
+    colorCount,
+    extractionMethod,
+    setExtractionMethod,
+  } = usePaletteStore()
+
   const [isExtracting, setIsExtracting] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // Wait for Zustand hydration to complete
   useEffect(() => {
     setIsHydrated(true)
   }, [])
@@ -75,71 +104,73 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container py-12 space-y-16">
-      {/* Hero Section */}
-      <section className="text-center space-y-6">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold">
-          <span className="gradient-text">Color Palette Tool</span>
+    <div className="container py-10 space-y-14">
+      <section className="text-center space-y-5">
+        <div className="inline-flex items-center rounded-full border border-[#2d2d38] bg-[#16161e] px-3 py-1 text-xs text-muted-foreground">
+          Pixel Paw Web Studio
+        </div>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.025em]">
+          <span className="gradient-text">Extract. Refine. Export.</span>
           <br />
-          for Game Artists
+          Color Workflow for Game Art
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Extract colors from reference images, transform them to match your game&apos;s style,
-          and export directly to Unity or Unreal Engine.
+          Bring reference art into a production-ready palette pipeline with style presets,
+          value checks, and export presets tuned for game workflows.
         </p>
       </section>
 
-      {/* Upload Section */}
-      <section className="max-w-2xl mx-auto">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <ImageUploader
-            onImageLoad={handleImageLoad}
-          />
+      <section className="max-w-3xl mx-auto">
+        <div className="rounded-2xl border border-[#2d2d38] bg-[#16161e]/95 p-6 shadow-[0_16px_44px_rgba(0,0,0,0.35)]">
+          <ImageUploader onImageLoad={handleImageLoad} />
 
-          {/* Extraction Method Selection */}
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm text-muted-foreground">Extraction Method:</span>
-              <div className="relative group">
-                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover border border-border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <p className="text-xs text-popover-foreground mb-2">
-                    <strong>Hue Histogram:</strong> Analyzes color distribution by hue values. Better for images with distinct color regions and produces more vibrant results.
-                  </p>
-                  <p className="text-xs text-popover-foreground">
-                    <strong>K-Means:</strong> Groups similar pixels using clustering algorithm. Better for photos with subtle color variations and gradients.
-                  </p>
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-border"></div>
+          <div className="mt-5 rounded-xl border border-[#2d2d38] bg-[#1a1a24] px-4 py-3">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <span>Extraction Method</span>
+                <div className="relative group">
+                  <IoInformationCircleOutline className="w-4 h-4 cursor-help text-[#a0a0b0]" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 rounded-lg bg-[#101018] border border-[#2d2d38] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-left">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <strong className="text-foreground">Hue Histogram:</strong> Strong for stylized art with distinct color regions.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong className="text-foreground">K-Means:</strong> Better for photo references and subtle gradients.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex rounded-lg border border-border overflow-hidden">
-              <button
-                onClick={() => setExtractionMethod('histogram')}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isHydrated && extractionMethod === 'histogram'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background hover:bg-muted text-muted-foreground'
-                }`}
-              >
-                Hue Histogram
-              </button>
-              <button
-                onClick={() => setExtractionMethod('kmeans')}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isHydrated && extractionMethod === 'kmeans'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background hover:bg-muted text-muted-foreground'
-                }`}
-              >
-                K-Means
-              </button>
+              <div className="flex rounded-xl border border-[#2d2d38] overflow-hidden">
+                <button
+                  onClick={() => setExtractionMethod("histogram")}
+                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    isHydrated && extractionMethod === "histogram"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent hover:bg-[#24242e] text-muted-foreground"
+                  }`}
+                >
+                  <IoStatsChartOutline className="h-4 w-4" />
+                  Hue Histogram
+                </button>
+                <button
+                  onClick={() => setExtractionMethod("kmeans")}
+                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    isHydrated && extractionMethod === "kmeans"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent hover:bg-[#24242e] text-muted-foreground"
+                  }`}
+                >
+                  <IoColorFilterOutline className="h-4 w-4" />
+                  K-Means
+                </button>
+              </div>
             </div>
           </div>
+
           {isExtracting && (
             <div className="mt-4 text-center text-muted-foreground">
               <div className="inline-block animate-spin mr-2">
-                <Palette className="h-5 w-5" />
+                <IoColorPaletteOutline className="h-5 w-5" />
               </div>
               Extracting colors...
             </div>
@@ -147,7 +178,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Recent Palettes */}
       {recentPalettes.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -155,7 +185,7 @@ export default function HomePage() {
             <Button variant="ghost" size="sm" asChild>
               <Link href="/library">
                 View all
-                <ArrowRight className="h-4 w-4 ml-1" />
+                <IoArrowForwardOutline className="h-4 w-4 ml-1" />
               </Link>
             </Button>
           </div>
@@ -165,12 +195,12 @@ export default function HomePage() {
               <Link
                 key={palette.id}
                 href={`/palette/${palette.id}`}
-                className="block rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors"
+                className="block rounded-xl border border-[#2d2d38] bg-[#16161e] p-4 hover:border-[#4f7bb8] transition-colors"
               >
-                <PalettePreview colors={palette.colors} className="mb-3" />
-                <div className="flex items-center justify-between">
+                <PalettePreview colors={palette.colors} className="mb-3 h-10 rounded-lg" />
+                <div className="flex items-center justify-between gap-3">
                   <span className="font-medium truncate">{palette.name}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {palette.colors.length} colors
                   </span>
                 </div>
@@ -180,38 +210,37 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Features Section */}
       <section className="space-y-8">
-        <h2 className="text-2xl font-semibold text-center">
-          Built for Game Development Workflow
+        <h2 className="text-2xl font-semibold text-center tracking-tight">
+          Built for Game Production Flow
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-lg border border-border bg-card p-6 space-y-4"
+              className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-5 space-y-3"
             >
-              <div className="inline-flex p-3 rounded-lg bg-primary/10">
-                <feature.icon className="h-6 w-6 text-primary" />
+              <div
+                className="inline-flex p-2.5 rounded-lg"
+                style={{ backgroundColor: `${feature.accent}20` }}
+              >
+                <feature.icon className="h-5 w-5" style={{ color: feature.accent }} />
               </div>
               <h3 className="font-semibold">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {feature.description}
-              </p>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="text-center space-y-6 py-12">
-        <h2 className="text-3xl font-bold">Ready to create stunning game palettes?</h2>
-        <div className="flex items-center justify-center gap-4">
-          <Button size="lg" asChild>
+      <section className="text-center space-y-5 py-8">
+        <h2 className="text-3xl font-bold tracking-tight">Ready to open your next palette?</h2>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <Button size="lg" className="bg-primary hover:bg-primary/90" asChild>
             <Link href="/create">
               Start Creating
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <IoArrowForwardOutline className="h-4 w-4 ml-2" />
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>

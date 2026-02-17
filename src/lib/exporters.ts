@@ -22,6 +22,88 @@ function roundRect(
   ctx.closePath();
 }
 
+export type SnsCardType = 'instagram' | 'twitter';
+
+export interface PngExportOptions {
+  mode?: 'moodboard' | 'sns';
+  snsCardType?: SnsCardType;
+  showHex?: boolean;
+  showStats?: boolean;
+  showHistogram?: boolean;
+}
+
+function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Failed to create blob'));
+    }, 'image/png');
+  });
+}
+
+function getLuminance(color: Color): number {
+  return Math.round(0.299 * color.rgb.r + 0.587 * color.rgb.g + 0.114 * color.rgb.b);
+}
+
+function buildLuminanceBins(colors: Color[], binCount: number = 20): number[] {
+  const bins = Array.from({ length: binCount }, () => 0);
+  if (colors.length === 0) return bins;
+
+  for (const color of colors) {
+    const luminance = getLuminance(color);
+    const index = Math.min(binCount - 1, Math.floor((luminance / 256) * binCount));
+    bins[index] += 1;
+  }
+
+  return bins;
+}
+
+async function renderSourceImage(
+  ctx: CanvasRenderingContext2D,
+  sourceImageUrl: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+): Promise<void> {
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error('Failed to load source image'));
+    image.src = sourceImageUrl;
+  });
+
+  ctx.save();
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.clip();
+  const imgAspect = image.width / image.height;
+  const boxAspect = width / height;
+  let drawWidth = width;
+  let drawHeight = height;
+  let offsetX = x;
+  let offsetY = y;
+
+  if (imgAspect > boxAspect) {
+    drawHeight = height;
+    drawWidth = height * imgAspect;
+    offsetX = x - (drawWidth - width) / 2;
+  } else {
+    drawWidth = width;
+    drawHeight = width / imgAspect;
+    offsetY = y - (drawHeight - height) / 2;
+  }
+  ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+  ctx.restore();
+
+  roundRect(ctx, x, y, width, height, radius);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
 export function exportToPng(palette: Palette): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -196,7 +278,7 @@ export function exportToPng(palette: Palette): Promise<Blob> {
         ctx.font = '12px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('Made with GamePalette', canvasWidth - padding, canvasHeight - 16);
+        ctx.fillText('Made with Pixel Paw', canvasWidth - padding, canvasHeight - 16);
 
         canvas.toBlob((blob) => {
           if (blob) {
@@ -216,7 +298,7 @@ export function exportToPng(palette: Palette): Promise<Blob> {
         ctx.font = '12px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('Made with GamePalette', canvasWidth - padding, canvasHeight - 16);
+        ctx.fillText('Made with Pixel Paw', canvasWidth - padding, canvasHeight - 16);
 
         canvas.toBlob((blob) => {
           if (blob) {
@@ -238,7 +320,7 @@ export function exportToPng(palette: Palette): Promise<Blob> {
       ctx.font = '12px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('Made with GamePalette', canvasWidth - padding, canvasHeight - 16);
+      ctx.fillText('Made with Pixel Paw', canvasWidth - padding, canvasHeight - 16);
 
       canvas.toBlob((blob) => {
         if (blob) {
@@ -249,6 +331,148 @@ export function exportToPng(palette: Palette): Promise<Blob> {
       }, 'image/png');
     }
   });
+}
+
+export async function exportToSnsPng(
+  palette: Palette,
+  options: PngExportOptions = {}
+): Promise<Blob> {
+  const cardType: SnsCardType = options.snsCardType ?? 'instagram';
+  const showHex = options.showHex ?? true;
+  const showStats = options.showStats ?? true;
+  const showHistogram = options.showHistogram ?? true;
+
+  const width = cardType === 'twitter' ? 1600 : 1080;
+  const height = cardType === 'twitter' ? 900 : 1080;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get canvas context');
+
+  const padding = cardType === 'twitter' ? 56 : 64;
+  const topAreaHeight = cardType === 'twitter' ? 360 : 420;
+  const stripHeight = cardType === 'twitter' ? 180 : 220;
+  const bottomAreaTop = padding + topAreaHeight + 24 + stripHeight + 24;
+  const contentWidth = width - padding * 2;
+  const sourceImageSize = cardType === 'twitter' ? 320 : 360;
+
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, '#121417');
+  gradient.addColorStop(1, '#1E2329');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  roundRect(ctx, padding, padding, contentWidth, height - padding * 2, 26);
+  ctx.fill();
+
+  ctx.fillStyle = '#F9FAFB';
+  ctx.font = `700 ${cardType === 'twitter' ? 52 : 56}px ui-sans-serif, system-ui`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(palette.name || 'Pixel Paw', padding + 28, padding + 24);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = `500 ${cardType === 'twitter' ? 22 : 24}px ui-sans-serif, system-ui`;
+  ctx.fillText(
+    `${palette.colors.length} colors`,
+    padding + 28,
+    padding + (cardType === 'twitter' ? 94 : 100)
+  );
+
+  const imageX = width - padding - sourceImageSize - 28;
+  const imageY = padding + 24;
+  if (palette.sourceImageUrl) {
+    try {
+      await renderSourceImage(ctx, palette.sourceImageUrl, imageX, imageY, sourceImageSize, sourceImageSize, 18);
+    } catch {
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      roundRect(ctx, imageX, imageY, sourceImageSize, sourceImageSize, 18);
+      ctx.fill();
+    }
+  }
+
+  const stripY = padding + topAreaHeight + 24;
+  const colors = palette.colors.slice(0, 8);
+  const swatchGap = 10;
+  const swatchWidth = (contentWidth - swatchGap * (colors.length - 1)) / Math.max(colors.length, 1);
+  colors.forEach((color, index) => {
+    const x = padding + index * (swatchWidth + swatchGap);
+    roundRect(ctx, x, stripY, swatchWidth, stripHeight, 16);
+    ctx.fillStyle = color.hex;
+    ctx.fill();
+
+    if (showHex) {
+      ctx.fillStyle = getLuminance(color) > 140 ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.94)';
+      ctx.font = `700 ${cardType === 'twitter' ? 22 : 24}px ui-monospace, SFMono-Regular, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(color.hex.toUpperCase(), x + swatchWidth / 2, stripY + stripHeight / 2);
+    }
+  });
+
+  if (showStats) {
+    const chipY = bottomAreaTop;
+    const averageLuminance =
+      colors.length > 0
+        ? Math.round(colors.reduce((sum, color) => sum + getLuminance(color), 0) / colors.length)
+        : 0;
+    const chips = [
+      `Style: ${palette.style}`,
+      `Avg Luma: ${averageLuminance}`,
+      `Export: ${cardType === 'twitter' ? '16:9' : '1:1'}`,
+    ];
+
+    let chipX = padding;
+    for (const chip of chips) {
+      ctx.font = `600 ${cardType === 'twitter' ? 20 : 21}px ui-sans-serif, system-ui`;
+      const textWidth = ctx.measureText(chip).width;
+      const chipWidth = textWidth + 28;
+      roundRect(ctx, chipX, chipY, chipWidth, 42, 21);
+      ctx.fillStyle = 'rgba(255,255,255,0.13)';
+      ctx.fill();
+
+      ctx.fillStyle = '#F3F4F6';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(chip, chipX + 14, chipY + 21);
+
+      chipX += chipWidth + 10;
+    }
+  }
+
+  if (showHistogram) {
+    const graphHeight = cardType === 'twitter' ? 120 : 132;
+    const graphY = height - padding - graphHeight - 18;
+    const graphWidth = contentWidth;
+    const bins = buildLuminanceBins(colors, 24);
+    const maxBin = Math.max(...bins, 1);
+    const barGap = 4;
+    const barWidth = (graphWidth - barGap * (bins.length - 1)) / bins.length;
+
+    roundRect(ctx, padding, graphY - 26, graphWidth, graphHeight + 36, 16);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fill();
+
+    bins.forEach((value, index) => {
+      const normalized = value / maxBin;
+      const barHeight = Math.max(4, normalized * graphHeight);
+      const x = padding + index * (barWidth + barGap);
+      const y = graphY + graphHeight - barHeight;
+      ctx.fillStyle = 'rgba(96,165,250,0.9)';
+      roundRect(ctx, x, y, barWidth, barHeight, 4);
+      ctx.fill();
+    });
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = `500 ${cardType === 'twitter' ? 18 : 20}px ui-sans-serif, system-ui`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Made with Pixel Paw', width - padding - 12, height - padding - 10);
+
+  return toBlob(canvas);
 }
 
 export function exportToJson(palette: Palette): string {
@@ -307,7 +531,7 @@ export function exportToUnity(palette: Palette): string {
   return `// ${palette.name}.cs
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewPalette", menuName = "GamePalette/Palette")]
+[CreateAssetMenu(fileName = "NewPalette", menuName = "PixelPaw/Palette")]
 public class ${palette.name.replace(/[^a-zA-Z0-9]/g, '')}Palette : ScriptableObject
 {
     public string paletteName = "${palette.name}";
@@ -348,12 +572,19 @@ export function downloadFile(content: string | Blob, filename: string, mimeType?
   URL.revokeObjectURL(url);
 }
 
-export async function exportPalette(palette: Palette, format: ExportFormat): Promise<void> {
+export async function exportPalette(
+  palette: Palette,
+  format: ExportFormat,
+  pngOptions: PngExportOptions = {}
+): Promise<void> {
   const safeName = palette.name.replace(/[^a-zA-Z0-9-_]/g, '_');
 
   switch (format) {
     case 'png': {
-      const blob = await exportToPng(palette);
+      const blob =
+        pngOptions.mode === 'sns'
+          ? await exportToSnsPng(palette, pngOptions)
+          : await exportToPng(palette);
       downloadFile(blob, `${safeName}.png`);
       break;
     }

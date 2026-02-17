@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Check } from "lucide-react"
+import { IoCopyOutline, IoCheckmarkOutline } from "react-icons/io5"
 import { Color } from "@/types"
 import { cn, copyToClipboard } from "@/lib/utils"
 
@@ -95,9 +95,9 @@ export function ColorCard({ color, selected, onClick, showDetails = false }: Col
             className="p-1 rounded hover:bg-white/20 transition-colors"
           >
             {copiedField === 'quick' ? (
-              <Check className="h-3 w-3 text-green-400" />
+              <IoCheckmarkOutline className="h-3 w-3 text-green-400" />
             ) : (
-              <Copy className="h-3 w-3 text-white" />
+              <IoCopyOutline className="h-3 w-3 text-white" />
             )}
           </button>
         </div>
@@ -126,9 +126,9 @@ function CopyRow({
       >
         <span>{value}</span>
         {copied ? (
-          <Check className="h-3 w-3 text-green-500" />
+          <IoCheckmarkOutline className="h-3 w-3 text-green-500" />
         ) : (
-          <Copy className="h-3 w-3" />
+          <IoCopyOutline className="h-3 w-3" />
         )}
       </button>
     </div>

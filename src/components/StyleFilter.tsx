@@ -1,10 +1,17 @@
 "use client"
 
+import type { IconType } from "react-icons"
+import {
+  IoPawOutline,
+  IoSparklesOutline,
+  IoBrushOutline,
+  IoEyeOutline,
+  IoOptionsOutline,
+} from "react-icons/io5"
 import { StyleType, CustomStyleSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { Sparkles, Palette, Eye, SlidersHorizontal } from "lucide-react"
 
 interface StyleFilterProps {
   currentStyle: StyleType
@@ -15,36 +22,49 @@ interface StyleFilterProps {
   onValueCheckToggle?: () => void
 }
 
-const styles: { id: StyleType; label: string; icon: React.ReactNode; description: string }[] = [
+interface StyleOption {
+  id: StyleType
+  label: string
+  description: string
+  icon: IconType
+  accent: string
+}
+
+const styleOptions: StyleOption[] = [
   {
     id: "original",
     label: "Original",
-    icon: <Palette className="h-4 w-4" />,
-    description: "Keep extracted colors as-is",
+    description: "Keep extracted colors",
+    icon: IoPawOutline,
+    accent: "#a0a0b0",
   },
   {
     id: "hypercasual",
-    label: "Hyper-casual",
-    icon: <Sparkles className="h-4 w-4" />,
-    description: "Bright, saturated colors",
+    label: "Hyper",
+    description: "Bright and punchy",
+    icon: IoSparklesOutline,
+    accent: "#fbbf24",
   },
   {
     id: "stylized",
     label: "Stylized",
-    icon: <Palette className="h-4 w-4" />,
-    description: "Warm, harmonious tones",
+    description: "Art-friendly shifts",
+    icon: IoBrushOutline,
+    accent: "#c084fc",
   },
   {
     id: "realistic",
     label: "Realistic",
-    icon: <Eye className="h-4 w-4" />,
-    description: "Natural, muted colors",
+    description: "Subtle and natural",
+    icon: IoEyeOutline,
+    accent: "#34d399",
   },
   {
     id: "custom",
     label: "Custom",
-    icon: <SlidersHorizontal className="h-4 w-4" />,
-    description: "Adjust manually",
+    description: "Manual controls",
+    icon: IoOptionsOutline,
+    accent: "#60a5fa",
   },
 ]
 
@@ -59,39 +79,45 @@ export function StyleFilter({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Style Filter</h3>
+        <h3 className="text-sm font-medium tracking-wide">Style Filter</h3>
         {onValueCheckToggle && (
           <Button
             variant={valueCheckEnabled ? "secondary" : "outline"}
             size="sm"
             onClick={onValueCheckToggle}
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <IoEyeOutline className="h-4 w-4 mr-2" />
             Value Check
           </Button>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {styles.map((style) => (
-          <Button
-            key={style.id}
-            variant={currentStyle === style.id ? "default" : "outline"}
-            size="sm"
-            onClick={() => onStyleChange(style.id)}
-            className={cn(
-              "flex items-center space-x-2",
-              currentStyle === style.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-            )}
-          >
-            {style.icon}
-            <span>{style.label}</span>
-          </Button>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        {styleOptions.map((style) => {
+          const isActive = currentStyle === style.id
+
+          return (
+            <button
+              key={style.id}
+              type="button"
+              onClick={() => onStyleChange(style.id)}
+              className={cn(
+                "rounded-xl border p-3 text-left transition-all",
+                "bg-[#1a1a24] border-[#24242e] hover:border-[#3a3a4a]",
+                isActive && "ring-2 ring-offset-2 ring-offset-background"
+              )}
+              style={isActive ? { borderColor: style.accent, backgroundColor: `${style.accent}20` } : undefined}
+            >
+              <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? style.accent : "#a0a0b0" }} />
+              <p className="text-xs font-semibold leading-tight">{style.label}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{style.description}</p>
+            </button>
+          )
+        })}
       </div>
 
       {currentStyle === "custom" && customSettings && onCustomSettingsChange && (
-        <div className="space-y-4 p-4 rounded-lg border border-border bg-card">
+        <div className="space-y-4 p-4 rounded-xl border border-[#2d2d38] bg-[#16161e]">
           <SliderControl
             label="Saturation"
             value={customSettings.saturationMultiplier}
@@ -101,7 +127,7 @@ export function StyleFilter({
             onChange={(value) =>
               onCustomSettingsChange({ ...customSettings, saturationMultiplier: value })
             }
-            formatValue={(v) => `${Math.round(v * 100)}%`}
+            formatValue={(value) => `${Math.round(value * 100)}%`}
           />
 
           <SliderControl
@@ -113,7 +139,7 @@ export function StyleFilter({
             onChange={(value) =>
               onCustomSettingsChange({ ...customSettings, lightnessMultiplier: value })
             }
-            formatValue={(v) => `${Math.round(v * 100)}%`}
+            formatValue={(value) => `${Math.round(value * 100)}%`}
           />
 
           <SliderControl
@@ -125,7 +151,7 @@ export function StyleFilter({
             onChange={(value) =>
               onCustomSettingsChange({ ...customSettings, hueShift: value })
             }
-            formatValue={(v) => `${v}°`}
+            formatValue={(value) => `${value}°`}
           />
         </div>
       )}

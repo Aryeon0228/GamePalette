@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Check, X, Loader2 } from "lucide-react"
+import { IoCheckmarkOutline, IoCloseOutline, IoRefreshOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -97,7 +97,7 @@ function PricingContent() {
 
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {/* Free Plan */}
-        <div className="rounded-xl border border-border bg-card p-8 space-y-6">
+        <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold">Free</h2>
             <p className="text-muted-foreground">Perfect for trying out</p>
@@ -124,9 +124,9 @@ function PricingContent() {
         </div>
 
         {/* Pro Plan */}
-        <div className="relative rounded-xl border-2 border-primary bg-card p-8 space-y-6">
+        <div className="relative rounded-xl border-2 border-primary bg-[#16161e] p-8 space-y-6">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-sm font-medium">
+            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] text-white text-sm font-medium">
               {isPremium ? "Current Plan" : "Most Popular"}
             </span>
           </div>
@@ -155,14 +155,14 @@ function PricingContent() {
             </Button>
           ) : (
             <Button
-              className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600"
+              className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]"
               size="lg"
               onClick={handleUpgrade}
               disabled={checkoutLoading || authLoading}
             >
               {checkoutLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <IoRefreshOutline className="mr-2 h-4 w-4 animate-spin" />
                   Loading...
                 </>
               ) : (
@@ -202,7 +202,7 @@ function PricingContent() {
             answer="Yes, we offer a 7-day money-back guarantee. If you're not satisfied with Pro, contact us for a full refund."
           />
           <FAQItem
-            question="Can I use GamePalette for commercial projects?"
+            question="Can I use Pixel Paw for commercial projects?"
             answer="Absolutely! Both Free and Pro plans allow commercial use. Create palettes for any game project."
           />
           <FAQItem
@@ -219,7 +219,7 @@ export default function PricingPage() {
   return (
     <Suspense fallback={
       <div className="container py-16 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <IoRefreshOutline className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     }>
       <PricingContent />
@@ -244,9 +244,9 @@ function FeatureRow({
       <span>
         {typeof value === "boolean" ? (
           value ? (
-            <Check className={cn("h-5 w-5", highlight ? "text-green-500" : "text-muted-foreground")} />
+            <IoCheckmarkOutline className={cn("h-5 w-5", highlight ? "text-green-500" : "text-muted-foreground")} />
           ) : (
-            <X className="h-5 w-5 text-muted-foreground/50" />
+            <IoCloseOutline className="h-5 w-5 text-muted-foreground/50" />
           )
         ) : (
           <span className={highlight ? "font-medium" : "text-muted-foreground"}>

@@ -4,11 +4,17 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Save, Download, Trash2, Eye, EyeOff } from "lucide-react"
+import {
+  IoArrowBackOutline,
+  IoSaveOutline,
+  IoDownloadOutline,
+  IoTrashOutline,
+  IoEyeOutline,
+  IoEyeOffOutline,
+} from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PaletteDisplay } from "@/components/PaletteDisplay"
-import { ColorCard } from "@/components/ColorCard"
 import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
@@ -34,23 +40,21 @@ export default function PaletteDetailPage() {
   const [displayColors, setDisplayColors] = useState<Color[]>([])
   const [hasChanges, setHasChanges] = useState(false)
 
-  // Load palette
   useEffect(() => {
     const found = getPaletteById(paletteId)
-    if (found) {
-      setPalette(found)
-      setPaletteName(found.name)
-      setCurrentStyle(found.style)
-      setDisplayColors(found.colors)
-    } else {
+    if (!found) {
       router.push("/library")
+      return
     }
+
+    setPalette(found)
+    setPaletteName(found.name)
+    setCurrentStyle(found.style)
+    setDisplayColors(found.colors)
   }, [paletteId, getPaletteById, router])
 
-  // Apply style filter
   useEffect(() => {
     if (!palette) return
-
     let colors = applyStyleFilter(palette.colors, currentStyle)
     if (valueCheckEnabled) {
       colors = toGrayscale(colors)
@@ -98,19 +102,24 @@ export default function PaletteDetailPage() {
     )
   }
 
+  const selectedColor =
+    selectedColorIndex !== null && displayColors[selectedColorIndex]
+      ? displayColors[selectedColorIndex]
+      : null
+
   return (
     <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
+        <div className="flex items-center space-x-4 min-w-0">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/library">
-              <ArrowLeft className="h-5 w-5" />
+              <IoArrowBackOutline className="h-5 w-5" />
             </Link>
           </Button>
           <Input
             value={paletteName}
-            onChange={(e) => handleNameChange(e.target.value)}
-            className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto"
+            onChange={(event) => handleNameChange(event.target.value)}
+            className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto max-w-full"
             placeholder="Palette name"
           />
           {hasChanges && (
@@ -120,42 +129,37 @@ export default function PaletteDetailPage() {
 
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="icon" onClick={handleDelete}>
-            <Trash2 className="h-5 w-5" />
+            <IoTrashOutline className="h-5 w-5" />
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowExportModal(true)}
-          >
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={() => setShowExportModal(true)}>
+            <IoDownloadOutline className="h-4 w-4 mr-2" />
             Export
           </Button>
           <Button onClick={handleSave} disabled={!hasChanges}>
-            <Save className="h-4 w-4 mr-2" />
+            <IoSaveOutline className="h-4 w-4 mr-2" />
             Save
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content - Palette & Variations */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Palette Display */}
-          <div className="rounded-lg border border-border bg-card p-6">
+          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Colors</h2>
               <Button
                 variant={valueCheckEnabled ? "secondary" : "outline"}
                 size="sm"
-                onClick={() => setValueCheckEnabled(!valueCheckEnabled)}
+                onClick={() => setValueCheckEnabled((value) => !value)}
               >
                 {valueCheckEnabled ? (
                   <>
-                    <EyeOff className="h-4 w-4 mr-2" />
+                    <IoEyeOffOutline className="h-4 w-4 mr-2" />
                     Hide Value Check
                   </>
                 ) : (
                   <>
-                    <Eye className="h-4 w-4 mr-2" />
+                    <IoEyeOutline className="h-4 w-4 mr-2" />
                     Value Check
                   </>
                 )}
@@ -168,70 +172,54 @@ export default function PaletteDetailPage() {
             />
           </div>
 
-          {/* Color Variations - directly below palette */}
-          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
-            <div className="rounded-lg border border-border bg-card p-6">
+          {selectedColor && (
+            <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
               <div className="flex items-start gap-4 mb-4">
-                {/* Selected Color Preview */}
                 <div
                   className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
-                  style={{ backgroundColor: displayColors[selectedColorIndex].hex }}
+                  style={{ backgroundColor: selectedColor.hex }}
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold">
-                    {displayColors[selectedColorIndex].name || 'Selected Color'}
-                  </h2>
-                  <p className="text-sm font-mono text-muted-foreground">
-                    {displayColors[selectedColorIndex].hex}
-                  </p>
+                  <h2 className="text-lg font-semibold">{selectedColor.name || "Selected Color"}</h2>
+                  <p className="text-sm font-mono text-muted-foreground">{selectedColor.hex}</p>
                   <p className="text-xs text-muted-foreground">
-                    HSL: {displayColors[selectedColorIndex].hsl.h}°, {displayColors[selectedColorIndex].hsl.s}%, {displayColors[selectedColorIndex].hsl.l}%
+                    HSL: {selectedColor.hsl.h}°, {selectedColor.hsl.s}%, {selectedColor.hsl.l}%
                   </p>
                 </div>
               </div>
-
-              {/* Color Variations */}
-              <ColorVariations color={displayColors[selectedColorIndex]} />
+              <ColorVariations color={selectedColor} />
             </div>
           )}
 
-          {/* Hint when no color selected */}
-          {displayColors.length > 0 && selectedColorIndex === null && (
-            <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+          {displayColors.length > 0 && !selectedColor && (
+            <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 text-center bg-[#16161e]/70">
               <p className="text-muted-foreground">
-                Click a color above to see value variations with hue shifting
+                Click a color above to see value variations with hue shifting.
               </p>
             </div>
           )}
 
-          {/* Source Image */}
           {palette.sourceImageUrl && (
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
               <h2 className="text-lg font-semibold mb-4">Source Image</h2>
               <Image
                 src={palette.sourceImageUrl}
                 alt="Source"
                 width={800}
                 height={320}
-                className="w-full max-h-80 object-contain rounded-lg"
+                className="w-full max-h-80 object-contain rounded-lg bg-[#101018]"
                 unoptimized
               />
             </div>
           )}
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Style Filter */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <StyleFilter
-              currentStyle={currentStyle}
-              onStyleChange={handleStyleChange}
-            />
+          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
+            <StyleFilter currentStyle={currentStyle} onStyleChange={handleStyleChange} />
           </div>
 
-          {/* Palette Info */}
-          <div className="rounded-lg border border-border bg-card p-6 space-y-3">
+          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6 space-y-3">
             <h2 className="text-lg font-semibold">Info</h2>
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
@@ -255,7 +243,6 @@ export default function PaletteDetailPage() {
         </div>
       </div>
 
-      {/* Export Modal */}
       <ExportModal
         open={showExportModal}
         onOpenChange={setShowExportModal}

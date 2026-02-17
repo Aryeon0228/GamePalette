@@ -4,7 +4,13 @@ import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Loader2, LogOut, Crown, CreditCard } from "lucide-react"
+import {
+  IoArrowBackOutline,
+  IoRefreshOutline,
+  IoLogOutOutline,
+  IoSparklesOutline,
+  IoCardOutline,
+} from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -49,7 +55,7 @@ function LoginContent() {
   if (loading) {
     return (
       <div className="container py-16 max-w-md flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <IoRefreshOutline className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -60,12 +66,12 @@ function LoginContent() {
       <div className="container py-16 max-w-md">
         <Button variant="ghost" size="sm" asChild className="mb-8">
           <Link href="/">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <IoArrowBackOutline className="h-4 w-4 mr-2" />
             Back to Home
           </Link>
         </Button>
 
-        <div className="rounded-xl border border-border bg-card p-8 space-y-6">
+        <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
           <div className="text-center space-y-4">
             {user.user_metadata?.avatar_url && (
               <Image
@@ -89,7 +95,7 @@ function LoginContent() {
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Plan</span>
               <span className={isPremium ? "text-primary font-medium flex items-center gap-1" : ""}>
-                {isPremium && <Crown className="h-4 w-4 text-yellow-500" />}
+                {isPremium && <IoSparklesOutline className="h-4 w-4 text-yellow-500" />}
                 {isPremium ? "Pro" : "Free"}
               </span>
             </div>
@@ -103,12 +109,12 @@ function LoginContent() {
           {isPremium ? (
             <Button variant="outline" className="w-full" asChild>
               <Link href="/pricing">
-                <CreditCard className="h-4 w-4 mr-2" />
+                <IoCardOutline className="h-4 w-4 mr-2" />
                 Manage Subscription
               </Link>
             </Button>
           ) : (
-            <Button className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600" asChild>
+            <Button className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]" asChild>
               <Link href="/pricing">Upgrade to Pro</Link>
             </Button>
           )}
@@ -118,7 +124,7 @@ function LoginContent() {
             className="w-full"
             onClick={handleSignOut}
           >
-            <LogOut className="h-4 w-4 mr-2" />
+            <IoLogOutOutline className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
         </div>
@@ -131,14 +137,14 @@ function LoginContent() {
     <div className="container py-16 max-w-md">
       <Button variant="ghost" size="sm" asChild className="mb-8">
         <Link href="/">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <IoArrowBackOutline className="h-4 w-4 mr-2" />
           Back to Home
         </Link>
       </Button>
 
-      <div className="rounded-xl border border-border bg-card p-8 space-y-6">
+      <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Welcome to GamePalette</h1>
+          <h1 className="text-2xl font-bold">Welcome to Pixel Paw</h1>
           <p className="text-muted-foreground">
             Sign in to sync your palettes across devices
           </p>
@@ -157,7 +163,7 @@ function LoginContent() {
           disabled={isSigningIn}
         >
           {isSigningIn ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <IoRefreshOutline className="h-5 w-5 animate-spin" />
           ) : (
             <>
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -212,7 +218,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="container py-16 max-w-md flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <IoRefreshOutline className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     }>
       <LoginContent />

@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 0 0% 11%;
-    --foreground: 210 40% 98%;
+    --background: 240 23% 5%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 15% 10%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 15% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 239 84% 67%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 231 28% 32%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 330 81% 60%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 215 42% 52%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 17%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 240 16% 14%;
+    --muted-foreground: 240 12% 63%;
 
-    --accent: 0 0% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 240 13% 16%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 89% 71%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 239 84% 67%;
+    --border: 240 11% 20%;
+    --input: 240 11% 16%;
+    --ring: 231 28% 32%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 }
 
@@ -42,6 +42,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(79, 123, 184, 0.16), transparent 35%),
+      radial-gradient(circle at 90% 20%, rgba(54, 169, 184, 0.12), transparent 38%);
+    background-attachment: fixed;
   }
 }
 
@@ -94,5 +99,5 @@ html {
 
 /* Gradient text helper */
 .gradient-text {
-  @apply bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent;
 }

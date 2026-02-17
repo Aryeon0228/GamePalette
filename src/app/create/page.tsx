@@ -1,22 +1,31 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Save, Download, RefreshCw, ArrowLeft, Eye } from "lucide-react"
+import {
+  IoSaveOutline,
+  IoDownloadOutline,
+  IoRefreshOutline,
+  IoArrowBackOutline,
+  IoEyeOutline,
+  IoSettingsOutline,
+  IoInformationCircleOutline,
+} from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ImageUploader } from "@/components/ImageUploader"
 import { ImageSelector } from "@/components/ImageSelector"
 import { PaletteDisplay } from "@/components/PaletteDisplay"
-import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { ColorCountSelector } from "@/components/ColorCountSelector"
+import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal"
+import { ColorDetailModal } from "@/components/ColorDetailModal"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { extractColors } from "@/lib/colorExtractor"
 import { useToast } from "@/components/ui/toast"
 import { generateId } from "@/lib/utils"
-import Link from "next/link"
 
 export default function CreatePage() {
   const router = useRouter()
@@ -24,10 +33,10 @@ export default function CreatePage() {
 
   const {
     currentPalette,
-    originalColors,
     currentStyle,
     customSettings,
     valueCheckEnabled,
+    colorBlindMode,
     colorCount,
     sourceImageUrl,
     extractionMethod,
@@ -36,6 +45,7 @@ export default function CreatePage() {
     setCurrentStyle,
     setCustomSettings,
     toggleValueCheck,
+    setColorBlindMode,
     setColorCount,
     setSourceImageUrl,
     setExtractionMethod,
@@ -47,30 +57,38 @@ export default function CreatePage() {
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
-  // Track the actual image used for extraction (could be cropped region)
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [showColorDetail, setShowColorDetail] = useState(false)
   const [extractionImageUrl, setExtractionImageUrl] = useState<string | null>(null)
-  // Track extraction request to prevent race conditions
   const extractionIdRef = useRef(0)
 
   const displayColors = getDisplayColors()
+  const selectedColor =
+    selectedColorIndex !== null && displayColors[selectedColorIndex] ? displayColors[selectedColorIndex] : null
 
-  // Extract colors from an image URL
+  useEffect(() => {
+    if (selectedColorIndex !== null && selectedColorIndex >= displayColors.length) {
+      setSelectedColorIndex(null)
+    }
+  }, [displayColors.length, selectedColorIndex])
+
   const extractFromImage = async (imageUrl: string, isRegionSelection = false) => {
     setIsExtracting(true)
 
     try {
       const colors = await extractColors(imageUrl, colorCount, extractionMethod)
+      const now = new Date().toISOString()
 
       setOriginalColors(colors)
       setCurrentPalette({
-        id: generateId(),
+        id: currentPalette?.id || generateId(),
         name: paletteName,
         colors,
         sourceImageUrl: sourceImageUrl || imageUrl,
         style: currentStyle,
-        tags: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        tags: currentPalette?.tags || [],
+        createdAt: currentPalette?.createdAt || now,
+        updatedAt: now,
       })
       setSelectedColorIndex(null)
       setExtractionImageUrl(imageUrl)
@@ -86,23 +104,17 @@ export default function CreatePage() {
     }
   }
 
-  // Handle initial image upload
   const handleImageLoad = async (imageUrl: string) => {
     setSourceImageUrl(imageUrl)
     setExtractionImageUrl(imageUrl)
     await extractFromImage(imageUrl)
   }
 
-  // Handle region selection
   const handleSelectionComplete = async (croppedImageUrl: string | null) => {
     if (croppedImageUrl) {
-      // Extract from the selected region
       await extractFromImage(croppedImageUrl, true)
-    } else {
-      // Reset to full image
-      if (sourceImageUrl) {
-        await extractFromImage(sourceImageUrl)
-      }
+    } else if (sourceImageUrl) {
+      await extractFromImage(sourceImageUrl)
     }
   }
 
@@ -110,36 +122,56 @@ export default function CreatePage() {
     const imageToUse = extractionImageUrl || sourceImageUrl
     if (!imageToUse) return
 
-    // Increment extraction ID to track this specific request
     const currentExtractionId = ++extractionIdRef.current
-
     setIsExtracting(true)
+
     try {
       const colors = await extractColors(imageToUse, colorCount, extractionMethod)
-
-      // Only update state if this is still the latest extraction request
       if (currentExtractionId !== extractionIdRef.current) return
 
       setOriginalColors(colors)
-      setCurrentPalette({
-        ...currentPalette!,
-        colors,
-        updatedAt: new Date().toISOString(),
-      })
+      const now = new Date().toISOString()
+
+      if (currentPalette) {
+        setCurrentPalette({
+          ...currentPalette,
+          colors,
+          updatedAt: now,
+        })
+      } else {
+        setCurrentPalette({
+          id: generateId(),
+          name: paletteName,
+          colors,
+          sourceImageUrl: sourceImageUrl || imageToUse,
+          style: currentStyle,
+          tags: [],
+          createdAt: now,
+          updatedAt: now,
+        })
+      }
     } catch (error) {
-      // Only show error if this is still the latest extraction request
       if (currentExtractionId !== extractionIdRef.current) return
       console.error("Failed to re-extract colors:", error)
       addToast("Failed to re-extract colors", "error")
     } finally {
-      // Only clear loading state if this is still the latest extraction request
       if (currentExtractionId === extractionIdRef.current) {
         setIsExtracting(false)
       }
     }
-  }, [extractionImageUrl, sourceImageUrl, colorCount, extractionMethod, currentPalette, setOriginalColors, setCurrentPalette, addToast])
+  }, [
+    addToast,
+    colorCount,
+    currentPalette,
+    currentStyle,
+    extractionImageUrl,
+    extractionMethod,
+    paletteName,
+    setCurrentPalette,
+    setOriginalColors,
+    sourceImageUrl,
+  ])
 
-  // Keep a ref to the latest handleReextract for use in effects
   const handleReextractRef = useRef(handleReextract)
   useEffect(() => {
     handleReextractRef.current = handleReextract
@@ -161,7 +193,6 @@ export default function CreatePage() {
     setSelectedColorIndex(null)
   }
 
-  // Re-extract when colorCount changes (only if we already have colors)
   const prevColorCountRef = useRef(colorCount)
   useEffect(() => {
     if (prevColorCountRef.current !== colorCount) {
@@ -170,7 +201,6 @@ export default function CreatePage() {
     }
   }, [colorCount])
 
-  // Re-extract when extractionMethod changes (only if we already have colors)
   const prevExtractionMethodRef = useRef(extractionMethod)
   useEffect(() => {
     if (prevExtractionMethodRef.current !== extractionMethod) {
@@ -185,12 +215,12 @@ export default function CreatePage() {
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/">
-              <ArrowLeft className="h-5 w-5" />
+              <IoArrowBackOutline className="h-5 w-5" />
             </Link>
           </Button>
           <Input
             value={paletteName}
-            onChange={(e) => setPaletteName(e.target.value)}
+            onChange={(event) => setPaletteName(event.target.value)}
             className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto"
             placeholder="Palette name"
           />
@@ -202,42 +232,49 @@ export default function CreatePage() {
             onClick={() => setShowExportModal(true)}
             disabled={!currentPalette || displayColors.length === 0}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <IoDownloadOutline className="h-4 w-4 mr-2" />
             Export
           </Button>
           <Button
             onClick={handleSave}
             disabled={!currentPalette || displayColors.length === 0}
           >
-            <Save className="h-4 w-4 mr-2" />
+            <IoSaveOutline className="h-4 w-4 mr-2" />
             Save
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column - Image & Style */}
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
               <h2 className="text-lg font-semibold">Source Image</h2>
-              {/* Extraction Method Selector */}
               <div className="flex gap-1">
                 <Button
-                  variant={extractionMethod === 'histogram' ? "default" : "outline"}
+                  variant={extractionMethod === "histogram" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setExtractionMethod('histogram')}
+                  onClick={() => setExtractionMethod("histogram")}
                   className="text-xs"
                 >
                   Hue Histogram
                 </Button>
                 <Button
-                  variant={extractionMethod === 'kmeans' ? "default" : "outline"}
+                  variant={extractionMethod === "kmeans" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setExtractionMethod('kmeans')}
+                  onClick={() => setExtractionMethod("kmeans")}
                   className="text-xs"
                 >
                   K-Means
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAdvancedSettings(true)}
+                  className="text-xs"
+                >
+                  <IoSettingsOutline className="h-3.5 w-3.5 mr-1.5" />
+                  Advanced
                 </Button>
               </div>
             </div>
@@ -260,25 +297,31 @@ export default function CreatePage() {
             )}
           </div>
 
-          {/* Quick Settings - 이미지 로드 후 항상 표시 */}
           {sourceImageUrl && (
             <div className="rounded-lg border border-border bg-card p-6">
               <h3 className="text-sm font-medium mb-4">Quick Settings</h3>
 
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <ColorCountSelector
-                  value={colorCount}
-                  onChange={setColorCount}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReextract}
-                  disabled={isExtracting}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
-                  Re-extract
-                </Button>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <ColorCountSelector value={colorCount} onChange={setColorCount} />
+                <div className="flex gap-2">
+                  <Button
+                    variant={valueCheckEnabled ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={toggleValueCheck}
+                  >
+                    <IoEyeOutline className="h-4 w-4 mr-2" />
+                    Value Check
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReextract}
+                    disabled={isExtracting}
+                  >
+                    <IoRefreshOutline className={`h-4 w-4 mr-2 ${isExtracting ? "animate-spin" : ""}`} />
+                    Re-extract
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -293,11 +336,17 @@ export default function CreatePage() {
           </div>
         </div>
 
-        {/* Right Column - Palette & Variations */}
         <div className="space-y-6">
-          {/* Palette */}
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold mb-4">Extracted Palette</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Extracted Palette</h2>
+              {selectedColor && (
+                <Button size="sm" variant="outline" onClick={() => setShowColorDetail(true)}>
+                  <IoInformationCircleOutline className="h-4 w-4 mr-1.5" />
+                  Color Detail
+                </Button>
+              )}
+            </div>
             <PaletteDisplay
               colors={displayColors}
               selectedIndex={selectedColorIndex ?? undefined}
@@ -305,55 +354,33 @@ export default function CreatePage() {
             />
           </div>
 
-          {/* Color Variations - directly below palette */}
-          {selectedColorIndex !== null && displayColors[selectedColorIndex] && (
+          {selectedColor && (
             <div className="rounded-lg border border-border bg-card p-6">
-              <div className="flex items-start gap-4 mb-4">
-                {/* Selected Color Preview */}
+              <div className="flex items-center gap-4">
                 <div
                   className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
-                  style={{ backgroundColor: displayColors[selectedColorIndex].hex }}
+                  style={{ backgroundColor: selectedColor.hex }}
                 />
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold">
-                    {displayColors[selectedColorIndex].name || 'Selected Color'}
-                  </h2>
-                  <p className="text-sm font-mono text-muted-foreground">
-                    {displayColors[selectedColorIndex].hex}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    HSL: {displayColors[selectedColorIndex].hsl.h}°, {displayColors[selectedColorIndex].hsl.s}%, {displayColors[selectedColorIndex].hsl.l}%
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-muted-foreground">Selected Color</p>
+                  <h3 className="text-lg font-semibold truncate">{selectedColor.name || selectedColor.hex}</h3>
+                  <p className="text-sm font-mono text-muted-foreground">{selectedColor.hex.toUpperCase()}</p>
                 </div>
-                {/* Value Check Button */}
-                <Button
-                  variant={valueCheckEnabled ? "secondary" : "outline"}
-                  size="sm"
-                  onClick={toggleValueCheck}
-                  className="shrink-0"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Value Check
-                </Button>
+                <Button onClick={() => setShowColorDetail(true)}>Open Detail</Button>
               </div>
-
-              {/* Color Variations */}
-              <ColorVariations color={displayColors[selectedColorIndex]} />
             </div>
           )}
 
-          {/* Hint when no color selected */}
-          {displayColors.length > 0 && selectedColorIndex === null && (
+          {displayColors.length > 0 && !selectedColor && (
             <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
               <p className="text-muted-foreground">
-                Click a color above to see value variations with hue shifting
+                Click a color above to inspect formats, variations, and harmonies.
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Export Modal */}
       {currentPalette && (
         <ExportModal
           open={showExportModal}
@@ -361,6 +388,27 @@ export default function CreatePage() {
           palette={{ ...currentPalette, name: paletteName, colors: displayColors }}
         />
       )}
+
+      <AdvancedSettingsModal
+        open={showAdvancedSettings}
+        onOpenChange={setShowAdvancedSettings}
+        currentStyle={currentStyle}
+        onStyleChange={setCurrentStyle}
+        extractionMethod={extractionMethod}
+        onExtractionMethodChange={setExtractionMethod}
+        colorCount={colorCount}
+        onColorCountChange={setColorCount}
+        valueCheckEnabled={valueCheckEnabled}
+        onValueCheckToggle={toggleValueCheck}
+        colorBlindMode={colorBlindMode}
+        onColorBlindModeChange={setColorBlindMode}
+      />
+
+      <ColorDetailModal
+        open={showColorDetail}
+        onOpenChange={setShowColorDetail}
+        color={selectedColor}
+      />
     </div>
   )
 }

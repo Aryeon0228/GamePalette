@@ -5,7 +5,7 @@ import { Color, VariationStyle } from "@/types"
 import { generateColorVariations, getVariationInfo } from "@/lib/styleFilters"
 import { copyToClipboard, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Check, Copy } from "lucide-react"
+import { IoCheckmarkOutline, IoCopyOutline } from "react-icons/io5"
 
 interface ColorVariationsProps {
   color: Color
@@ -89,9 +89,9 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
               {/* Hover overlay */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                 {copiedHex === step.color.hex ? (
-                  <Check className="h-4 w-4 text-white" />
+                  <IoCheckmarkOutline className="h-4 w-4 text-white" />
                 ) : (
-                  <Copy className="h-3 w-3 text-white" />
+                  <IoCopyOutline className="h-3 w-3 text-white" />
                 )}
               </div>
             </div>
@@ -154,12 +154,12 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
         >
           {copiedHex === "all" ? (
             <>
-              <Check className="h-3 w-3 mr-1.5" />
+              <IoCheckmarkOutline className="h-3 w-3 mr-1.5" />
               Copied!
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3 mr-1.5" />
+              <IoCopyOutline className="h-3 w-3 mr-1.5" />
               Copy All
             </>
           )}
