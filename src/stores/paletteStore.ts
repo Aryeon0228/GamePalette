@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { Palette, Color, StyleType, CustomStyleSettings, Folder } from '@/types';
 import { generateId } from '@/lib/utils';
 import { applyStyleFilter, toGrayscale, defaultCustomSettings } from '@/lib/styleFilters';
@@ -51,6 +51,34 @@ interface PaletteState {
   // Reset
   resetCurrentPalette: () => void;
 }
+
+type PersistedPaletteState = Pick<
+  PaletteState,
+  'savedPalettes' | 'folders' | 'colorCount' | 'extractionMethod' | 'colorBlindMode'
+>;
+
+const PALETTE_STORAGE_KEY = 'pixelpow-storage';
+const LEGACY_PALETTE_STORAGE_KEY = 'gamepalette-storage';
+
+const paletteStorage = createJSONStorage<PersistedPaletteState>(() => ({
+  getItem: (name) => {
+    const currentValue = window.localStorage.getItem(name);
+    if (currentValue !== null) {
+      return currentValue;
+    }
+
+    // Backward compatibility for users who already had data under the old key.
+    return window.localStorage.getItem(LEGACY_PALETTE_STORAGE_KEY);
+  },
+  setItem: (name, value) => {
+    window.localStorage.setItem(name, value);
+    window.localStorage.removeItem(LEGACY_PALETTE_STORAGE_KEY);
+  },
+  removeItem: (name) => {
+    window.localStorage.removeItem(name);
+    window.localStorage.removeItem(LEGACY_PALETTE_STORAGE_KEY);
+  },
+}));
 
 export const usePaletteStore = create<PaletteState>()(
   persist(
@@ -218,7 +246,8 @@ export const usePaletteStore = create<PaletteState>()(
       },
     }),
     {
-      name: 'gamepalette-storage',
+      name: PALETTE_STORAGE_KEY,
+      storage: paletteStorage,
       partialize: (state) => ({
         savedPalettes: state.savedPalettes,
         folders: state.folders,

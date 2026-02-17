@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 
 const DISMISS_KEY = "pixelpaw_mobile_banner_dismissed"
 const SESSION_HIDE_KEY = "pixelpaw_mobile_banner_session_hidden"
-const MOBILE_REPO_URL = "https://github.com/Aryeon0228/GamePalette-Mobile"
+const MOBILE_REPO_URL = process.env.NEXT_PUBLIC_MOBILE_REPO_URL || "https://github.com/Aryeon0228/GamePalette-Mobile"
 const AUTO_HIDE_MS = 12000
 
 export function MobileAppBanner() {

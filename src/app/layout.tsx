@@ -16,8 +16,12 @@ const spaceGrotesk = localFont({
   display: "swap",
 })
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://gamepalette.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: "Pixel Paw - Color Palette Tool for Game Artists",
   description: "Extract, transform, and export color palettes optimized for game development. Includes style presets, value check, and Unity/Unreal export.",
   keywords: ["game art", "color palette", "game development", "color tool", "unity", "unreal", "game artist"],
