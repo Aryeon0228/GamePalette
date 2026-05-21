@@ -22,7 +22,9 @@ import { ColorCountSelector } from "@/components/ColorCountSelector"
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal"
 import { ColorDetailPanel } from "@/components/ColorDetailPanel"
 import { HistogramSection } from "@/components/HistogramSection"
+import { SphereShadingPreview } from "@/components/SphereShadingPreview"
 import { usePaletteStore } from "@/stores/paletteStore"
+import { buildShadingScheme } from "@/lib/exporters"
 import { extractColors, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
 import { useToast } from "@/components/ui/toast"
 import { generateId } from "@/lib/utils"
@@ -372,6 +374,40 @@ export default function CreatePage() {
           </div>
 
           {histogram && <HistogramSection histogram={histogram} />}
+
+          {currentPalette && displayColors.length > 0 && (() => {
+            const scheme = buildShadingScheme({ ...currentPalette, colors: displayColors })
+            const swatches = [
+              scheme.specular,
+              scheme.midtone,
+              scheme.shadow,
+              scheme.rim,
+              scheme.background,
+            ]
+            return (
+              <div className="rounded-lg border border-border bg-card p-6 space-y-4">
+                <h2 className="text-lg font-semibold">Sphere Shading</h2>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <SphereShadingPreview scheme={scheme} className="w-44 h-40 shrink-0" />
+                  <div className="grid grid-cols-1 gap-1.5 w-full">
+                    {swatches.map((swatch) => (
+                      <div key={swatch.role} className="flex items-center gap-2">
+                        <span
+                          className="h-6 w-6 rounded shrink-0 border border-border"
+                          style={{ backgroundColor: swatch.hex }}
+                        />
+                        <span className="text-xs font-medium w-24">{swatch.label}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground">{swatch.hex}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Specular / midtone / shadow / rim / background mapped from your picked colors.
+                </p>
+              </div>
+            )
+          })()}
 
           {selectedColor && <ColorDetailPanel color={selectedColor} />}
 
