@@ -30,6 +30,14 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
   return { h: Math.round(h), s: Math.round(s * 100), v: Math.round(max * 100) }
 }
 
+// ── HWB (Hue, Whiteness, Blackness) ──
+export function rgbToHwb(r: number, g: number, b: number): { h: number; w: number; b: number } {
+  const { h } = rgbToHsv(r, g, b) // HWB shares HSV/HSL hue
+  const w = Math.min(r, g, b) / 255
+  const bl = 1 - Math.max(r, g, b) / 255
+  return { h, w: Math.round(w * 100), b: Math.round(bl * 100) }
+}
+
 // ── CMYK ──
 export function rgbToCmyk(r: number, g: number, b: number): { c: number; m: number; y: number; k: number } {
   const rn = r / 255
@@ -95,9 +103,9 @@ export function rgbToOklch(r: number, g: number, b: number): { L: number; c: num
   return { L, c, h }
 }
 
-export type ColorFormat = "HEX" | "RGB" | "HSL" | "HSV" | "CMYK" | "LAB" | "OKLAB" | "OKLCH"
+export type ColorFormat = "HEX" | "RGB" | "HSL" | "HSV" | "HWB" | "CMYK" | "LAB" | "OKLAB" | "OKLCH"
 
-export const COLOR_FORMATS: ColorFormat[] = ["HEX", "RGB", "HSL", "HSV", "CMYK", "LAB", "OKLAB", "OKLCH"]
+export const COLOR_FORMATS: ColorFormat[] = ["HEX", "RGB", "HSL", "HSV", "HWB", "CMYK", "LAB", "OKLAB", "OKLCH"]
 
 export function formatColor(color: Color, format: ColorFormat): string {
   const { r, g, b } = color.rgb
@@ -109,6 +117,10 @@ export function formatColor(color: Color, format: ColorFormat): string {
     case "HSV": {
       const { h, s, v } = rgbToHsv(r, g, b)
       return `hsv(${h}, ${s}%, ${v}%)`
+    }
+    case "HWB": {
+      const { h, w, b: bl } = rgbToHwb(r, g, b)
+      return `hwb(${h} ${w}% ${bl}%)`
     }
     case "CMYK": {
       const { c, m, y, k } = rgbToCmyk(r, g, b)
