@@ -357,8 +357,11 @@ export default function CreatePage() {
 
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <h2 className="text-lg font-semibold">Extracted Palette</h2>
+              {sourceImageUrl && (
+                <ColorCountSelector compact value={colorCount} onChange={setColorCount} />
+              )}
             </div>
             <PaletteDisplay
               colors={displayColors}
