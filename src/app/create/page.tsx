@@ -364,6 +364,7 @@ export default function CreatePage() {
               )}
             </div>
             <PaletteDisplay
+              adaptive
               colors={displayColors}
               selectedIndex={selectedColorIndex ?? undefined}
               onColorSelect={(_, index) => setSelectedColorIndex(index)}

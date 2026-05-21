@@ -11,6 +11,8 @@ interface PaletteDisplayProps {
   onColorSelect?: (color: Color, index: number) => void
   selectedIndex?: number
   compact?: boolean
+  /** Keep a fixed-height container and shrink swatches as the count grows. */
+  adaptive?: boolean
 }
 
 export function PaletteDisplay({
@@ -19,6 +21,7 @@ export function PaletteDisplay({
   onColorSelect,
   selectedIndex,
   compact = false,
+  adaptive = false,
 }: PaletteDisplayProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
@@ -50,6 +53,31 @@ export function PaletteDisplay({
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
             title={color.hex}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  if (adaptive) {
+    // Fixed-height box: pick a column count that keeps the row count low so the
+    // container stays the same size and the swatches shrink as colors are added.
+    const cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(colors.length * 2))))
+    return (
+      <div
+        className={cn("grid gap-2 h-72", className)}
+        style={{
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          gridAutoRows: "minmax(0, 1fr)",
+        }}
+      >
+        {colors.map((color, index) => (
+          <ColorCard
+            key={index}
+            color={color}
+            fill
+            selected={selectedIndex === index}
+            onClick={() => onColorSelect?.(color, index)}
           />
         ))}
       </div>
