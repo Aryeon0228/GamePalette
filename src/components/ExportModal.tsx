@@ -18,11 +18,11 @@ import {
   exportToScss,
   exportToUnity,
   exportToUnreal,
-  exportToLighting,
-  buildThreePointLighting,
+  buildShadingScheme,
   downloadFile,
   SnsCardType,
 } from "@/lib/exporters"
+import { SphereShadingPreview } from "@/components/SphereShadingPreview"
 import { imageToAscii, type AsciiArtResult } from "@/lib/asciiArt"
 import { copyToClipboard } from "@/lib/utils"
 
@@ -56,8 +56,8 @@ const exportOptions: ExportOption[] = [
   },
   {
     format: "lighting",
-    label: "3-Point Lighting",
-    description: "Key / Fill / Back light preset (JSON)",
+    label: "Sphere Shading",
+    description: "Specular / midtone / shadow / rim / background (JSON)",
     action: "download",
   },
   {
@@ -103,8 +103,8 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
 
   const previewRatio = snsCardType === "twitter" ? "16 / 9" : "1 / 1"
   const previewColors = palette.colors
-  const lighting = useMemo(
-    () => (palette.colors.length > 0 ? buildThreePointLighting(palette) : null),
+  const shading = useMemo(
+    () => (palette.colors.length > 0 ? buildShadingScheme(palette) : null),
     [palette]
   )
 
@@ -305,37 +305,28 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
             )}
           </section>
 
-          {lighting && (
+          {shading && (
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold">3-Point Lighting Preview</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {[lighting.key, lighting.fill, lighting.back].map((light) => (
-                  <div
-                    key={light.role}
-                    className="rounded-lg border border-border overflow-hidden"
-                  >
-                    <div className="h-16 relative" style={{ backgroundColor: light.hex }}>
-                      <span
-                        className="absolute bottom-1 right-1.5 text-[10px] font-mono"
-                        style={{
-                          color:
-                            0.299 * light.rgb.r + 0.587 * light.rgb.g + 0.114 * light.rgb.b > 140
-                              ? "rgba(0,0,0,0.82)"
-                              : "rgba(255,255,255,0.94)",
-                        }}
-                      >
-                        {Math.round(light.intensity * 100)}%
-                      </span>
-                    </div>
-                    <div className="px-2 py-1.5 bg-background">
-                      <p className="text-xs font-medium">{light.label}</p>
-                      <p className="text-[10px] font-mono text-muted-foreground">{light.hex}</p>
-                    </div>
-                  </div>
-                ))}
+              <h3 className="text-sm font-semibold">Sphere Shading</h3>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <SphereShadingPreview scheme={shading} className="w-44 h-40 shrink-0" />
+                <div className="grid grid-cols-1 gap-1.5 w-full">
+                  {[shading.specular, shading.midtone, shading.shadow, shading.rim, shading.background].map(
+                    (swatch) => (
+                      <div key={swatch.role} className="flex items-center gap-2">
+                        <span
+                          className="h-6 w-6 rounded shrink-0 border border-border"
+                          style={{ backgroundColor: swatch.hex }}
+                        />
+                        <span className="text-xs font-medium w-24">{swatch.label}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground">{swatch.hex}</span>
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Key = brightest · Fill = softer shadows · Back = complementary rim. Export below as JSON.
+                A shading study built only from your picked colors. Export below as JSON.
               </p>
             </section>
           )}

@@ -1,5 +1,4 @@
 import { Palette, Color, ExportFormat } from '@/types';
-import { hslToRgb, rgbToHsl, rgbToHex } from '@/lib/utils';
 
 // Helper function to draw rounded rectangles
 function roundRect(
@@ -478,27 +477,25 @@ export async function exportToSnsPng(
 }
 
 // ============================================
-// 3-POINT LIGHTING PRESET
+// SPHERE SHADING SCHEME
 // ============================================
 
-export type LightRole = 'key' | 'fill' | 'back';
+export type ShadingRole = 'specular' | 'midtone' | 'shadow' | 'rim' | 'background';
 
-export interface LightSpec {
-  role: LightRole;
+export interface ShadingSwatch {
+  role: ShadingRole;
   label: string;
   hex: string;
   rgb: { r: number; g: number; b: number };
-  /** RGB normalized to 0-1, ready for game engines / shaders. */
-  normalized: [number, number, number];
-  /** Relative intensity (key = 1.0). */
-  intensity: number;
   note: string;
 }
 
-export interface ThreePointLighting {
-  key: LightSpec;
-  fill: LightSpec;
-  back: LightSpec;
+export interface ShadingScheme {
+  specular: ShadingSwatch;
+  midtone: ShadingSwatch;
+  shadow: ShadingSwatch;
+  rim: ShadingSwatch;
+  background: ShadingSwatch;
 }
 
 const NEUTRAL_COLOR: Color = {
@@ -507,83 +504,71 @@ const NEUTRAL_COLOR: Color = {
   hsl: { h: 0, s: 0, l: 50 },
 };
 
-function normalizedRgb(rgb: { r: number; g: number; b: number }): [number, number, number] {
-  return [
-    Math.round((rgb.r / 255) * 1000) / 1000,
-    Math.round((rgb.g / 255) * 1000) / 1000,
-    Math.round((rgb.b / 255) * 1000) / 1000,
-  ];
-}
-
 // Smallest distance between two hues on the 0-360 wheel.
 function hueDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
 }
 
-function makeLight(role: LightRole, label: string, color: Color, intensity: number, note: string): LightSpec {
-  return {
-    role,
-    label,
-    hex: color.hex.toUpperCase(),
-    rgb: color.rgb,
-    normalized: normalizedRgb(color.rgb),
-    intensity,
-    note,
-  };
+function makeSwatch(role: ShadingRole, label: string, color: Color, note: string): ShadingSwatch {
+  return { role, label, hex: color.hex.toUpperCase(), rgb: color.rgb, note };
 }
 
 /**
- * Derive a 3-point lighting rig from a palette.
- * - Key light  = the brightest color (the dominant light source)
- * - Fill light = the next brightest color, dimmed to soften shadows
- * - Back light = the palette color closest to the key's complement (rim separation);
- *                falls back to the computed 180° complement when none is close enough.
+ * Map the picked palette onto a classic sphere-shading study — using ONLY the
+ * extracted colors. Values are assigned by luminance; the rim (back light) is the
+ * palette color nearest the midtone's complement for separation, and the
+ * background is the calmest (least saturated) color.
  */
-export function buildThreePointLighting(palette: Palette): ThreePointLighting {
+export function buildShadingScheme(palette: Palette): ShadingScheme {
   const colors = palette.colors.length > 0 ? palette.colors : [NEUTRAL_COLOR];
 
   // Sort a copy by luminance, brightest first.
   const byBrightness = [...colors].sort((a, b) => getLuminance(b) - getLuminance(a));
+  const n = byBrightness.length;
 
-  const keyColor = byBrightness[0];
-  const fillColor = byBrightness[1] ?? byBrightness[0];
+  const specularColor = byBrightness[0];
+  const shadowColor = byBrightness[n - 1];
+  const midtoneColor = byBrightness[Math.floor((n - 1) / 2)];
 
-  const complementHue = (keyColor.hsl.h + 180) % 360;
-
-  // Prefer an existing palette color near the complement (skip key/fill where possible).
-  const backCandidates = colors.filter((c) => c !== keyColor && c !== fillColor);
-  let backColor: Color | null = null;
+  // Rim / back light: palette color nearest the midtone's complement.
+  const complementHue = (midtoneColor.hsl.h + 180) % 360;
+  let rimColor = midtoneColor;
   let bestDistance = Infinity;
-  for (const candidate of backCandidates) {
+  for (const candidate of colors) {
     const distance = hueDistance(candidate.hsl.h, complementHue);
     if (distance < bestDistance) {
       bestDistance = distance;
-      backColor = candidate;
+      rimColor = candidate;
     }
   }
 
-  // If nothing is reasonably close to the complement, synthesize one from the key.
-  if (!backColor || bestDistance > 60) {
-    const synth = hslToRgb(complementHue, Math.max(keyColor.hsl.s, 40), Math.min(keyColor.hsl.l, 55));
-    const hex = rgbToHex(synth.r, synth.g, synth.b);
-    backColor = { hex, rgb: synth, hsl: rgbToHsl(synth.r, synth.g, synth.b) };
+  // Background: the calmest (least saturated) color makes a neutral backdrop.
+  let backgroundColor = colors[0];
+  let lowestSat = Infinity;
+  for (const candidate of colors) {
+    if (candidate.hsl.s < lowestSat) {
+      lowestSat = candidate.hsl.s;
+      backgroundColor = candidate;
+    }
   }
 
   return {
-    key: makeLight('key', 'Key Light', keyColor, 1.0, 'Brightest color — primary light source'),
-    fill: makeLight('fill', 'Fill Light', fillColor, 0.45, 'Second brightest — softens shadows at ~45% of key'),
-    back: makeLight('back', 'Back / Rim Light', backColor, 0.7, 'Complementary tone — separates subject from background'),
+    specular: makeSwatch('specular', 'Specular', specularColor, 'Brightest color — direct highlight'),
+    midtone: makeSwatch('midtone', 'Midtone', midtoneColor, 'Mid value — the lit surface'),
+    shadow: makeSwatch('shadow', 'Shadow', shadowColor, 'Darkest color — core shadow'),
+    rim: makeSwatch('rim', 'Rim / Back', rimColor, 'Nearest complement — back light separation'),
+    background: makeSwatch('background', 'Background', backgroundColor, 'Calmest color — backdrop / ambient'),
   };
 }
 
-export function exportToLighting(palette: Palette): string {
-  const rig = buildThreePointLighting(palette);
+export function exportToShading(palette: Palette): string {
+  const scheme = buildShadingScheme(palette);
   return JSON.stringify(
     {
       name: palette.name,
-      setup: '3-point-lighting',
-      lights: rig,
+      setup: 'sphere-shading',
+      roles: scheme,
       exportedAt: new Date().toISOString(),
     },
     null,
@@ -730,8 +715,8 @@ export async function exportPalette(
       break;
     }
     case 'lighting': {
-      const lighting = exportToLighting(palette);
-      downloadFile(lighting, `${safeName}-lighting.json`, 'application/json');
+      const shading = exportToShading(palette);
+      downloadFile(shading, `${safeName}-shading.json`, 'application/json');
       break;
     }
   }
