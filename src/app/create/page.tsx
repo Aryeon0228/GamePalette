@@ -10,7 +10,6 @@ import {
   IoArrowBackOutline,
   IoEyeOutline,
   IoSettingsOutline,
-  IoInformationCircleOutline,
 } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,7 +20,7 @@ import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { ColorCountSelector } from "@/components/ColorCountSelector"
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal"
-import { ColorDetailModal } from "@/components/ColorDetailModal"
+import { ColorDetailPanel } from "@/components/ColorDetailPanel"
 import { HistogramSection } from "@/components/HistogramSection"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { extractColors, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
@@ -59,7 +58,6 @@ export default function CreatePage() {
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
-  const [showColorDetail, setShowColorDetail] = useState(false)
   const [extractionImageUrl, setExtractionImageUrl] = useState<string | null>(null)
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const extractionIdRef = useRef(0)
@@ -361,12 +359,6 @@ export default function CreatePage() {
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Extracted Palette</h2>
-              {selectedColor && (
-                <Button size="sm" variant="outline" onClick={() => setShowColorDetail(true)}>
-                  <IoInformationCircleOutline className="h-4 w-4 mr-1.5" />
-                  Color Detail
-                </Button>
-              )}
             </div>
             <PaletteDisplay
               colors={displayColors}
@@ -377,22 +369,7 @@ export default function CreatePage() {
 
           {histogram && <HistogramSection histogram={histogram} />}
 
-          {selectedColor && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
-                  style={{ backgroundColor: selectedColor.hex }}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-muted-foreground">Selected Color</p>
-                  <h3 className="text-lg font-semibold truncate">{selectedColor.name || selectedColor.hex}</h3>
-                  <p className="text-sm font-mono text-muted-foreground">{selectedColor.hex.toUpperCase()}</p>
-                </div>
-                <Button onClick={() => setShowColorDetail(true)}>Open Detail</Button>
-              </div>
-            </div>
-          )}
+          {selectedColor && <ColorDetailPanel color={selectedColor} />}
 
           {displayColors.length > 0 && !selectedColor && (
             <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
@@ -425,12 +402,6 @@ export default function CreatePage() {
         onValueCheckToggle={toggleValueCheck}
         colorBlindMode={colorBlindMode}
         onColorBlindModeChange={setColorBlindMode}
-      />
-
-      <ColorDetailModal
-        open={showColorDetail}
-        onOpenChange={setShowColorDetail}
-        color={selectedColor}
       />
     </div>
   )
