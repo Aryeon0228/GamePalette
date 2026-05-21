@@ -20,8 +20,10 @@ import {
   exportToUnreal,
   exportToLighting,
   buildThreePointLighting,
+  downloadFile,
   SnsCardType,
 } from "@/lib/exporters"
+import { imageToAscii, type AsciiArtResult } from "@/lib/asciiArt"
 import { copyToClipboard } from "@/lib/utils"
 
 interface ExportModalProps {
@@ -94,6 +96,10 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
   const [cardShowHex, setCardShowHex] = useState(true)
   const [cardShowStats, setCardShowStats] = useState(true)
   const [cardShowHistogram, setCardShowHistogram] = useState(true)
+  const [asciiWidth, setAsciiWidth] = useState(80)
+  const [asciiArt, setAsciiArt] = useState<AsciiArtResult | null>(null)
+  const [asciiGenerating, setAsciiGenerating] = useState(false)
+  const [asciiCopied, setAsciiCopied] = useState(false)
 
   const previewRatio = snsCardType === "twitter" ? "16 / 9" : "1 / 1"
   const previewColors = palette.colors
@@ -150,6 +156,31 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
     } finally {
       setIsExporting(null)
     }
+  }
+
+  const safeName = palette.name.replace(/[^a-zA-Z0-9-_]/g, "_")
+
+  const handleGenerateAscii = async () => {
+    if (!palette.sourceImageUrl) return
+    setAsciiGenerating(true)
+    try {
+      const result = await imageToAscii(palette.sourceImageUrl, {
+        width: asciiWidth,
+        colors: palette.colors,
+      })
+      setAsciiArt(result)
+    } catch (error) {
+      console.error("ASCII generation failed:", error)
+    } finally {
+      setAsciiGenerating(false)
+    }
+  }
+
+  const handleCopyAscii = async () => {
+    if (!asciiArt) return
+    await copyToClipboard(asciiArt.text)
+    setAsciiCopied(true)
+    setTimeout(() => setAsciiCopied(false), 2000)
   }
 
   return (
@@ -306,6 +337,75 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
               <p className="text-xs text-muted-foreground">
                 Key = brightest · Fill = softer shadows · Back = complementary rim. Export below as JSON.
               </p>
+            </section>
+          )}
+
+          {palette.sourceImageUrl && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">ASCII Art</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  { w: 60, label: "Small" },
+                  { w: 80, label: "Medium" },
+                  { w: 120, label: "Large" },
+                ].map((opt) => (
+                  <Button
+                    key={opt.w}
+                    size="sm"
+                    variant={asciiWidth === opt.w ? "default" : "outline"}
+                    onClick={() => setAsciiWidth(opt.w)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+                <Button size="sm" variant="secondary" onClick={handleGenerateAscii} disabled={asciiGenerating}>
+                  {asciiGenerating ? "Generating…" : asciiArt ? "Regenerate" : "Generate"}
+                </Button>
+              </div>
+
+              {asciiArt && (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-border bg-[#0d0d12] overflow-auto max-h-64">
+                    <pre
+                      className="font-mono leading-none p-3 whitespace-pre"
+                      style={{ fontSize: "5px" }}
+                      // Generated locally from a fixed glyph ramp + palette hex; no user-supplied markup.
+                      dangerouslySetInnerHTML={{ __html: asciiArt.htmlBody }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={handleCopyAscii}>
+                      {asciiCopied ? (
+                        <>
+                          <IoCheckmarkOutline className="h-4 w-4 mr-1" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <IoCopyOutline className="h-4 w-4 mr-1" />
+                          Copy text
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadFile(asciiArt.text, `${safeName}-ascii.txt`, "text/plain")}
+                    >
+                      <IoDownloadOutline className="h-4 w-4 mr-1" />
+                      .txt
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadFile(asciiArt.html, `${safeName}-ascii.html`, "text/html")}
+                    >
+                      <IoDownloadOutline className="h-4 w-4 mr-1" />
+                      .html (color)
+                    </Button>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
