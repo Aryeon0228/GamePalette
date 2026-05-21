@@ -34,13 +34,13 @@ export function ColorChannelBar({
       >
         {!hueTrack && (
           <div
-            className="absolute inset-y-0 left-0 rounded-full"
+            className="absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-300 ease-out"
             style={{ width: `${percentage}%`, backgroundColor: color }}
           />
         )}
         {hueTrack && (
           <div
-            className="absolute inset-y-0 w-1 -translate-x-1/2 rounded-full bg-foreground ring-1 ring-background"
+            className="absolute inset-y-0 w-1 -translate-x-1/2 rounded-full bg-foreground ring-1 ring-background transition-[left] duration-300 ease-out"
             style={{ left: `${percentage}%` }}
           />
         )}

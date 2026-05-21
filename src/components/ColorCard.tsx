@@ -10,9 +10,11 @@ interface ColorCardProps {
   selected?: boolean
   onClick?: () => void
   showDetails?: boolean
+  /** Fill the parent cell (h/w 100%) instead of using a fixed aspect ratio. */
+  fill?: boolean
 }
 
-export function ColorCard({ color, selected, onClick, showDetails = false }: ColorCardProps) {
+export function ColorCard({ color, selected, onClick, showDetails = false, fill = false }: ColorCardProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const handleCopy = async (value: string, field: string) => {
@@ -73,7 +75,7 @@ export function ColorCard({ color, selected, onClick, showDetails = false }: Col
     <div
       className={cn(
         "group relative rounded-lg overflow-hidden cursor-pointer transition-all",
-        "aspect-square sm:aspect-[4/5]",
+        fill ? "h-full w-full min-h-0" : "aspect-square sm:aspect-[4/5]",
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
       )}
       style={{ backgroundColor: color.hex }}
