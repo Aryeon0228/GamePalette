@@ -107,6 +107,96 @@ export type ColorFormat = "HEX" | "RGB" | "HSL" | "HSV" | "HWB" | "CMYK" | "LAB"
 
 export const COLOR_FORMATS: ColorFormat[] = ["HEX", "RGB", "HSL", "HSV", "HWB", "CMYK", "LAB", "OKLAB", "OKLCH"]
 
+export interface ChannelSpec {
+  label: string
+  value: number
+  max: number
+  /** Bar fill color. */
+  color: string
+  /** Pre-formatted value display (falls back to value when omitted). */
+  display: string
+  /** Render the track as a hue gradient with a marker (for the H channel). */
+  hueTrack?: boolean
+  /** Center the bar at zero and fill toward the value (for signed a/b channels). */
+  bipolar?: boolean
+}
+
+const RGB_BAR = { r: "#ef4444", g: "#22c55e", b: "#3b82f6" }
+
+/** Per-format channel breakdown for the detail panel's Channels section. */
+export function getChannels(color: Color, format: ColorFormat): ChannelSpec[] {
+  const { r, g, b } = color.rgb
+  const hex = color.hex
+
+  switch (format) {
+    case "HSL": {
+      const { h, s, l } = color.hsl
+      return [
+        { label: "H", value: h, max: 360, color: hex, display: `${h}°`, hueTrack: true },
+        { label: "S", value: s, max: 100, color: hex, display: `${s}%` },
+        { label: "L", value: l, max: 100, color: hex, display: `${l}%` },
+      ]
+    }
+    case "HSV": {
+      const { h, s, v } = rgbToHsv(r, g, b)
+      return [
+        { label: "H", value: h, max: 360, color: hex, display: `${h}°`, hueTrack: true },
+        { label: "S", value: s, max: 100, color: hex, display: `${s}%` },
+        { label: "V", value: v, max: 100, color: hex, display: `${v}%` },
+      ]
+    }
+    case "HWB": {
+      const { h, w, b: bl } = rgbToHwb(r, g, b)
+      return [
+        { label: "H", value: h, max: 360, color: hex, display: `${h}°`, hueTrack: true },
+        { label: "W", value: w, max: 100, color: hex, display: `${w}%` },
+        { label: "B", value: bl, max: 100, color: hex, display: `${bl}%` },
+      ]
+    }
+    case "CMYK": {
+      const { c, m, y, k } = rgbToCmyk(r, g, b)
+      return [
+        { label: "C", value: c, max: 100, color: "#22d3ee", display: `${c}%` },
+        { label: "M", value: m, max: 100, color: "#e879f9", display: `${m}%` },
+        { label: "Y", value: y, max: 100, color: "#facc15", display: `${y}%` },
+        { label: "K", value: k, max: 100, color: "#6b7280", display: `${k}%` },
+      ]
+    }
+    case "LAB": {
+      const { l, a, b: lb } = rgbToLab(r, g, b)
+      return [
+        { label: "L", value: l, max: 100, color: hex, display: `${l}` },
+        { label: "a", value: a, max: 128, color: hex, display: `${a}`, bipolar: true },
+        { label: "b", value: lb, max: 128, color: hex, display: `${lb}`, bipolar: true },
+      ]
+    }
+    case "OKLAB": {
+      const { L, a, b: ob } = rgbToOklab(r, g, b)
+      return [
+        { label: "L", value: L, max: 1, color: hex, display: L.toFixed(3) },
+        { label: "a", value: a, max: 0.4, color: hex, display: a.toFixed(3), bipolar: true },
+        { label: "b", value: ob, max: 0.4, color: hex, display: ob.toFixed(3), bipolar: true },
+      ]
+    }
+    case "OKLCH": {
+      const { L, c, h } = rgbToOklch(r, g, b)
+      return [
+        { label: "L", value: L, max: 1, color: hex, display: L.toFixed(3) },
+        { label: "C", value: c, max: 0.4, color: hex, display: c.toFixed(3) },
+        { label: "H", value: h, max: 360, color: hex, display: `${Math.round(h)}°`, hueTrack: true },
+      ]
+    }
+    case "HEX":
+    case "RGB":
+    default:
+      return [
+        { label: "R", value: r, max: 255, color: RGB_BAR.r, display: `${r}` },
+        { label: "G", value: g, max: 255, color: RGB_BAR.g, display: `${g}` },
+        { label: "B", value: b, max: 255, color: RGB_BAR.b, display: `${b}` },
+      ]
+  }
+}
+
 export function formatColor(color: Color, format: ColorFormat): string {
   const { r, g, b } = color.rgb
   switch (format) {

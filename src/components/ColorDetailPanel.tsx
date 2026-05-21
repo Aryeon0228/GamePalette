@@ -9,7 +9,7 @@ import { Color, VariationStyle } from "@/types"
 import { generateColorVariations } from "@/lib/styleFilters"
 import { HarmonyType, generateColorHarmonies } from "@/lib/colorVision"
 import { copyToClipboard, contrastRatio } from "@/lib/utils"
-import { COLOR_FORMATS, ColorFormat, formatColor } from "@/lib/colorFormats"
+import { COLOR_FORMATS, ColorFormat, formatColor, getChannels } from "@/lib/colorFormats"
 
 interface ColorDetailPanelProps {
   color: Color | null
@@ -105,18 +105,23 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold">Channels</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-          <div className="space-y-2">
-            <ColorChannelBar label="R" value={color.rgb.r} max={255} color="#ef4444" />
-            <ColorChannelBar label="G" value={color.rgb.g} max={255} color="#22c55e" />
-            <ColorChannelBar label="B" value={color.rgb.b} max={255} color="#3b82f6" />
-          </div>
-          <div className="space-y-2">
-            <ColorChannelBar label="H" value={color.hsl.h} max={360} color={color.hex} hueTrack unit="°" />
-            <ColorChannelBar label="S" value={color.hsl.s} max={100} color={color.hex} unit="%" />
-            <ColorChannelBar label="L" value={color.hsl.l} max={100} color={color.hex} unit="%" />
-          </div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Channels</h3>
+          <span className="text-[10px] font-mono text-muted-foreground">{format}</span>
+        </div>
+        <div className="space-y-2">
+          {getChannels(color, format).map((ch) => (
+            <ColorChannelBar
+              key={`${format}-${ch.label}`}
+              label={ch.label}
+              value={ch.value}
+              max={ch.max}
+              color={ch.color}
+              hueTrack={ch.hueTrack}
+              bipolar={ch.bipolar}
+              display={ch.display}
+            />
+          ))}
         </div>
       </section>
 
