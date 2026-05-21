@@ -9,12 +9,11 @@ import { Color, VariationStyle } from "@/types"
 import { generateColorVariations } from "@/lib/styleFilters"
 import { HarmonyType, generateColorHarmonies } from "@/lib/colorVision"
 import { copyToClipboard, contrastRatio } from "@/lib/utils"
+import { COLOR_FORMATS, ColorFormat, formatColor } from "@/lib/colorFormats"
 
 interface ColorDetailPanelProps {
   color: Color | null
 }
-
-type ColorFormat = "HEX" | "RGB" | "HSL"
 
 export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
   const [format, setFormat] = useState<ColorFormat>("HEX")
@@ -50,12 +49,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
     [color, complementHex]
   )
 
-  const displayValue = useMemo(() => {
-    if (!color) return ""
-    if (format === "RGB") return `rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`
-    if (format === "HSL") return `hsl(${color.hsl.h}, ${color.hsl.s}%, ${color.hsl.l}%)`
-    return color.hex.toUpperCase()
-  }, [color, format])
+  const displayValue = useMemo(() => (color ? formatColor(color, format) : ""), [color, format])
 
   const handleCopy = async (value: string, token: string) => {
     await copyToClipboard(value)
@@ -75,10 +69,11 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
           className="rounded-lg h-24 w-full border border-border flex items-center justify-between px-4"
           style={{ backgroundColor: color.hex }}
         >
-          <span className="font-mono text-sm text-white/95 drop-shadow">{displayValue}</span>
+          <span className="font-mono text-sm text-white/95 drop-shadow min-w-0 truncate mr-2">{displayValue}</span>
           <Button
             variant="secondary"
             size="sm"
+            className="shrink-0"
             onClick={() => handleCopy(displayValue, `main:${displayValue}`)}
           >
             {copiedToken === `main:${displayValue}` ? (
@@ -95,10 +90,11 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {(["HEX", "RGB", "HSL"] as const).map((candidate) => (
+        <div className="grid grid-cols-4 gap-2">
+          {COLOR_FORMATS.map((candidate) => (
             <Button
               key={candidate}
+              size="sm"
               variant={format === candidate ? "default" : "outline"}
               onClick={() => setFormat(candidate)}
             >
