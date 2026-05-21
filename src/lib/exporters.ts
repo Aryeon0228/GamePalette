@@ -395,7 +395,7 @@ export async function exportToSnsPng(
   }
 
   const stripY = padding + topAreaHeight + 24;
-  const colors = palette.colors.slice(0, 8);
+  const colors = palette.colors;
   const swatchGap = 10;
   const swatchWidth = (contentWidth - swatchGap * (colors.length - 1)) / Math.max(colors.length, 1);
   colors.forEach((color, index) => {
@@ -404,7 +404,8 @@ export async function exportToSnsPng(
     ctx.fillStyle = color.hex;
     ctx.fill();
 
-    if (showHex) {
+    // Skip hex labels once swatches get too narrow to fit them (many colors).
+    if (showHex && swatchWidth > 70) {
       ctx.fillStyle = getLuminance(color) > 140 ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.94)';
       ctx.font = `700 ${cardType === 'twitter' ? 22 : 24}px ui-monospace, SFMono-Regular, monospace`;
       ctx.textAlign = 'center';
