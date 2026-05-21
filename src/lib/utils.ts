@@ -103,6 +103,25 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
   };
 }
 
+// Relative luminance per WCAG 2.x (0 = black, 1 = white)
+export function relativeLuminance(hex: string): number {
+  const { r, g, b } = hexToRgb(hex);
+  const channel = (c: number) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+// WCAG contrast ratio between two colors (1 = identical, 21 = black/white)
+export function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = relativeLuminance(hex1);
+  const l2 = relativeLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 export function formatDate(date: string | Date): string {
   const d = new Date(date);
   return d.toLocaleDateString('en-US', {

@@ -1,4 +1,5 @@
 import { Palette, Color, ExportFormat } from '@/types';
+import { hslToRgb, rgbToHsl, rgbToHex } from '@/lib/utils';
 
 // Helper function to draw rounded rectangles
 function roundRect(
@@ -475,6 +476,120 @@ export async function exportToSnsPng(
   return toBlob(canvas);
 }
 
+// ============================================
+// 3-POINT LIGHTING PRESET
+// ============================================
+
+export type LightRole = 'key' | 'fill' | 'back';
+
+export interface LightSpec {
+  role: LightRole;
+  label: string;
+  hex: string;
+  rgb: { r: number; g: number; b: number };
+  /** RGB normalized to 0-1, ready for game engines / shaders. */
+  normalized: [number, number, number];
+  /** Relative intensity (key = 1.0). */
+  intensity: number;
+  note: string;
+}
+
+export interface ThreePointLighting {
+  key: LightSpec;
+  fill: LightSpec;
+  back: LightSpec;
+}
+
+const NEUTRAL_COLOR: Color = {
+  hex: '#808080',
+  rgb: { r: 128, g: 128, b: 128 },
+  hsl: { h: 0, s: 0, l: 50 },
+};
+
+function normalizedRgb(rgb: { r: number; g: number; b: number }): [number, number, number] {
+  return [
+    Math.round((rgb.r / 255) * 1000) / 1000,
+    Math.round((rgb.g / 255) * 1000) / 1000,
+    Math.round((rgb.b / 255) * 1000) / 1000,
+  ];
+}
+
+// Smallest distance between two hues on the 0-360 wheel.
+function hueDistance(a: number, b: number): number {
+  const diff = Math.abs(a - b) % 360;
+  return diff > 180 ? 360 - diff : diff;
+}
+
+function makeLight(role: LightRole, label: string, color: Color, intensity: number, note: string): LightSpec {
+  return {
+    role,
+    label,
+    hex: color.hex.toUpperCase(),
+    rgb: color.rgb,
+    normalized: normalizedRgb(color.rgb),
+    intensity,
+    note,
+  };
+}
+
+/**
+ * Derive a 3-point lighting rig from a palette.
+ * - Key light  = the brightest color (the dominant light source)
+ * - Fill light = the next brightest color, dimmed to soften shadows
+ * - Back light = the palette color closest to the key's complement (rim separation);
+ *                falls back to the computed 180° complement when none is close enough.
+ */
+export function buildThreePointLighting(palette: Palette): ThreePointLighting {
+  const colors = palette.colors.length > 0 ? palette.colors : [NEUTRAL_COLOR];
+
+  // Sort a copy by luminance, brightest first.
+  const byBrightness = [...colors].sort((a, b) => getLuminance(b) - getLuminance(a));
+
+  const keyColor = byBrightness[0];
+  const fillColor = byBrightness[1] ?? byBrightness[0];
+
+  const complementHue = (keyColor.hsl.h + 180) % 360;
+
+  // Prefer an existing palette color near the complement (skip key/fill where possible).
+  const backCandidates = colors.filter((c) => c !== keyColor && c !== fillColor);
+  let backColor: Color | null = null;
+  let bestDistance = Infinity;
+  for (const candidate of backCandidates) {
+    const distance = hueDistance(candidate.hsl.h, complementHue);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      backColor = candidate;
+    }
+  }
+
+  // If nothing is reasonably close to the complement, synthesize one from the key.
+  if (!backColor || bestDistance > 60) {
+    const synth = hslToRgb(complementHue, Math.max(keyColor.hsl.s, 40), Math.min(keyColor.hsl.l, 55));
+    const hex = rgbToHex(synth.r, synth.g, synth.b);
+    backColor = { hex, rgb: synth, hsl: rgbToHsl(synth.r, synth.g, synth.b) };
+  }
+
+  return {
+    key: makeLight('key', 'Key Light', keyColor, 1.0, 'Brightest color — primary light source'),
+    fill: makeLight('fill', 'Fill Light', fillColor, 0.45, 'Second brightest — softens shadows at ~45% of key'),
+    back: makeLight('back', 'Back / Rim Light', backColor, 0.7, 'Complementary tone — separates subject from background'),
+  };
+}
+
+export function exportToLighting(palette: Palette): string {
+  const rig = buildThreePointLighting(palette);
+  return JSON.stringify(
+    {
+      name: palette.name,
+      setup: '3-point-lighting',
+      lights: rig,
+      exportedAt: new Date().toISOString(),
+    },
+    null,
+    2
+  );
+}
+
 export function exportToJson(palette: Palette): string {
   const exportData = {
     name: palette.name,
@@ -611,6 +726,11 @@ export async function exportPalette(
     case 'unreal': {
       const unreal = exportToUnreal(palette);
       downloadFile(unreal, `${safeName}.csv`, 'text/csv');
+      break;
+    }
+    case 'lighting': {
+      const lighting = exportToLighting(palette);
+      downloadFile(lighting, `${safeName}-lighting.json`, 'application/json');
       break;
     }
   }
