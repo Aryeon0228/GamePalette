@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { IoCheckmarkOutline, IoCopyOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { ColorChannelBar } from "@/components/ColorChannelBar"
+import { HarmonyWheel } from "@/components/HarmonyWheel"
 import { Color, VariationStyle } from "@/types"
 import { generateColorVariations } from "@/lib/styleFilters"
 import { HarmonyType, generateColorHarmonies } from "@/lib/colorVision"
@@ -134,26 +135,36 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
               </span>
             </span>
           </div>
-          <div className="flex h-20 overflow-hidden rounded-lg border border-border">
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center font-mono text-xs"
-              style={{ backgroundColor: color.hex, color: complementHex }}
-              onClick={() => handleCopy(color.hex, `comp-base:${color.hex}`)}
-            >
-              {copiedToken === `comp-base:${color.hex}` ? "Copied" : color.hex.toUpperCase()}
-            </button>
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center font-mono text-xs"
-              style={{ backgroundColor: complementHex, color: color.hex }}
-              onClick={() => handleCopy(complementHex, `comp:${complementHex}`)}
-            >
-              {copiedToken === `comp:${complementHex}` ? "Copied" : complementHex.toUpperCase()}
-            </button>
+          <div className="flex items-center gap-4">
+            <HarmonyWheel
+              baseHue={color.hsl.h}
+              colors={[
+                { hex: color.hex, angle: 0 },
+                { hex: complementHex, angle: 180 },
+              ]}
+              size={96}
+            />
+            <div className="flex-1 flex h-20 overflow-hidden rounded-lg border border-border">
+              <button
+                type="button"
+                className="flex-1 flex items-center justify-center font-mono text-xs"
+                style={{ backgroundColor: color.hex, color: complementHex }}
+                onClick={() => handleCopy(color.hex, `comp-base:${color.hex}`)}
+              >
+                {copiedToken === `comp-base:${color.hex}` ? "Copied" : color.hex.toUpperCase()}
+              </button>
+              <button
+                type="button"
+                className="flex-1 flex items-center justify-center font-mono text-xs"
+                style={{ backgroundColor: complementHex, color: color.hex }}
+                onClick={() => handleCopy(complementHex, `comp:${complementHex}`)}
+              >
+                {copiedToken === `comp:${complementHex}` ? "Copied" : complementHex.toUpperCase()}
+              </button>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Base and its 180° complement. Higher ratios read more clearly when paired.
+            The dots show the base and its 180° complement on the wheel. Higher ratios read more clearly when paired.
           </p>
         </section>
       )}
@@ -214,7 +225,14 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
 
         {activeHarmony && (
           <div className="rounded-lg border border-border p-3 space-y-3">
-            <p className="text-xs text-muted-foreground">{activeHarmony.description}</p>
+            <div className="flex items-center gap-4">
+              <HarmonyWheel
+                baseHue={color.hsl.h}
+                colors={activeHarmony.colors.map((item) => ({ hex: item.hex, angle: item.angle }))}
+                size={104}
+              />
+              <p className="text-xs text-muted-foreground flex-1">{activeHarmony.description}</p>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {activeHarmony.colors.map((item) => (
                 <button
