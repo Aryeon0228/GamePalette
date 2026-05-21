@@ -26,6 +26,24 @@ interface HueBin {
 
 export type ExtractionMethod = 'histogram' | 'kmeans';
 
+// Luminosity histogram analysis result (ported from the mobile app)
+export interface LuminosityHistogram {
+  bins: number[]; // 32 bins, normalized so the tallest bin is 100
+  average: number; // Average luminosity (0-255)
+  contrast: number; // Contrast percentage (0-100)
+  darkPercent: number; // Percentage of dark pixels
+  midPercent: number; // Percentage of mid-tone pixels
+  brightPercent: number; // Percentage of bright pixels
+  minValue: number; // Minimum luminosity
+  maxValue: number; // Maximum luminosity
+}
+
+const LUMINOSITY_WEIGHTS = { r: 0.299, g: 0.587, b: 0.114 } as const;
+const LUMINOSITY_BIN_SIZE = 8; // 32 bins cover 0-255
+const LUMINOSITY_STD_NORMALIZER = 128;
+const LUMINOSITY_DARK_THRESHOLD = 85;
+const LUMINOSITY_MID_THRESHOLD = 170;
+
 // Main color extraction function with selectable method
 export async function extractColors(
   imageUrl: string,
@@ -549,4 +567,123 @@ export function createColorFromRgb(r: number, g: number, b: number): Color {
     hsl,
     name: getColorName(hex),
   };
+}
+
+// ============================================
+// LUMINOSITY HISTOGRAM ANALYSIS (canvas-based)
+// ============================================
+
+/**
+ * Analyze the brightness (luminosity) distribution of an image.
+ * Mirrors the mobile app's analysis but reads pixels from a canvas.
+ * Returns null if the image cannot be loaded or has no opaque pixels.
+ */
+export async function analyzeLuminosityHistogram(
+  imageUrl: string
+): Promise<LuminosityHistogram | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+
+        // Resize for performance / accuracy balance (max 150px)
+        const maxDimension = 150;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDimension) {
+            height = (height / width) * maxDimension;
+            width = maxDimension;
+          }
+        } else if (height > maxDimension) {
+          width = (width / height) * maxDimension;
+          height = maxDimension;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        const data = ctx.getImageData(0, 0, width, height).data;
+
+        const luminosities: number[] = [];
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 128) continue; // skip transparent pixels
+          const lum = Math.round(
+            LUMINOSITY_WEIGHTS.r * data[i] +
+              LUMINOSITY_WEIGHTS.g * data[i + 1] +
+              LUMINOSITY_WEIGHTS.b * data[i + 2]
+          );
+          luminosities.push(lum);
+        }
+
+        if (luminosities.length === 0) {
+          resolve(null);
+          return;
+        }
+
+        // Build 32-bin histogram
+        const binCount = 32;
+        const bins = new Array<number>(binCount).fill(0);
+        for (const lum of luminosities) {
+          const binIndex = Math.min(Math.floor(lum / LUMINOSITY_BIN_SIZE), binCount - 1);
+          bins[binIndex]++;
+        }
+        const maxBinCount = Math.max(...bins);
+        const normalizedBins = bins.map((count) =>
+          maxBinCount > 0 ? Math.round((count / maxBinCount) * 100) : 0
+        );
+
+        // Statistics
+        const totalPixels = luminosities.length;
+        const sum = luminosities.reduce((a, b) => a + b, 0);
+        const average = Math.round(sum / totalPixels);
+
+        const sorted = [...luminosities].sort((a, b) => a - b);
+        const minValue = sorted[0];
+        const maxValue = sorted[sorted.length - 1];
+
+        const variance =
+          luminosities.reduce((acc, lum) => acc + Math.pow(lum - average, 2), 0) / totalPixels;
+        const stdDev = Math.sqrt(variance);
+
+        const rangeContrast = (maxValue - minValue) / 255;
+        const stdContrast = stdDev / LUMINOSITY_STD_NORMALIZER;
+        const contrast = Math.round(Math.min(100, ((rangeContrast + stdContrast) / 2) * 100));
+
+        let darkCount = 0;
+        let midCount = 0;
+        let brightCount = 0;
+        for (const lum of luminosities) {
+          if (lum < LUMINOSITY_DARK_THRESHOLD) darkCount++;
+          else if (lum < LUMINOSITY_MID_THRESHOLD) midCount++;
+          else brightCount++;
+        }
+
+        resolve({
+          bins: normalizedBins,
+          average,
+          contrast,
+          darkPercent: Math.round((darkCount / totalPixels) * 100),
+          midPercent: Math.round((midCount / totalPixels) * 100),
+          brightPercent: Math.round((brightCount / totalPixels) * 100),
+          minValue,
+          maxValue,
+        });
+      } catch (error) {
+        console.error('Luminosity histogram error:', error);
+        resolve(null);
+      }
+    };
+
+    img.onerror = () => resolve(null);
+    img.src = imageUrl;
+  });
 }

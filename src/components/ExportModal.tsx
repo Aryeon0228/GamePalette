@@ -18,6 +18,8 @@ import {
   exportToScss,
   exportToUnity,
   exportToUnreal,
+  exportToLighting,
+  buildThreePointLighting,
   SnsCardType,
 } from "@/lib/exporters"
 import { copyToClipboard } from "@/lib/utils"
@@ -48,6 +50,12 @@ const exportOptions: ExportOption[] = [
     format: "json",
     label: "JSON",
     description: "Structured data format",
+    action: "download",
+  },
+  {
+    format: "lighting",
+    label: "3-Point Lighting",
+    description: "Key / Fill / Back light preset (JSON)",
     action: "download",
   },
   {
@@ -88,7 +96,11 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
   const [cardShowHistogram, setCardShowHistogram] = useState(true)
 
   const previewRatio = snsCardType === "twitter" ? "16 / 9" : "1 / 1"
-  const previewColors = useMemo(() => palette.colors.slice(0, 8), [palette.colors])
+  const previewColors = palette.colors
+  const lighting = useMemo(
+    () => (palette.colors.length > 0 ? buildThreePointLighting(palette) : null),
+    [palette]
+  )
 
   const handleExport = async (option: ExportOption) => {
     if (option.proOnly && !isPro) {
@@ -235,7 +247,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                             className="flex-1 rounded-sm min-h-10 flex items-center justify-center"
                             style={{ backgroundColor: color.hex }}
                           >
-                            {cardShowHex && (
+                            {cardShowHex && previewColors.length <= 8 && (
                               <span className="text-[9px] font-mono text-black/80">{color.hex.toUpperCase()}</span>
                             )}
                           </div>
@@ -261,6 +273,41 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
               </div>
             )}
           </section>
+
+          {lighting && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">3-Point Lighting Preview</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {[lighting.key, lighting.fill, lighting.back].map((light) => (
+                  <div
+                    key={light.role}
+                    className="rounded-lg border border-border overflow-hidden"
+                  >
+                    <div className="h-16 relative" style={{ backgroundColor: light.hex }}>
+                      <span
+                        className="absolute bottom-1 right-1.5 text-[10px] font-mono"
+                        style={{
+                          color:
+                            0.299 * light.rgb.r + 0.587 * light.rgb.g + 0.114 * light.rgb.b > 140
+                              ? "rgba(0,0,0,0.82)"
+                              : "rgba(255,255,255,0.94)",
+                        }}
+                      >
+                        {Math.round(light.intensity * 100)}%
+                      </span>
+                    </div>
+                    <div className="px-2 py-1.5 bg-background">
+                      <p className="text-xs font-medium">{light.label}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground">{light.hex}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Key = brightest · Fill = softer shadows · Back = complementary rim. Export below as JSON.
+              </p>
+            </section>
+          )}
 
           <div className="space-y-2">
             {exportOptions.map((option) => {

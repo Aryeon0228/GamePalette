@@ -44,7 +44,7 @@ export interface CustomStyleSettings {
   hueShift: number;
 }
 
-export type ExportFormat = 'png' | 'json' | 'css' | 'scss' | 'unity' | 'unreal';
+export type ExportFormat = 'png' | 'json' | 'css' | 'scss' | 'unity' | 'unreal' | 'lighting';
 
 export interface ColorVariation {
   shadow2: Color;      // 가장 어두운 그림자

@@ -22,8 +22,9 @@ import { ExportModal } from "@/components/ExportModal"
 import { ColorCountSelector } from "@/components/ColorCountSelector"
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal"
 import { ColorDetailModal } from "@/components/ColorDetailModal"
+import { HistogramSection } from "@/components/HistogramSection"
 import { usePaletteStore } from "@/stores/paletteStore"
-import { extractColors } from "@/lib/colorExtractor"
+import { extractColors, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
 import { useToast } from "@/components/ui/toast"
 import { generateId } from "@/lib/utils"
 
@@ -60,7 +61,25 @@ export default function CreatePage() {
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [showColorDetail, setShowColorDetail] = useState(false)
   const [extractionImageUrl, setExtractionImageUrl] = useState<string | null>(null)
+  const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const extractionIdRef = useRef(0)
+
+  // Luminosity histogram depends only on the source image, so recompute it
+  // whenever the extracted image changes (not on color-count/method changes).
+  useEffect(() => {
+    if (!extractionImageUrl) {
+      setHistogram(null)
+      return
+    }
+    let cancelled = false
+    setHistogram(null)
+    analyzeLuminosityHistogram(extractionImageUrl).then((result) => {
+      if (!cancelled) setHistogram(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [extractionImageUrl])
 
   const displayColors = getDisplayColors()
   const selectedColor =
@@ -301,8 +320,10 @@ export default function CreatePage() {
             <div className="rounded-lg border border-border bg-card p-6">
               <h3 className="text-sm font-medium mb-4">Quick Settings</h3>
 
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <ColorCountSelector value={colorCount} onChange={setColorCount} />
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="min-w-[180px] flex-1">
+                  <ColorCountSelector value={colorCount} onChange={setColorCount} />
+                </div>
                 <div className="flex gap-2">
                   <Button
                     variant={valueCheckEnabled ? "secondary" : "outline"}
@@ -353,6 +374,8 @@ export default function CreatePage() {
               onColorSelect={(_, index) => setSelectedColorIndex(index)}
             />
           </div>
+
+          {histogram && <HistogramSection histogram={histogram} />}
 
           {selectedColor && (
             <div className="rounded-lg border border-border bg-card p-6">

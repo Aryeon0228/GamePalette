@@ -4,10 +4,11 @@ import { useMemo, useState } from "react"
 import { IoCheckmarkOutline, IoCopyOutline } from "react-icons/io5"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { ColorChannelBar } from "@/components/ColorChannelBar"
 import { Color, VariationStyle } from "@/types"
 import { generateColorVariations } from "@/lib/styleFilters"
 import { HarmonyType, generateColorHarmonies } from "@/lib/colorVision"
-import { copyToClipboard } from "@/lib/utils"
+import { copyToClipboard, contrastRatio } from "@/lib/utils"
 
 interface ColorDetailModalProps {
   open: boolean
@@ -39,6 +40,16 @@ export function ColorDetailModal({ open, onOpenChange, color }: ColorDetailModal
   const activeHarmony = useMemo(
     () => harmonies.find((harmony) => harmony.type === selectedHarmony) ?? null,
     [harmonies, selectedHarmony]
+  )
+
+  const complementHex = useMemo(() => {
+    const complementary = harmonies.find((harmony) => harmony.type === "complementary")
+    return complementary?.colors[1]?.hex ?? null
+  }, [harmonies])
+
+  const complementContrast = useMemo(
+    () => (color && complementHex ? contrastRatio(color.hex, complementHex) : null),
+    [color, complementHex]
   )
 
   const displayValue = useMemo(() => {
@@ -105,6 +116,57 @@ export function ColorDetailModal({ open, onOpenChange, color }: ColorDetailModal
                 ))}
               </div>
             </section>
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">Channels</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                <div className="space-y-2">
+                  <ColorChannelBar label="R" value={color.rgb.r} max={255} color="#ef4444" />
+                  <ColorChannelBar label="G" value={color.rgb.g} max={255} color="#22c55e" />
+                  <ColorChannelBar label="B" value={color.rgb.b} max={255} color="#3b82f6" />
+                </div>
+                <div className="space-y-2">
+                  <ColorChannelBar label="H" value={color.hsl.h} max={360} color={color.hex} hueTrack unit="°" />
+                  <ColorChannelBar label="S" value={color.hsl.s} max={100} color={color.hex} unit="%" />
+                  <ColorChannelBar label="L" value={color.hsl.l} max={100} color={color.hex} unit="%" />
+                </div>
+              </div>
+            </section>
+
+            {complementHex && complementContrast !== null && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Complementary Contrast</h3>
+                  <span className="text-xs text-muted-foreground">
+                    Ratio{" "}
+                    <span className="font-mono font-semibold text-foreground">
+                      {complementContrast.toFixed(2)}:1
+                    </span>
+                  </span>
+                </div>
+                <div className="flex h-20 overflow-hidden rounded-lg border border-border">
+                  <button
+                    type="button"
+                    className="flex-1 flex items-center justify-center font-mono text-xs"
+                    style={{ backgroundColor: color.hex, color: complementHex }}
+                    onClick={() => handleCopy(color.hex, `comp-base:${color.hex}`)}
+                  >
+                    {copiedToken === `comp-base:${color.hex}` ? "Copied" : color.hex.toUpperCase()}
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 flex items-center justify-center font-mono text-xs"
+                    style={{ backgroundColor: complementHex, color: color.hex }}
+                    onClick={() => handleCopy(complementHex, `comp:${complementHex}`)}
+                  >
+                    {copiedToken === `comp:${complementHex}` ? "Copied" : complementHex.toUpperCase()}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Base and its 180° complement. Higher ratios read more clearly when paired.
+                </p>
+              </section>
+            )}
 
             <section className="space-y-3">
               <div className="flex items-center justify-between">
