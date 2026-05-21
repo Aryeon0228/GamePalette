@@ -14,7 +14,7 @@ export function ColorCountSelector({
   value,
   onChange,
   min = 3,
-  max = 16,
+  max = 32,
 }: ColorCountSelectorProps) {
   // Keep the value within bounds so persisted/legacy values can't break the UI.
   const clamp = (n: number) => Math.min(max, Math.max(min, n))
