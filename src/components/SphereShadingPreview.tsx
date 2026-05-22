@@ -33,6 +33,7 @@ export function SphereShadingPreview({ scheme, className }: SphereShadingPreview
   const uid = useId()
   const gradId = `sphere-${uid}`
   const blurId = `rim-${uid}`
+  const clipId = `clip-${uid}`
 
   return (
     <svg
@@ -50,6 +51,9 @@ export function SphereShadingPreview({ scheme, className }: SphereShadingPreview
         <filter id={blurId} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="2.2" />
         </filter>
+        <clipPath id={clipId}>
+          <circle cx={CX} cy={CY} r={R} />
+        </clipPath>
       </defs>
 
       {/* Background */}
@@ -61,15 +65,17 @@ export function SphereShadingPreview({ scheme, className }: SphereShadingPreview
       {/* Sphere body */}
       <circle cx={CX} cy={CY} r={R} fill={`url(#${gradId})`} />
 
-      {/* Rim / back light on the shadow-side edge */}
+      {/* Rim / back light on the shadow-side edge, clipped to the sphere so it
+          stays inside the silhouette instead of spilling past the edge. */}
       <path
         d={arcPath(-38, 92)}
         fill="none"
         stroke={scheme.rim.hex}
-        strokeWidth="5"
+        strokeWidth="7"
         strokeLinecap="round"
         opacity="0.9"
         filter={`url(#${blurId})`}
+        clipPath={`url(#${clipId})`}
       />
 
       {/* Crisp specular highlight */}
