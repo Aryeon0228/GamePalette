@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { IoRemoveOutline, IoAddOutline } from "react-icons/io5"
 import { Slider } from "@/components/ui/slider"
 
@@ -20,6 +21,9 @@ export function ColorCountSelector({
   max = 32,
   compact = false,
 }: ColorCountSelectorProps) {
+  const t = useTranslations("colorCount")
+  const a = useTranslations("a11y")
+
   // Keep the value within bounds so persisted/legacy values can't break the UI.
   const clamp = (n: number) => Math.min(max, Math.max(min, n))
 
@@ -41,12 +45,12 @@ export function ColorCountSelector({
     }
     return (
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-muted-foreground mr-1">Colors</span>
+        <span className="text-xs text-muted-foreground mr-1">{t("colors")}</span>
         <button
           type="button"
           onClick={() => step(-1)}
           disabled={current <= min}
-          aria-label="Decrease color count"
+          aria-label={a("decreaseCount")}
           className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <IoRemoveOutline className="h-4 w-4" />
@@ -56,7 +60,7 @@ export function ColorCountSelector({
           type="button"
           onClick={() => step(1)}
           disabled={current >= max}
-          aria-label="Increase color count"
+          aria-label={a("increaseCount")}
           className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <IoAddOutline className="h-4 w-4" />
@@ -68,7 +72,7 @@ export function ColorCountSelector({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">Colors</span>
+        <span className="text-sm text-muted-foreground">{t("colors")}</span>
         <span className="text-sm font-semibold tabular-nums">{localValue}</span>
       </div>
       <Slider
@@ -78,7 +82,7 @@ export function ColorCountSelector({
         value={localValue}
         onValueChange={(next) => setLocalValue(clamp(next))}
         onValueCommit={(next) => onChange(clamp(next))}
-        aria-label="Number of colors to extract"
+        aria-label={a("colorCountSlider")}
       />
       <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums">
         <span>{min}</span>

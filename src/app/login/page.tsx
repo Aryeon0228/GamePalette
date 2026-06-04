@@ -11,10 +11,12 @@ import {
   IoSparklesOutline,
   IoCardOutline,
 } from "react-icons/io5"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 
 function LoginContent() {
+  const t = useTranslations("login")
   const { user, loading, isPremium, signInWithGoogle, signOut } = useAuth()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,9 +25,9 @@ function LoginContent() {
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
-      setError("Authentication failed. Please try again.")
+      setError(t("authFailed"))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const handleGoogleLogin = async () => {
     try {
@@ -37,7 +39,7 @@ function LoginContent() {
     } catch (err) {
       console.error('Google login error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-      setError(`Failed to sign in: ${errorMessage}`)
+      setError(t("signInFail", { message: errorMessage }))
       setIsSigningIn(false)
     }
   }
@@ -47,7 +49,7 @@ function LoginContent() {
       await signOut()
       router.refresh()
     } catch {
-      setError("Failed to sign out. Please try again.")
+      setError(t("signOutFail"))
     }
   }
 
@@ -67,7 +69,7 @@ function LoginContent() {
         <Button variant="ghost" size="sm" asChild className="mb-8">
           <Link href="/">
             <IoArrowBackOutline className="h-4 w-4 mr-2" />
-            Back to Home
+            {t("backToHome")}
           </Link>
         </Button>
 
@@ -85,7 +87,7 @@ function LoginContent() {
             )}
             <div>
               <h1 className="text-2xl font-bold">
-                {user.user_metadata?.full_name || "Welcome!"}
+                {user.user_metadata?.full_name || t("welcomeUser")}
               </h1>
               <p className="text-muted-foreground">{user.email}</p>
             </div>
@@ -93,15 +95,15 @@ function LoginContent() {
 
           <div className="p-4 rounded-lg bg-muted/50 space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Plan</span>
+              <span className="text-muted-foreground">{t("plan")}</span>
               <span className={isPremium ? "text-primary font-medium flex items-center gap-1" : ""}>
                 {isPremium && <IoSparklesOutline className="h-4 w-4 text-yellow-500" />}
-                {isPremium ? "Pro" : "Free"}
+                {isPremium ? t("pro") : t("free")}
               </span>
             </div>
             {!isPremium && (
               <p className="text-xs text-muted-foreground">
-                Upgrade to Pro for cloud sync and premium features
+                {t("upgradeHint")}
               </p>
             )}
           </div>
@@ -110,12 +112,12 @@ function LoginContent() {
             <Button variant="outline" className="w-full" asChild>
               <Link href="/pricing">
                 <IoCardOutline className="h-4 w-4 mr-2" />
-                Manage Subscription
+                {t("manageSubscription")}
               </Link>
             </Button>
           ) : (
             <Button className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]" asChild>
-              <Link href="/pricing">Upgrade to Pro</Link>
+              <Link href="/pricing">{t("upgradeToPro")}</Link>
             </Button>
           )}
 
@@ -125,7 +127,7 @@ function LoginContent() {
             onClick={handleSignOut}
           >
             <IoLogOutOutline className="h-4 w-4 mr-2" />
-            Sign Out
+            {t("signOut")}
           </Button>
         </div>
       </div>
@@ -144,9 +146,9 @@ function LoginContent() {
 
       <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Welcome to Pixel Paw</h1>
+          <h1 className="text-2xl font-bold">{t("welcomeTitle")}</h1>
           <p className="text-muted-foreground">
-            Sign in to sync your palettes across devices
+            {t("welcomeSubtitle")}
           </p>
         </div>
 
@@ -184,31 +186,31 @@ function LoginContent() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              {t("continueWithGoogle")}
             </>
           )}
         </Button>
 
         <div className="space-y-3 pt-4 border-t border-border">
-          <h3 className="text-sm font-medium text-center">Why sign in?</h3>
+          <h3 className="text-sm font-medium text-center">{t("whySignIn")}</h3>
           <ul className="text-sm text-muted-foreground space-y-2">
             <li className="flex items-start gap-2">
               <span className="text-primary">*</span>
-              <span>Free: Save palettes locally on this device</span>
+              <span>{t("benefitFree")}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">*</span>
-              <span>Premium: Sync palettes across all your devices</span>
+              <span>{t("benefitPremium")}</span>
             </li>
           </ul>
         </div>
       </div>
 
       <p className="mt-8 text-center text-xs text-muted-foreground">
-        By continuing, you agree to our{" "}
-        <Link href="#" className="underline">Terms of Service</Link>
-        {" "}and{" "}
-        <Link href="#" className="underline">Privacy Policy</Link>
+        {t.rich("agree", {
+          terms: (c) => <Link href="#" className="underline">{c}</Link>,
+          privacy: (c) => <Link href="#" className="underline">{c}</Link>,
+        })}
       </p>
     </div>
   )

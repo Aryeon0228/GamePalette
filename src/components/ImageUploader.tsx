@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { IoCloudUploadOutline, IoLinkOutline, IoImageOutline, IoCloseOutline } from "react-icons/io5"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ interface ImageUploaderProps {
 }
 
 export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploaderProps) {
+  const t = useTranslations("imageUploader")
   const [isDragging, setIsDragging] = useState(false)
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlValue, setUrlValue] = useState("")
@@ -23,7 +25,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
+      setError(t("errInvalidImage"))
       return
     }
 
@@ -38,15 +40,15 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
         setIsLoading(false)
       }
       reader.onerror = () => {
-        setError('Failed to read file')
+        setError(t("errReadFail"))
         setIsLoading(false)
       }
       reader.readAsDataURL(file)
     } catch {
-      setError('Failed to process file')
+      setError(t("errProcessFail"))
       setIsLoading(false)
     }
-  }, [onImageLoad])
+  }, [onImageLoad, t])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -85,7 +87,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
     try {
       new URL(urlValue)
     } catch {
-      setError('Please enter a valid URL')
+      setError(t("errInvalidUrl"))
       setIsLoading(false)
       return
     }
@@ -100,11 +102,11 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
       setUrlValue("")
     }
     img.onerror = () => {
-      setError('Failed to load image from URL')
+      setError(t("errLoadUrlFail"))
       setIsLoading(false)
     }
     img.src = urlValue
-  }, [urlValue, onImageLoad])
+  }, [urlValue, onImageLoad, t])
 
   // Handle paste event
   useEffect(() => {
@@ -183,23 +185,23 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
 
           <div className="space-y-2">
             <p className="text-lg font-medium">
-              {isLoading ? "Loading..." : "Drop image here or click to upload"}
+              {isLoading ? t("loading") : t("dropText")}
             </p>
             <p className="text-sm text-muted-foreground">
-              Or press Ctrl+V to paste from clipboard
+              {t("pasteHint")}
             </p>
           </div>
 
           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
             <IoImageOutline className="h-4 w-4" />
-            <span>PNG, JPG, GIF up to 10MB</span>
+            <span>{t("fileTypes")}</span>
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-center">
         <div className="flex-1 border-t border-border" />
-        <span className="px-4 text-sm text-muted-foreground">or</span>
+        <span className="px-4 text-sm text-muted-foreground">{t("or")}</span>
         <div className="flex-1 border-t border-border" />
       </div>
 
@@ -207,16 +209,16 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
         <div className="flex space-x-2">
           <Input
             type="url"
-            placeholder="https://example.com/image.jpg"
+            placeholder={t("urlPlaceholder")}
             value={urlValue}
             onChange={(e) => setUrlValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
           />
           <Button onClick={handleUrlSubmit} disabled={isLoading}>
-            Load
+            {t("load")}
           </Button>
           <Button variant="ghost" onClick={() => setShowUrlInput(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
         </div>
       ) : (
@@ -226,7 +228,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
           onClick={() => setShowUrlInput(true)}
         >
           <IoLinkOutline className="h-4 w-4 mr-2" />
-          Load from URL
+          {t("loadFromUrl")}
         </Button>
       )}
 

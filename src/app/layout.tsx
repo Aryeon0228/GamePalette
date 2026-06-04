@@ -1,8 +1,11 @@
 import type { Metadata } from "next"
 import Script from "next/script"
 import localFont from "next/font/local"
+import { NextIntlClientProvider } from "next-intl"
+import { getLocale, getTranslations } from "next-intl/server"
 import "./globals.css"
 import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
 import { MobileAppBanner } from "@/components/MobileAppBanner"
 import { ToastProvider } from "@/components/ui/toast"
 import { AuthProvider } from "@/contexts/AuthContext"
@@ -20,29 +23,35 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Pixel Paw - Color Palette Tool for Game Artists",
-  description: "Extract, transform, and export color palettes optimized for game development. Includes style presets, value check, and Unity/Unreal export.",
-  keywords: ["game art", "color palette", "game development", "color tool", "unity", "unreal", "game artist"],
-  authors: [{ name: "Pixel Paw" }],
-  openGraph: {
-    title: "Pixel Paw - Color Palette Tool for Game Artists",
-    description: "Extract, transform, and export color palettes optimized for game development.",
-    type: "website",
-  },
-  other: {
-    "google-adsense-account": "ca-pub-2165224388421574",
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata")
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: t("title"),
+    description: t("description"),
+    keywords: ["game art", "color palette", "game development", "color tool", "unity", "unreal", "game artist"],
+    authors: [{ name: "Pixel Paw" }],
+    openGraph: {
+      title: t("title"),
+      description: t("ogDescription"),
+      type: "website",
+    },
+    other: {
+      "google-adsense-account": "ca-pub-2165224388421574",
+    },
+  }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <head>
         <Script
           async
@@ -52,26 +61,18 @@ export default function RootLayout({
         />
       </head>
       <body className={`${spaceGrotesk.variable} font-sans antialiased`}>
-        <AuthProvider>
-          <ToastProvider>
-            <div className="relative min-h-screen flex flex-col">
-              <Header />
-              <MobileAppBanner />
-              <main className="flex-1">{children}</main>
-              <footer className="border-t border-border py-6 mt-auto">
-                <div className="container text-center text-sm text-muted-foreground space-y-2">
-                  <p>Pixel Paw - Color Palette Tool for Game Artists</p>
-                  <p>
-                    문의: <a href="mailto:cloudysnowyday@gmail.com" className="hover:text-foreground transition-colors">cloudysnowyday@gmail.com</a>
-                    {" | "}
-                    Discord: <span className="hover:text-foreground">@cloudysnowyday</span>
-                  </p>
-                  <p className="mt-1">Twitter: <a href="https://twitter.com/TomatoO_O" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">@TomatoO_O</a></p>
-                </div>
-              </footer>
-            </div>
-          </ToastProvider>
-        </AuthProvider>
+        <NextIntlClientProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <div className="relative min-h-screen flex flex-col">
+                <Header />
+                <MobileAppBanner />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </ToastProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

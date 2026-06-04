@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { IoCloseOutline, IoLogoGithub, IoPhonePortraitOutline, IoRefreshOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 
@@ -12,6 +13,7 @@ const AUTO_HIDE_MS = 12000
 
 export function MobileAppBanner() {
   const pathname = usePathname()
+  const t = useTranslations("mobileBanner")
   const [isReady, setIsReady] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
   const [isSessionHidden, setIsSessionHidden] = useState(false)
@@ -62,8 +64,8 @@ export function MobileAppBanner() {
             <div className="flex items-start gap-2.5 text-white">
               <IoPhonePortraitOutline className="h-5 w-5 mt-0.5 shrink-0" />
               <div className="text-sm leading-relaxed">
-                <p className="font-semibold">Pixel Paw 모바일 버전도 운영 중입니다.</p>
-                <p className="text-white/85 text-xs">모바일 최신 기능은 아래 저장소에서 바로 확인할 수 있어요.</p>
+                <p className="font-semibold">{t("title")}</p>
+                <p className="text-white/85 text-xs">{t("subtitle")}</p>
               </div>
             </div>
 
@@ -75,7 +77,7 @@ export function MobileAppBanner() {
               >
                 <Button size="sm" className="bg-white/16 hover:bg-white/22 border border-white/25 text-white">
                   <IoLogoGithub className="h-4 w-4 mr-1.5" />
-                  Mobile Repo
+                  {t("repoButton")}
                 </Button>
               </a>
               <Button
@@ -83,7 +85,7 @@ export function MobileAppBanner() {
                 size="icon"
                 className="h-9 w-9 text-white hover:bg-white/20 hover:text-white"
                 onClick={handleDismissPermanently}
-                aria-label="Dismiss mobile banner"
+                aria-label={t("dismiss")}
               >
                 <IoCloseOutline className="h-5 w-5" />
               </Button>
@@ -100,7 +102,7 @@ export function MobileAppBanner() {
             onClick={handleShowAgain}
           >
             <IoRefreshOutline className="h-4 w-4 mr-1.5" />
-            모바일 배너 다시 보기
+            {t("showAgain")}
           </Button>
         </div>
       )}

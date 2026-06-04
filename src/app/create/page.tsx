@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   IoSaveOutline,
   IoDownloadOutline,
@@ -32,6 +33,8 @@ import { generateId } from "@/lib/utils"
 export default function CreatePage() {
   const router = useRouter()
   const { addToast } = useToast()
+  const t = useTranslations("create")
+  const tShading = useTranslations("shading")
 
   const {
     currentPalette,
@@ -113,11 +116,11 @@ export default function CreatePage() {
       setExtractionImageUrl(imageUrl)
 
       if (isRegionSelection) {
-        addToast("Colors extracted from selected region", "success")
+        addToast(t("toastRegion"), "success")
       }
     } catch (error) {
       console.error("Failed to extract colors:", error)
-      addToast("Failed to extract colors from image", "error")
+      addToast(t("toastExtractFail"), "error")
     } finally {
       setIsExtracting(false)
     }
@@ -172,7 +175,7 @@ export default function CreatePage() {
     } catch (error) {
       if (currentExtractionId !== extractionIdRef.current) return
       console.error("Failed to re-extract colors:", error)
-      addToast("Failed to re-extract colors", "error")
+      addToast(t("toastReextractFail"), "error")
     } finally {
       if (currentExtractionId === extractionIdRef.current) {
         setIsExtracting(false)
@@ -189,6 +192,7 @@ export default function CreatePage() {
     setCurrentPalette,
     setOriginalColors,
     sourceImageUrl,
+    t,
   ])
 
   const handleReextractRef = useRef(handleReextract)
@@ -199,7 +203,7 @@ export default function CreatePage() {
   const handleSave = () => {
     const id = savePalette(paletteName)
     if (id) {
-      addToast("Palette saved successfully", "success")
+      addToast(t("toastSaved"), "success")
       router.push(`/palette/${id}`)
     }
   }
@@ -241,7 +245,7 @@ export default function CreatePage() {
             value={paletteName}
             onChange={(event) => setPaletteName(event.target.value)}
             className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto"
-            placeholder="Palette name"
+            placeholder={t("paletteNamePlaceholder")}
           />
         </div>
 
@@ -252,14 +256,14 @@ export default function CreatePage() {
             disabled={!currentPalette || displayColors.length === 0}
           >
             <IoDownloadOutline className="h-4 w-4 mr-2" />
-            Export
+            {t("export")}
           </Button>
           <Button
             onClick={handleSave}
             disabled={!currentPalette || displayColors.length === 0}
           >
             <IoSaveOutline className="h-4 w-4 mr-2" />
-            Save
+            {t("save")}
           </Button>
         </div>
       </div>
@@ -268,7 +272,7 @@ export default function CreatePage() {
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold">Source Image</h2>
+              <h2 className="text-lg font-semibold">{t("sourceImage")}</h2>
               <div className="flex gap-1">
                 <Button
                   variant={extractionMethod === "histogram" ? "default" : "outline"}
@@ -276,7 +280,7 @@ export default function CreatePage() {
                   onClick={() => setExtractionMethod("histogram")}
                   className="text-xs"
                 >
-                  Hue Histogram
+                  {t("hueHistogram")}
                 </Button>
                 <Button
                   variant={extractionMethod === "kmeans" ? "default" : "outline"}
@@ -284,7 +288,7 @@ export default function CreatePage() {
                   onClick={() => setExtractionMethod("kmeans")}
                   className="text-xs"
                 >
-                  K-Means
+                  {t("kmeans")}
                 </Button>
                 <Button
                   variant="outline"
@@ -293,7 +297,7 @@ export default function CreatePage() {
                   className="text-xs"
                 >
                   <IoSettingsOutline className="h-3.5 w-3.5 mr-1.5" />
-                  Advanced
+                  {t("advanced")}
                 </Button>
               </div>
             </div>
@@ -311,14 +315,14 @@ export default function CreatePage() {
             {isExtracting && (
               <div className="mt-4 text-center text-muted-foreground">
                 <div className="inline-block animate-spin mr-2">⏳</div>
-                Extracting colors...
+                {t("extracting")}
               </div>
             )}
           </div>
 
           {sourceImageUrl && (
             <div className="rounded-lg border border-border bg-card p-6">
-              <h3 className="text-sm font-medium mb-4">Quick Settings</h3>
+              <h3 className="text-sm font-medium mb-4">{t("quickSettings")}</h3>
 
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="min-w-[180px] flex-1">
@@ -331,7 +335,7 @@ export default function CreatePage() {
                     onClick={toggleValueCheck}
                   >
                     <IoEyeOutline className="h-4 w-4 mr-2" />
-                    Value Check
+                    {t("valueCheck")}
                   </Button>
                   <Button
                     variant="outline"
@@ -340,7 +344,7 @@ export default function CreatePage() {
                     disabled={isExtracting}
                   >
                     <IoRefreshOutline className={`h-4 w-4 mr-2 ${isExtracting ? "animate-spin" : ""}`} />
-                    Re-extract
+                    {t("reextract")}
                   </Button>
                 </div>
               </div>
@@ -360,7 +364,7 @@ export default function CreatePage() {
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <h2 className="text-lg font-semibold">Extracted Palette</h2>
+              <h2 className="text-lg font-semibold">{t("extractedPalette")}</h2>
               {sourceImageUrl && (
                 <ColorCountSelector compact value={colorCount} onChange={setColorCount} />
               )}
@@ -386,7 +390,7 @@ export default function CreatePage() {
             ]
             return (
               <div className="rounded-lg border border-border bg-card p-6 space-y-4">
-                <h2 className="text-lg font-semibold">Sphere Shading</h2>
+                <h2 className="text-lg font-semibold">{t("sphereShading")}</h2>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <SphereShadingPreview scheme={scheme} className="w-44 h-40 shrink-0" />
                   <div className="grid grid-cols-1 gap-1.5 w-full">
@@ -396,14 +400,14 @@ export default function CreatePage() {
                           className="h-6 w-6 rounded shrink-0 border border-border"
                           style={{ backgroundColor: swatch.hex }}
                         />
-                        <span className="text-xs font-medium w-24">{swatch.label}</span>
+                        <span className="text-xs font-medium w-24">{tShading(swatch.role)}</span>
                         <span className="text-[10px] font-mono text-muted-foreground">{swatch.hex}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Specular / midtone / shadow / rim / background mapped from your picked colors.
+                  {t("shadingNote")}
                 </p>
               </div>
             )
@@ -414,7 +418,7 @@ export default function CreatePage() {
           {displayColors.length > 0 && !selectedColor && (
             <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
               <p className="text-muted-foreground">
-                Click a color above to inspect formats, variations, and harmonies.
+                {t("inspectHint")}
               </p>
             </div>
           )}

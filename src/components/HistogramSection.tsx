@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { IoAnalyticsOutline } from "react-icons/io5"
 import type { LuminosityHistogram } from "@/lib/colorExtractor"
 
@@ -8,17 +9,19 @@ interface HistogramSectionProps {
 }
 
 interface ToneStat {
-  label: string
+  key: string
   value: number
   accent?: boolean
 }
 
 export function HistogramSection({ histogram }: HistogramSectionProps) {
+  const t = useTranslations("histogram")
+
   const stats: ToneStat[] = [
-    { label: "Dark", value: histogram.darkPercent },
-    { label: "Mid", value: histogram.midPercent },
-    { label: "Bright", value: histogram.brightPercent },
-    { label: "Avg", value: histogram.average, accent: true },
+    { key: "dark", value: histogram.darkPercent },
+    { key: "mid", value: histogram.midPercent },
+    { key: "bright", value: histogram.brightPercent },
+    { key: "avg", value: histogram.average, accent: true },
   ]
 
   return (
@@ -26,13 +29,13 @@ export function HistogramSection({ histogram }: HistogramSectionProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <IoAnalyticsOutline className="h-4 w-4" />
-          <span>Luminosity</span>
+          <span>{t("luminosity")}</span>
         </div>
         <div className="flex items-baseline gap-1.5">
           <span className="text-sm font-semibold text-primary tabular-nums">
             {histogram.contrast}%
           </span>
-          <span className="text-xs text-muted-foreground">Contrast</span>
+          <span className="text-xs text-muted-foreground">{t("contrast")}</span>
         </div>
       </div>
 
@@ -71,7 +74,7 @@ export function HistogramSection({ histogram }: HistogramSectionProps) {
       <div className="grid grid-cols-4 gap-2">
         {stats.map((stat) => (
           <div
-            key={stat.label}
+            key={stat.key}
             className={
               stat.accent
                 ? "rounded-lg border border-primary/40 bg-primary/10 px-2 py-2 text-center"
@@ -88,7 +91,7 @@ export function HistogramSection({ histogram }: HistogramSectionProps) {
               {stat.value}
               {stat.accent ? "" : "%"}
             </p>
-            <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+            <p className="text-[10px] text-muted-foreground">{t(stat.key)}</p>
           </div>
         ))}
       </div>

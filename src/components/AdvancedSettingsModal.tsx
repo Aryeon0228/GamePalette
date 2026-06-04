@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ColorCountSelector } from "@/components/ColorCountSelector"
@@ -35,12 +36,12 @@ interface AdvancedSettingsModalProps {
   onColorBlindModeChange: (mode: ColorBlindnessType) => void
 }
 
-const styleButtons: Array<{ id: StyleType; label: string; icon: IconType }> = [
-  { id: "original", label: "Original", icon: IoPawOutline },
-  { id: "hypercasual", label: "Hyper-casual", icon: IoSparklesOutline },
-  { id: "stylized", label: "Stylized", icon: IoBrushOutline },
-  { id: "realistic", label: "Realistic", icon: IoEyeOutline },
-  { id: "custom", label: "Custom", icon: IoOptionsOutline },
+const styleButtons: Array<{ id: StyleType; labelKey: string; icon: IconType }> = [
+  { id: "original", labelKey: "original", icon: IoPawOutline },
+  { id: "hypercasual", labelKey: "hypercasualLong", icon: IoSparklesOutline },
+  { id: "stylized", labelKey: "stylized", icon: IoBrushOutline },
+  { id: "realistic", labelKey: "realistic", icon: IoEyeOutline },
+  { id: "custom", labelKey: "custom", icon: IoOptionsOutline },
 ]
 
 export function AdvancedSettingsModal({
@@ -57,44 +58,47 @@ export function AdvancedSettingsModal({
   colorBlindMode,
   onColorBlindModeChange,
 }: AdvancedSettingsModalProps) {
+  const t = useTranslations("advancedSettings")
+  const ts = useTranslations("styles")
+  const tc = useTranslations("colorBlind")
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)} className="max-w-2xl p-0 overflow-hidden">
         <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle>Advanced Settings</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Fine-tune extraction, display, and accessibility options.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[72vh] overflow-y-auto px-6 py-5 space-y-6">
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Extraction Method</h3>
+            <h3 className="text-sm font-semibold">{t("extractionMethod")}</h3>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={extractionMethod === "histogram" ? "default" : "outline"}
                 onClick={() => onExtractionMethodChange("histogram")}
               >
                 <IoStatsChartOutline className="h-4 w-4 mr-2" />
-                Hue Histogram
+                {t("hueHistogram")}
               </Button>
               <Button
                 variant={extractionMethod === "kmeans" ? "default" : "outline"}
                 onClick={() => onExtractionMethodChange("kmeans")}
               >
                 <IoColorFilterOutline className="h-4 w-4 mr-2" />
-                K-Means
+                {t("kmeans")}
               </Button>
             </div>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Color Count</h3>
+            <h3 className="text-sm font-semibold">{t("colorCount")}</h3>
             <ColorCountSelector value={colorCount} onChange={onColorCountChange} />
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Style Preset</h3>
+            <h3 className="text-sm font-semibold">{t("stylePreset")}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {styleButtons.map((style) => (
                 <Button
@@ -103,24 +107,24 @@ export function AdvancedSettingsModal({
                   onClick={() => onStyleChange(style.id)}
                 >
                   <style.icon className="h-4 w-4 mr-2" />
-                  {style.label}
+                  {ts(style.labelKey)}
                 </Button>
               ))}
             </div>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Value Check</h3>
+            <h3 className="text-sm font-semibold">{t("valueCheck")}</h3>
             <Button
               variant={valueCheckEnabled ? "secondary" : "outline"}
               onClick={onValueCheckToggle}
             >
-              {valueCheckEnabled ? "Enabled" : "Disabled"}
+              {valueCheckEnabled ? t("enabled") : t("disabled")}
             </Button>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Color Vision Simulation</h3>
+            <h3 className="text-sm font-semibold">{t("colorVision")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {COLOR_BLINDNESS_OPTIONS.map((option) => (
                 <Button
@@ -130,8 +134,8 @@ export function AdvancedSettingsModal({
                   onClick={() => onColorBlindModeChange(option.type)}
                 >
                   <span className="text-left">
-                    <span className="block font-medium">{option.label}</span>
-                    <span className="block text-xs text-muted-foreground">{option.description}</span>
+                    <span className="block font-medium">{tc(`${option.type}Label`)}</span>
+                    <span className="block text-xs text-muted-foreground">{tc(`${option.type}Desc`)}</span>
                   </span>
                 </Button>
               ))}

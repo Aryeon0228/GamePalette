@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import {
   IoSearchOutline,
@@ -17,6 +18,7 @@ import { usePaletteStore } from "@/stores/paletteStore"
 import { formatDate, cn } from "@/lib/utils"
 
 export default function LibraryPage() {
+  const t = useTranslations("library")
   const { savedPalettes, folders, deletePalette, createFolder, deleteFolder } = usePaletteStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
@@ -54,7 +56,7 @@ export default function LibraryPage() {
   const handleDeletePalette = (id: string, event: React.MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()
-    if (confirm("Are you sure you want to delete this palette?")) {
+    if (confirm(t("deleteConfirm"))) {
       deletePalette(id)
     }
   }
@@ -65,14 +67,14 @@ export default function LibraryPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <IoLibraryOutline className="h-7 w-7 text-[#4f7bb8]" />
-            My Library
+            {t("title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Store and organize extracted palettes.</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" asChild>
           <Link href="/create">
             <IoAddCircleOutline className="h-4 w-4 mr-2" />
-            New Palette
+            {t("newPalette")}
           </Link>
         </Button>
       </div>
@@ -82,7 +84,7 @@ export default function LibraryPage() {
           <div className="relative">
             <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search palettes..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="pl-10 rounded-xl"
@@ -93,7 +95,7 @@ export default function LibraryPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-semibold flex items-center gap-1.5">
                 <IoFolderOpenOutline className="h-4 w-4 text-[#a0a0b0]" />
-                Folders
+                {t("folders")}
               </h3>
               <Button variant="ghost" size="icon" onClick={() => setShowNewFolder(true)}>
                 <IoAddOutline className="h-4 w-4" />
@@ -110,7 +112,7 @@ export default function LibraryPage() {
                 )}
                 onClick={() => setSelectedFolder(null)}
               >
-                All Palettes ({savedPalettes.length})
+                {t("allPalettes", { count: savedPalettes.length })}
               </button>
 
               {folders.map((folder) => (
@@ -127,14 +129,14 @@ export default function LibraryPage() {
                     className="flex-1 text-left"
                     onClick={() => setSelectedFolder(folder.id)}
                   >
-                    {folder.name} ({savedPalettes.filter((palette) => palette.folderId === folder.id).length})
+                    {t("folderItem", { name: folder.name, count: savedPalettes.filter((p) => p.folderId === folder.id).length })}
                   </button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100"
                     onClick={() => {
-                      if (confirm("Delete this folder?")) {
+                      if (confirm(t("deleteFolderConfirm"))) {
                         deleteFolder(folder.id)
                         if (selectedFolder === folder.id) {
                           setSelectedFolder(null)
@@ -150,7 +152,7 @@ export default function LibraryPage() {
               {showNewFolder && (
                 <div className="flex items-center space-x-2 px-3 py-2">
                   <Input
-                    placeholder="Folder name"
+                    placeholder={t("folderNamePlaceholder")}
                     value={newFolderName}
                     onChange={(event) => setNewFolderName(event.target.value)}
                     onKeyDown={(event) => event.key === "Enter" && handleCreateFolder()}
@@ -158,7 +160,7 @@ export default function LibraryPage() {
                     autoFocus
                   />
                   <Button size="sm" onClick={handleCreateFolder}>
-                    Add
+                    {t("add")}
                   </Button>
                 </div>
               )}
@@ -166,10 +168,10 @@ export default function LibraryPage() {
           </div>
 
           <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-4 space-y-2">
-            <h3 className="font-semibold">Stats</h3>
+            <h3 className="font-semibold">{t("stats")}</h3>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>Total Palettes: {savedPalettes.length}</p>
-              <p>Total Folders: {folders.length}</p>
+              <p>{t("totalPalettes", { count: savedPalettes.length })}</p>
+              <p>{t("totalFolders", { count: folders.length })}</p>
             </div>
           </div>
         </aside>
@@ -178,10 +180,10 @@ export default function LibraryPage() {
           {filteredPalettes.length === 0 ? (
             <div className="text-center py-16 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-[#16161e]/70">
               <p className="text-muted-foreground mb-4">
-                {searchQuery ? "No palettes match your search" : "No palettes saved yet"}
+                {searchQuery ? t("noMatch") : t("noPalettes")}
               </p>
               <Button asChild>
-                <Link href="/create">Create Your First Palette</Link>
+                <Link href="/create">{t("createFirst")}</Link>
               </Button>
             </div>
           ) : (
@@ -199,7 +201,7 @@ export default function LibraryPage() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{palette.name}</h3>
                         <p className="text-xs text-muted-foreground">
-                          {palette.colors.length} colors • {formatDate(palette.updatedAt)}
+                          {t("colorsAndDate", { count: palette.colors.length, date: formatDate(palette.updatedAt) })}
                         </p>
                       </div>
                       <Button

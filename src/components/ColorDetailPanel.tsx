@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import { IoCheckmarkOutline, IoCopyOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { ColorChannelBar } from "@/components/ColorChannelBar"
@@ -15,7 +16,30 @@ interface ColorDetailPanelProps {
   color: Color | null
 }
 
+// Stable keys mapping lib data → message catalog keys.
+const HARMONY_KEY: Record<HarmonyType, string> = {
+  complementary: "complementary",
+  analogous: "analogous",
+  triadic: "triadic",
+  "split-complementary": "split",
+  tetradic: "tetradic",
+}
+
+const HARMONY_ROLE_KEY: Record<string, string> = {
+  Base: "roleBase",
+  Complement: "roleComplement",
+  Left: "roleLeft",
+  Right: "roleRight",
+  Second: "roleSecond",
+  Third: "roleThird",
+  Fourth: "roleFourth",
+  "Split 1": "roleSplit1",
+  "Split 2": "roleSplit2",
+}
+
 export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
+  const t = useTranslations("colorDetail")
+  const th = useTranslations("harmony")
   const [format, setFormat] = useState<ColorFormat>("HEX")
   const [variationStyle, setVariationStyle] = useState<VariationStyle>("stylized")
   const [selectedHarmony, setSelectedHarmony] = useState<HarmonyType>("complementary")
@@ -25,11 +49,11 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
     if (!color) return []
     const generated = generateColorVariations(color, variationStyle)
     return [
-      { key: "shadow2", label: "S2", color: generated.shadow2 },
-      { key: "shadow1", label: "S1", color: generated.shadow1 },
-      { key: "midtone", label: "Base", color: generated.midtone },
-      { key: "highlight1", label: "L1", color: generated.highlight1 },
-      { key: "highlight2", label: "L2", color: generated.highlight2 },
+      { key: "shadow2", labelKey: "stepS2", color: generated.shadow2 },
+      { key: "shadow1", labelKey: "stepS1", color: generated.shadow1 },
+      { key: "midtone", labelKey: "stepBase", color: generated.midtone },
+      { key: "highlight1", labelKey: "stepL1", color: generated.highlight1 },
+      { key: "highlight2", labelKey: "stepL2", color: generated.highlight2 },
     ]
   }, [color, variationStyle])
 
@@ -63,7 +87,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
     <div className="rounded-lg border border-border bg-card p-6 space-y-6">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold truncate">{color.name || "Color Detail"}</h2>
+          <h2 className="text-lg font-semibold truncate">{color.name || t("title")}</h2>
         </div>
         <div
           className="rounded-lg h-24 w-full border border-border flex items-center justify-between px-4"
@@ -79,12 +103,12 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
             {copiedToken === `main:${displayValue}` ? (
               <>
                 <IoCheckmarkOutline className="h-4 w-4 mr-1.5" />
-                Copied
+                {t("copied")}
               </>
             ) : (
               <>
                 <IoCopyOutline className="h-4 w-4 mr-1.5" />
-                Copy
+                {t("copy")}
               </>
             )}
           </Button>
@@ -106,7 +130,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Channels</h3>
+          <h3 className="text-sm font-semibold">{t("channels")}</h3>
           <span className="text-[10px] font-mono text-muted-foreground">{format}</span>
         </div>
         <div className="space-y-2">
@@ -128,9 +152,9 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
       {complementHex && complementContrast !== null && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Complementary Contrast</h3>
+            <h3 className="text-sm font-semibold">{t("complementaryContrast")}</h3>
             <span className="text-xs text-muted-foreground">
-              Ratio{" "}
+              {t("ratio")}{" "}
               <span className="font-mono font-semibold text-foreground">
                 {complementContrast.toFixed(2)}:1
               </span>
@@ -152,7 +176,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
                 style={{ backgroundColor: color.hex, color: complementHex }}
                 onClick={() => handleCopy(color.hex, `comp-base:${color.hex}`)}
               >
-                {copiedToken === `comp-base:${color.hex}` ? "Copied" : color.hex.toUpperCase()}
+                {copiedToken === `comp-base:${color.hex}` ? t("copied") : color.hex.toUpperCase()}
               </button>
               <button
                 type="button"
@@ -160,33 +184,33 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
                 style={{ backgroundColor: complementHex, color: color.hex }}
                 onClick={() => handleCopy(complementHex, `comp:${complementHex}`)}
               >
-                {copiedToken === `comp:${complementHex}` ? "Copied" : complementHex.toUpperCase()}
+                {copiedToken === `comp:${complementHex}` ? t("copied") : complementHex.toUpperCase()}
               </button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            The dots show the base and its 180° complement on the wheel. Higher ratios read more clearly when paired.
+            {t("complementNote")}
           </p>
         </section>
       )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Variations</h3>
+          <h3 className="text-sm font-semibold">{t("variations")}</h3>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant={variationStyle === "stylized" ? "default" : "outline"}
               onClick={() => setVariationStyle("stylized")}
             >
-              Hue Shift
+              {t("hueShift")}
             </Button>
             <Button
               size="sm"
               variant={variationStyle === "realistic" ? "default" : "outline"}
               onClick={() => setVariationStyle("realistic")}
             >
-              Lightness
+              {t("lightness")}
             </Button>
           </div>
         </div>
@@ -201,7 +225,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
             >
               <div className="h-16" style={{ backgroundColor: variation.color.hex }} />
               <div className="px-2 py-1.5 bg-background">
-                <p className="text-[10px] text-muted-foreground">{variation.label}</p>
+                <p className="text-[10px] text-muted-foreground">{t(variation.labelKey)}</p>
                 <p className="text-[10px] font-mono truncate">{variation.color.hex.toUpperCase()}</p>
               </div>
             </button>
@@ -210,7 +234,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold">Harmony</h3>
+        <h3 className="text-sm font-semibold">{t("harmony")}</h3>
         <div className="flex flex-wrap gap-2">
           {harmonies.map((harmony) => (
             <Button
@@ -219,7 +243,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
               variant={selectedHarmony === harmony.type ? "default" : "outline"}
               onClick={() => setSelectedHarmony(harmony.type)}
             >
-              {harmony.name}
+              {th(`${HARMONY_KEY[harmony.type]}Name`)}
             </Button>
           ))}
         </div>
@@ -232,7 +256,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
                 colors={activeHarmony.colors.map((item) => ({ hex: item.hex, angle: item.angle }))}
                 size={104}
               />
-              <p className="text-xs text-muted-foreground flex-1">{activeHarmony.description}</p>
+              <p className="text-xs text-muted-foreground flex-1">{th(`${HARMONY_KEY[activeHarmony.type]}Desc`)}</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {activeHarmony.colors.map((item) => (
@@ -244,7 +268,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
                 >
                   <div className="h-14" style={{ backgroundColor: item.hex }} />
                   <div className="px-2 py-1.5 bg-background">
-                    <p className="text-[10px] text-muted-foreground">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{th(HARMONY_ROLE_KEY[item.name] ?? "roleBase")}</p>
                     <p className="text-[10px] font-mono">{item.hex.toUpperCase()}</p>
                   </div>
                 </button>

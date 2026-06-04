@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import type { IconType } from "react-icons"
 import {
   IoArrowForwardOutline,
@@ -22,40 +23,36 @@ import { extractColors } from "@/lib/colorExtractor"
 import { generateId } from "@/lib/utils"
 
 interface FeatureItem {
+  id: string
   icon: IconType
-  title: string
-  description: string
   accent: string
 }
 
 const features: FeatureItem[] = [
   {
+    id: "feature1",
     icon: IoColorPaletteOutline,
-    title: "Style Presets",
-    description: "Switch palettes across hyper, stylized, and realistic game-art tones.",
     accent: "#4f7bb8",
   },
   {
+    id: "feature2",
     icon: IoEyeOutline,
-    title: "Value Check",
-    description: "Validate contrast and readability using grayscale previews.",
     accent: "#34d399",
   },
   {
+    id: "feature3",
     icon: IoDownloadOutline,
-    title: "Flexible Export",
-    description: "Export moodboards, SNS cards, and engine-ready formats quickly.",
     accent: "#60a5fa",
   },
   {
+    id: "feature4",
     icon: IoSparklesOutline,
-    title: "Smart Extraction",
-    description: "Use Histogram or K-Means extraction based on your reference art.",
     accent: "#fbbf24",
   },
 ]
 
 export default function HomePage() {
+  const t = useTranslations("home")
   const router = useRouter()
   const {
     savedPalettes,
@@ -107,16 +104,15 @@ export default function HomePage() {
     <div className="container py-10 space-y-14">
       <section className="text-center space-y-5">
         <div className="inline-flex items-center rounded-full border border-[#2d2d38] bg-[#16161e] px-3 py-1 text-xs text-muted-foreground">
-          Pixel Paw Web Studio
+          {t("badge")}
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.025em]">
-          <span className="gradient-text">Extract. Refine. Export.</span>
+          <span className="gradient-text">{t("heroTitle1")}</span>
           <br />
-          Color Workflow for Game Art
+          {t("heroTitle2")}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Bring reference art into a production-ready palette pipeline with style presets,
-          value checks, and export presets tuned for game workflows.
+          {t("heroSubtitle")}
         </p>
       </section>
 
@@ -127,15 +123,15 @@ export default function HomePage() {
           <div className="mt-5 rounded-xl border border-[#2d2d38] bg-[#1a1a24] px-4 py-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <span>Extraction Method</span>
+                <span>{t("extractionMethod")}</span>
                 <div className="relative group">
                   <IoInformationCircleOutline className="w-4 h-4 cursor-help text-[#a0a0b0]" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 rounded-lg bg-[#101018] border border-[#2d2d38] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-left">
                     <p className="text-xs text-muted-foreground mb-2">
-                      <strong className="text-foreground">Hue Histogram:</strong> Strong for stylized art with distinct color regions.
+                      {t.rich("tooltipHistogram", { b: (chunks) => <strong className="text-foreground">{chunks}</strong> })}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      <strong className="text-foreground">K-Means:</strong> Better for photo references and subtle gradients.
+                      {t.rich("tooltipKmeans", { b: (chunks) => <strong className="text-foreground">{chunks}</strong> })}
                     </p>
                   </div>
                 </div>
@@ -150,7 +146,7 @@ export default function HomePage() {
                   }`}
                 >
                   <IoStatsChartOutline className="h-4 w-4" />
-                  Hue Histogram
+                  {t("hueHistogram")}
                 </button>
                 <button
                   onClick={() => setExtractionMethod("kmeans")}
@@ -161,7 +157,7 @@ export default function HomePage() {
                   }`}
                 >
                   <IoColorFilterOutline className="h-4 w-4" />
-                  K-Means
+                  {t("kmeans")}
                 </button>
               </div>
             </div>
@@ -172,7 +168,7 @@ export default function HomePage() {
               <div className="inline-block animate-spin mr-2">
                 <IoColorPaletteOutline className="h-5 w-5" />
               </div>
-              Extracting colors...
+              {t("extracting")}
             </div>
           )}
         </div>
@@ -181,10 +177,10 @@ export default function HomePage() {
       {recentPalettes.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Palettes</h2>
+            <h2 className="text-xl font-semibold">{t("recentPalettes")}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/library">
-                View all
+                {t("viewAll")}
                 <IoArrowForwardOutline className="h-4 w-4 ml-1" />
               </Link>
             </Button>
@@ -201,7 +197,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-medium truncate">{palette.name}</span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {palette.colors.length} colors
+                    {t("colorsCount", { count: palette.colors.length })}
                   </span>
                 </div>
               </Link>
@@ -212,13 +208,13 @@ export default function HomePage() {
 
       <section className="space-y-8">
         <h2 className="text-2xl font-semibold text-center tracking-tight">
-          Built for Game Production Flow
+          {t("featuresTitle")}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature) => (
             <div
-              key={feature.title}
+              key={feature.id}
               className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-5 space-y-3"
             >
               <div
@@ -227,24 +223,24 @@ export default function HomePage() {
               >
                 <feature.icon className="h-5 w-5" style={{ color: feature.accent }} />
               </div>
-              <h3 className="font-semibold">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <h3 className="font-semibold">{t(`${feature.id}Title`)}</h3>
+              <p className="text-sm text-muted-foreground">{t(`${feature.id}Desc`)}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="text-center space-y-5 py-8">
-        <h2 className="text-3xl font-bold tracking-tight">Ready to open your next palette?</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("ctaTitle")}</h2>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Button size="lg" className="bg-primary hover:bg-primary/90" asChild>
             <Link href="/create">
-              Start Creating
+              {t("startCreating")}
               <IoArrowForwardOutline className="h-4 w-4 ml-2" />
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="/pricing">View Pricing</Link>
+            <Link href="/pricing">{t("viewPricing")}</Link>
           </Button>
         </div>
       </section>

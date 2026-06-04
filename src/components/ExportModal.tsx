@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import {
   IoDownloadOutline,
   IoCopyOutline,
@@ -35,60 +36,25 @@ interface ExportModalProps {
 
 interface ExportOption {
   format: ExportFormat
-  label: string
-  description: string
+  /** Maps to exportModal.opt.<optKey>Label / <optKey>Desc in the message catalog. */
+  optKey: string
   action: "download" | "copy"
   proOnly?: boolean
 }
 
 const exportOptions: ExportOption[] = [
-  {
-    format: "png",
-    label: "PNG Image",
-    description: "Moodboard or SNS card export",
-    action: "download",
-  },
-  {
-    format: "json",
-    label: "JSON",
-    description: "Structured data format",
-    action: "download",
-  },
-  {
-    format: "lighting",
-    label: "Sphere Shading",
-    description: "Specular / midtone / shadow / rim / background (JSON)",
-    action: "download",
-  },
-  {
-    format: "css",
-    label: "CSS Variables",
-    description: "Ready for web projects",
-    action: "copy",
-  },
-  {
-    format: "scss",
-    label: "SCSS Variables",
-    description: "With color map included",
-    action: "copy",
-  },
-  {
-    format: "unity",
-    label: "Unity ScriptableObject",
-    description: "C# code for Unity",
-    action: "download",
-    proOnly: true,
-  },
-  {
-    format: "unreal",
-    label: "Unreal DataTable CSV",
-    description: "Import as DataTable",
-    action: "download",
-    proOnly: true,
-  },
+  { format: "png", optKey: "png", action: "download" },
+  { format: "json", optKey: "json", action: "download" },
+  { format: "lighting", optKey: "lighting", action: "download" },
+  { format: "css", optKey: "css", action: "copy" },
+  { format: "scss", optKey: "scss", action: "copy" },
+  { format: "unity", optKey: "unity", action: "download", proOnly: true },
+  { format: "unreal", optKey: "unreal", action: "download", proOnly: true },
 ]
 
 export function ExportModal({ open, onOpenChange, palette, isPro = false }: ExportModalProps) {
+  const t = useTranslations("exportModal")
+  const tShading = useTranslations("shading")
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null)
   const [isExporting, setIsExporting] = useState<string | null>(null)
   const [pngMode, setPngMode] = useState<"moodboard" | "sns">("sns")
@@ -187,29 +153,29 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClose={() => onOpenChange(false)} className="sm:max-w-2xl p-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border">
-          <DialogTitle>Export Palette</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Choose a format to export &ldquo;{palette.name}&rdquo;
+            {t("description", { name: palette.name })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[76vh] overflow-y-auto px-6 py-5 space-y-5">
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">PNG Layout</h3>
+            <h3 className="text-sm font-semibold">{t("pngLayout")}</h3>
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant={pngMode === "sns" ? "default" : "outline"}
                 onClick={() => setPngMode("sns")}
               >
-                SNS Card
+                {t("snsCard")}
               </Button>
               <Button
                 size="sm"
                 variant={pngMode === "moodboard" ? "default" : "outline"}
                 onClick={() => setPngMode("moodboard")}
               >
-                Moodboard
+                {t("moodboard")}
               </Button>
             </div>
 
@@ -221,14 +187,14 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     variant={snsCardType === "instagram" ? "default" : "outline"}
                     onClick={() => setSnsCardType("instagram")}
                   >
-                    Instagram (1:1)
+                    {t("instagram")}
                   </Button>
                   <Button
                     size="sm"
                     variant={snsCardType === "twitter" ? "default" : "outline"}
                     onClick={() => setSnsCardType("twitter")}
                   >
-                    Twitter/X (16:9)
+                    {t("twitter")}
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -237,21 +203,21 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     variant={cardShowHex ? "secondary" : "outline"}
                     onClick={() => setCardShowHex((value) => !value)}
                   >
-                    HEX
+                    {t("hex")}
                   </Button>
                   <Button
                     size="sm"
                     variant={cardShowStats ? "secondary" : "outline"}
                     onClick={() => setCardShowStats((value) => !value)}
                   >
-                    Stats
+                    {t("stats")}
                   </Button>
                   <Button
                     size="sm"
                     variant={cardShowHistogram ? "secondary" : "outline"}
                     onClick={() => setCardShowHistogram((value) => !value)}
                   >
-                    Histogram
+                    {t("histogram")}
                   </Button>
                 </div>
 
@@ -268,7 +234,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                       />
                     )}
                     <p className="text-sm font-semibold truncate pr-28">{palette.name}</p>
-                    <p className="text-[11px] text-zinc-300">{palette.colors.length} colors</p>
+                    <p className="text-[11px] text-zinc-300">{t("colorsCount", { count: palette.colors.length })}</p>
 
                     <div className="absolute left-3 right-3 bottom-3 space-y-2">
                       <div className="flex gap-1.5">
@@ -285,7 +251,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                         ))}
                       </div>
                       {cardShowStats && (
-                        <div className="text-[10px] text-zinc-300">Style: {palette.style} · Export ready</div>
+                        <div className="text-[10px] text-zinc-300">{t("styleExportReady", { style: palette.style })}</div>
                       )}
                       {cardShowHistogram && (
                         <div className="h-6 flex items-end gap-1">
@@ -307,7 +273,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
 
           {shading && (
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold">Sphere Shading</h3>
+              <h3 className="text-sm font-semibold">{t("sphereShading")}</h3>
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <SphereShadingPreview scheme={shading} className="w-44 h-40 shrink-0" />
                 <div className="grid grid-cols-1 gap-1.5 w-full">
@@ -318,7 +284,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                           className="h-6 w-6 rounded shrink-0 border border-border"
                           style={{ backgroundColor: swatch.hex }}
                         />
-                        <span className="text-xs font-medium w-24">{swatch.label}</span>
+                        <span className="text-xs font-medium w-24">{tShading(swatch.role)}</span>
                         <span className="text-[10px] font-mono text-muted-foreground">{swatch.hex}</span>
                       </div>
                     )
@@ -326,19 +292,19 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                A shading study built only from your picked colors. Export below as JSON.
+                {t("shadingNote")}
               </p>
             </section>
           )}
 
           {palette.sourceImageUrl && (
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold">ASCII Art</h3>
+              <h3 className="text-sm font-semibold">{t("asciiArt")}</h3>
               <div className="flex flex-wrap items-center gap-2">
                 {[
-                  { w: 60, label: "Small" },
-                  { w: 80, label: "Medium" },
-                  { w: 120, label: "Large" },
+                  { w: 60, key: "small" },
+                  { w: 80, key: "medium" },
+                  { w: 120, key: "large" },
                 ].map((opt) => (
                   <Button
                     key={opt.w}
@@ -346,11 +312,11 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     variant={asciiWidth === opt.w ? "default" : "outline"}
                     onClick={() => setAsciiWidth(opt.w)}
                   >
-                    {opt.label}
+                    {t(opt.key)}
                   </Button>
                 ))}
                 <Button size="sm" variant="secondary" onClick={handleGenerateAscii} disabled={asciiGenerating}>
-                  {asciiGenerating ? "Generating…" : asciiArt ? "Regenerate" : "Generate"}
+                  {asciiGenerating ? t("generating") : asciiArt ? t("regenerate") : t("generate")}
                 </Button>
               </div>
 
@@ -369,12 +335,12 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                       {asciiCopied ? (
                         <>
                           <IoCheckmarkOutline className="h-4 w-4 mr-1" />
-                          Copied
+                          {t("copied")}
                         </>
                       ) : (
                         <>
                           <IoCopyOutline className="h-4 w-4 mr-1" />
-                          Copy text
+                          {t("copyText")}
                         </>
                       )}
                     </Button>
@@ -384,7 +350,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                       onClick={() => downloadFile(asciiArt.text, `${safeName}-ascii.txt`, "text/plain")}
                     >
                       <IoDownloadOutline className="h-4 w-4 mr-1" />
-                      .txt
+                      {t("txt")}
                     </Button>
                     <Button
                       size="sm"
@@ -392,7 +358,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                       onClick={() => downloadFile(asciiArt.html, `${safeName}-ascii.html`, "text/html")}
                     >
                       <IoDownloadOutline className="h-4 w-4 mr-1" />
-                      .html (color)
+                      {t("htmlColor")}
                     </Button>
                   </div>
                 </div>
@@ -417,14 +383,14 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">{option.label}</span>
+                      <span className="font-medium">{t(`opt.${option.optKey}Label`)}</span>
                       {isLocked && (
                         <span className="text-xs bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] text-white px-2 py-0.5 rounded-full">
-                          Pro
+                          {t("pro")}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{option.description}</p>
+                    <p className="text-sm text-muted-foreground">{t(`opt.${option.optKey}Desc`)}</p>
                   </div>
 
                   <Button
@@ -438,17 +404,17 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     ) : isCopied ? (
                       <>
                         <IoCheckmarkOutline className="h-4 w-4 mr-1" />
-                        Copied
+                        {t("copied")}
                       </>
                     ) : option.action === "download" ? (
                       <>
                         <IoDownloadOutline className="h-4 w-4 mr-1" />
-                        Download
+                        {t("download")}
                       </>
                     ) : (
                       <>
                         <IoCopyOutline className="h-4 w-4 mr-1" />
-                        Copy
+                        {t("copy")}
                       </>
                     )}
                   </Button>
@@ -460,10 +426,10 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
           {!isPro && (
             <div className="border-t border-border pt-4">
               <Button className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]">
-                Upgrade to Pro - $3.99/month
+                {t("upgradeButton")}
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">
-                Unlock Unity/Unreal export, cloud sync, and more
+                {t("upgradeHint")}
               </p>
             </div>
           )}
