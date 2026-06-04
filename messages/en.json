@@ -27,7 +27,7 @@
     "badge": "Pixel Paw Web Studio",
     "heroTitle1": "Extract. Refine. Export.",
     "heroTitle2": "Color Workflow for Game Art",
-    "heroSubtitle": "Bring reference art into a production-ready palette pipeline with style presets, value checks, and export presets tuned for game workflows.",
+    "heroSubtitle": "Turn reference art into a game-ready palette in seconds.",
     "extractionMethod": "Extraction Method",
     "tooltipHistogram": "<b>Hue Histogram:</b> Strong for stylized art with distinct color regions.",
     "tooltipKmeans": "<b>K-Means:</b> Better for photo references and subtle gradients.",

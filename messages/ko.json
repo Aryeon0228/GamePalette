@@ -27,7 +27,7 @@
     "badge": "Pixel Paw 웹 스튜디오",
     "heroTitle1": "추출. 다듬기. 내보내기.",
     "heroTitle2": "게임 아트를 위한 컬러 워크플로우",
-    "heroSubtitle": "레퍼런스 아트를 스타일 프리셋, 밸류 체크, 게임 워크플로우에 맞춘 내보내기 프리셋과 함께 제작용 팔레트 파이프라인으로 가져오세요.",
+    "heroSubtitle": "레퍼런스 아트를 게임용 팔레트로 빠르게 추출하고 내보내세요.",
     "extractionMethod": "추출 방식",
     "tooltipHistogram": "<b>Hue 히스토그램:</b> 색 영역이 뚜렷한 스타일라이즈드 아트에 강력합니다.",
     "tooltipKmeans": "<b>K-Means:</b> 사진 레퍼런스나 미묘한 그라데이션에 더 적합합니다.",
