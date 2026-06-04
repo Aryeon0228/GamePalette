@@ -322,7 +322,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
 
               {asciiArt && (
                 <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-[#0d0d12] overflow-auto max-h-64">
+                  <div className="rounded-lg border border-border bg-background overflow-auto max-h-64">
                     <pre
                       className="font-mono leading-none p-3 whitespace-pre"
                       style={{ fontSize: "5px" }}
@@ -385,7 +385,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     <div className="flex items-center space-x-2">
                       <span className="font-medium">{t(`opt.${option.optKey}Label`)}</span>
                       {isLocked && (
-                        <span className="text-xs bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] text-white px-2 py-0.5 rounded-full">
+                        <span className="text-xs bg-gradient-to-r from-sky-600 to-cyan-500 text-white px-2 py-0.5 rounded-full">
                           {t("pro")}
                         </span>
                       )}
@@ -425,7 +425,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
 
           {!isPro && (
             <div className="border-t border-border pt-4">
-              <Button className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]">
+              <Button className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600">
                 {t("upgradeButton")}
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">

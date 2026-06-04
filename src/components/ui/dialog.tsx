@@ -16,7 +16,7 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="fixed inset-0 bg-black/80"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
       />
       {children}
@@ -31,7 +31,9 @@ const DialogContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
+      // Glassmorphism: translucent panel + backdrop blur, with a near-opaque fallback
+      // where backdrop-filter is unsupported so text stays readable.
+      "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-white/10 bg-card/95 supports-[backdrop-filter]:bg-card/70 backdrop-blur-2xl p-6 shadow-2xl shadow-black/40 duration-200 sm:rounded-2xl",
       className
     )}
     {...props}

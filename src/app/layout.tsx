@@ -19,6 +19,13 @@ const spaceGrotesk = localFont({
   display: "swap",
 })
 
+// Pretendard (variable) — primary UI/body font with full Korean coverage.
+const pretendard = localFont({
+  src: [{ path: "../../public/fonts/PretendardVariable.woff2", weight: "45 920", style: "normal" }],
+  variable: "--font-pretendard",
+  display: "swap",
+})
+
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
@@ -60,7 +67,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className={`${spaceGrotesk.variable} font-sans antialiased`}>
+      <body className={`${pretendard.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <NextIntlClientProvider>
           <AuthProvider>
             <ToastProvider>

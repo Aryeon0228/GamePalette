@@ -40,7 +40,7 @@ export function Header() {
   const t = useTranslations("header")
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/92 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
       <div className="container flex h-20 items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_18px_rgba(79,123,184,0.35)]">

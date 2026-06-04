@@ -73,7 +73,7 @@ function LoginContent() {
           </Link>
         </Button>
 
-        <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
+        <div className="rounded-xl border border-border bg-card p-8 space-y-6">
           <div className="text-center space-y-4">
             {user.user_metadata?.avatar_url && (
               <Image
@@ -116,7 +116,7 @@ function LoginContent() {
               </Link>
             </Button>
           ) : (
-            <Button className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]" asChild>
+            <Button className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600" asChild>
               <Link href="/pricing">{t("upgradeToPro")}</Link>
             </Button>
           )}
@@ -144,7 +144,7 @@ function LoginContent() {
         </Link>
       </Button>
 
-      <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
+      <div className="rounded-xl border border-border bg-card p-8 space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">{t("welcomeTitle")}</h1>
           <p className="text-muted-foreground">

@@ -147,7 +147,7 @@ export default function PaletteDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
+          <div className="rounded-xl border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{t("colors")}</h2>
               <Button
@@ -176,7 +176,7 @@ export default function PaletteDetailPage() {
           </div>
 
           {selectedColor && (
-            <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
+            <div className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-start gap-4 mb-4">
                 <div
                   className="w-16 h-16 rounded-lg shrink-0 ring-2 ring-primary"
@@ -195,7 +195,7 @@ export default function PaletteDetailPage() {
           )}
 
           {displayColors.length > 0 && !selectedColor && (
-            <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 text-center bg-[#16161e]/70">
+            <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 text-center bg-card/70">
               <p className="text-muted-foreground">
                 {t("variationHint")}
               </p>
@@ -203,14 +203,14 @@ export default function PaletteDetailPage() {
           )}
 
           {palette.sourceImageUrl && (
-            <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
+            <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="text-lg font-semibold mb-4">{t("sourceImage")}</h2>
               <Image
                 src={palette.sourceImageUrl}
                 alt="Source"
                 width={800}
                 height={320}
-                className="w-full max-h-80 object-contain rounded-lg bg-[#101018]"
+                className="w-full max-h-80 object-contain rounded-lg bg-background"
                 unoptimized
               />
             </div>
@@ -218,11 +218,11 @@ export default function PaletteDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
+          <div className="rounded-xl border border-border bg-card p-6">
             <StyleFilter currentStyle={currentStyle} onStyleChange={handleStyleChange} />
           </div>
 
-          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6 space-y-3">
+          <div className="rounded-xl border border-border bg-card p-6 space-y-3">
             <h2 className="text-lg font-semibold">{t("info")}</h2>
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
