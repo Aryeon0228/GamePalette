@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -27,6 +28,8 @@ export default function PaletteDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { addToast } = useToast()
+  const t = useTranslations("palette")
+  const ts = useTranslations("styles")
   const paletteId = params.id as string
 
   const { getPaletteById, updatePalette, deletePalette } = usePaletteStore()
@@ -73,14 +76,14 @@ export default function PaletteDetailPage() {
     })
 
     setHasChanges(false)
-    addToast("Palette saved successfully", "success")
+    addToast(t("saved"), "success")
   }
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this palette?")) {
+    if (confirm(t("deleteConfirm"))) {
       deletePalette(paletteId)
       router.push("/library")
-      addToast("Palette deleted", "success")
+      addToast(t("deleted"), "success")
     }
   }
 
@@ -97,7 +100,7 @@ export default function PaletteDetailPage() {
   if (!palette) {
     return (
       <div className="container py-16 text-center">
-        <p className="text-muted-foreground">Loading palette...</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       </div>
     )
   }
@@ -120,10 +123,10 @@ export default function PaletteDetailPage() {
             value={paletteName}
             onChange={(event) => handleNameChange(event.target.value)}
             className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto max-w-full"
-            placeholder="Palette name"
+            placeholder={t("paletteNamePlaceholder")}
           />
           {hasChanges && (
-            <span className="text-xs text-muted-foreground">(unsaved changes)</span>
+            <span className="text-xs text-muted-foreground">{t("unsaved")}</span>
           )}
         </div>
 
@@ -133,11 +136,11 @@ export default function PaletteDetailPage() {
           </Button>
           <Button variant="outline" onClick={() => setShowExportModal(true)}>
             <IoDownloadOutline className="h-4 w-4 mr-2" />
-            Export
+            {t("export")}
           </Button>
           <Button onClick={handleSave} disabled={!hasChanges}>
             <IoSaveOutline className="h-4 w-4 mr-2" />
-            Save
+            {t("save")}
           </Button>
         </div>
       </div>
@@ -146,7 +149,7 @@ export default function PaletteDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Colors</h2>
+              <h2 className="text-lg font-semibold">{t("colors")}</h2>
               <Button
                 variant={valueCheckEnabled ? "secondary" : "outline"}
                 size="sm"
@@ -155,12 +158,12 @@ export default function PaletteDetailPage() {
                 {valueCheckEnabled ? (
                   <>
                     <IoEyeOffOutline className="h-4 w-4 mr-2" />
-                    Hide Value Check
+                    {t("hideValueCheck")}
                   </>
                 ) : (
                   <>
                     <IoEyeOutline className="h-4 w-4 mr-2" />
-                    Value Check
+                    {t("valueCheck")}
                   </>
                 )}
               </Button>
@@ -180,7 +183,7 @@ export default function PaletteDetailPage() {
                   style={{ backgroundColor: selectedColor.hex }}
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold">{selectedColor.name || "Selected Color"}</h2>
+                  <h2 className="text-lg font-semibold">{selectedColor.name || t("selectedColor")}</h2>
                   <p className="text-sm font-mono text-muted-foreground">{selectedColor.hex}</p>
                   <p className="text-xs text-muted-foreground">
                     HSL: {selectedColor.hsl.h}°, {selectedColor.hsl.s}%, {selectedColor.hsl.l}%
@@ -194,14 +197,14 @@ export default function PaletteDetailPage() {
           {displayColors.length > 0 && !selectedColor && (
             <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 text-center bg-[#16161e]/70">
               <p className="text-muted-foreground">
-                Click a color above to see value variations with hue shifting.
+                {t("variationHint")}
               </p>
             </div>
           )}
 
           {palette.sourceImageUrl && (
             <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6">
-              <h2 className="text-lg font-semibold mb-4">Source Image</h2>
+              <h2 className="text-lg font-semibold mb-4">{t("sourceImage")}</h2>
               <Image
                 src={palette.sourceImageUrl}
                 alt="Source"
@@ -220,22 +223,22 @@ export default function PaletteDetailPage() {
           </div>
 
           <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-6 space-y-3">
-            <h2 className="text-lg font-semibold">Info</h2>
+            <h2 className="text-lg font-semibold">{t("info")}</h2>
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Colors</span>
+                <span className="text-muted-foreground">{t("colors")}</span>
                 <span>{palette.colors.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Style</span>
-                <span className="capitalize">{currentStyle}</span>
+                <span className="text-muted-foreground">{t("style")}</span>
+                <span>{ts(currentStyle)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Created</span>
+                <span className="text-muted-foreground">{t("created")}</span>
                 <span>{new Date(palette.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Updated</span>
+                <span className="text-muted-foreground">{t("updated")}</span>
                 <span>{new Date(palette.updatedAt).toLocaleDateString()}</span>
               </div>
             </div>

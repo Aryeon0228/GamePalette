@@ -1,6 +1,7 @@
 "use client"
 
 import { useId } from "react"
+import { useTranslations } from "next-intl"
 import type { ShadingScheme } from "@/lib/exporters"
 
 interface SphereShadingPreviewProps {
@@ -30,6 +31,7 @@ function arcPath(startDeg: number, endDeg: number): string {
  * light on the far edge, and a calm background — all from the picked colors.
  */
 export function SphereShadingPreview({ scheme, className }: SphereShadingPreviewProps) {
+  const t = useTranslations("a11y")
   const uid = useId()
   const gradId = `sphere-${uid}`
   const blurId = `rim-${uid}`
@@ -40,7 +42,7 @@ export function SphereShadingPreview({ scheme, className }: SphereShadingPreview
       viewBox="0 0 220 200"
       className={className}
       role="img"
-      aria-label="Sphere shading preview built from the palette"
+      aria-label={t("spherePreview")}
     >
       <defs>
         <radialGradient id={gradId} cx="35%" cy="30%" r="75%">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Color } from "@/types"
 import { ColorCard } from "./ColorCard"
 import { cn } from "@/lib/utils"
@@ -23,6 +24,7 @@ export function PaletteDisplay({
   compact = false,
   adaptive = false,
 }: PaletteDisplayProps) {
+  const t = useTranslations("paletteDisplay")
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   if (colors.length === 0) {
@@ -32,7 +34,7 @@ export function PaletteDisplay({
         className
       )}>
         <p className="text-muted-foreground text-center">
-          Upload an image to extract colors
+          {t("uploadHint")}
         </p>
       </div>
     )

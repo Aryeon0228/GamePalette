@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import { useTranslations } from "next-intl"
 
 /**
  * A hue color wheel that plots colors as dots at their position on the wheel.
@@ -43,6 +44,7 @@ interface HarmonyWheelProps {
 }
 
 export function HarmonyWheel({ baseHue, colors, size = WHEEL_SIZE }: HarmonyWheelProps) {
+  const t = useTranslations("a11y")
   const dots = useMemo(
     () =>
       colors.map((color, index) => {
@@ -63,7 +65,7 @@ export function HarmonyWheel({ baseHue, colors, size = WHEEL_SIZE }: HarmonyWhee
       height={size}
       viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
       role="img"
-      aria-label="Color wheel showing harmony relationships"
+      aria-label={t("harmonyWheel")}
     >
       {RING_SEGMENTS.map((segment) => (
         <path key={segment.key} d={segment.d} fill={segment.fill} opacity={0.6} />

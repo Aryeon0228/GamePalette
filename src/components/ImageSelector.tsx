@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import {
   IoCropOutline,
   IoBrushOutline,
@@ -53,6 +54,7 @@ export function ImageSelector({
   onClear,
   className,
 }: ImageSelectorProps) {
+  const t = useTranslations("imageSelector")
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -434,7 +436,7 @@ export function ImageSelector({
 
         {selectionMode && !hasSelection && (
           <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-lg">
-            {selectionShape === "rect" ? "Drag to select a rectangle" : "Draw a freeform lasso path"}
+            {selectionShape === "rect" ? t("dragRect") : t("drawLasso")}
           </div>
         )}
       </div>
@@ -448,7 +450,7 @@ export function ImageSelector({
               onClick={handleStartSelectionMode}
             >
               <IoCropOutline className="h-4 w-4 mr-2" />
-              Select Region
+              {t("selectRegion")}
             </Button>
           ) : (
             <>
@@ -462,7 +464,7 @@ export function ImageSelector({
                   }}
                 >
                   <IoCropOutline className="h-4 w-4 mr-2" />
-                  Rect
+                  {t("rect")}
                 </Button>
                 <Button
                   variant={selectionShape === "lasso" ? "secondary" : "ghost"}
@@ -473,19 +475,19 @@ export function ImageSelector({
                   }}
                 >
                   <IoBrushOutline className="h-4 w-4 mr-2" />
-                  Lasso
+                  {t("lasso")}
                 </Button>
               </div>
 
               {hasSelection ? (
                 <Button variant="default" size="sm" onClick={handleConfirmSelection}>
                   <IoCheckmarkOutline className="h-4 w-4 mr-2" />
-                  Extract from Selection
+                  {t("extractFromSelection")}
                 </Button>
               ) : (
                 <Button variant="ghost" size="sm" onClick={handleCancelSelectionMode}>
                   <IoCloseOutline className="h-4 w-4 mr-2" />
-                  Cancel
+                  {t("cancel")}
                 </Button>
               )}
 
@@ -496,7 +498,7 @@ export function ImageSelector({
                   onClick={handleClearSelection}
                 >
                   <IoRefreshOutline className="h-4 w-4 mr-2" />
-                  Reset
+                  {t("reset")}
                 </Button>
               )}
             </>
@@ -506,14 +508,14 @@ export function ImageSelector({
         {onClear && (
           <Button variant="destructive" size="sm" onClick={handleClearImage}>
             <IoCloseOutline className="h-4 w-4 mr-2" />
-            Clear Image
+            {t("clearImage")}
           </Button>
         )}
       </div>
 
       {hasSelection && selectionMode && (
         <p className="text-xs text-muted-foreground text-center">
-          Selection ready. Click &quot;Extract from Selection&quot; to extract colors from the selected area only.
+          {t("selectionReady")}
         </p>
       )}
     </div>

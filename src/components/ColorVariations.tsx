@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useTranslations } from "next-intl"
 import { Color, VariationStyle } from "@/types"
 import { generateColorVariations, getVariationInfo } from "@/lib/styleFilters"
 import { copyToClipboard, cn } from "@/lib/utils"
@@ -14,6 +15,7 @@ interface ColorVariationsProps {
 }
 
 export function ColorVariations({ color, className, compact = false }: ColorVariationsProps) {
+  const t = useTranslations("colorVariations")
   const [style, setStyle] = useState<VariationStyle>("stylized")
   const [copiedHex, setCopiedHex] = useState<string | null>(null)
   const [showDetails, setShowDetails] = useState(false)
@@ -35,18 +37,18 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
   }
 
   const variationSteps = [
-    { key: "shadow2", color: variations.shadow2, label: "S2", fullLabel: "Shadow 2", delta: -30 },
-    { key: "shadow1", color: variations.shadow1, label: "S1", fullLabel: "Shadow 1", delta: -15 },
-    { key: "midtone", color: variations.midtone, label: "Base", fullLabel: "Base", delta: 0 },
-    { key: "highlight1", color: variations.highlight1, label: "L1", fullLabel: "Light 1", delta: 15 },
-    { key: "highlight2", color: variations.highlight2, label: "L2", fullLabel: "Light 2", delta: 30 },
+    { key: "shadow2", color: variations.shadow2, label: "S2", fullLabel: "Shadow 2", labelKey: "stepShadow2", delta: -30 },
+    { key: "shadow1", color: variations.shadow1, label: "S1", fullLabel: "Shadow 1", labelKey: "stepShadow1", delta: -15 },
+    { key: "midtone", color: variations.midtone, label: "Base", fullLabel: "Base", labelKey: "stepBase", delta: 0 },
+    { key: "highlight1", color: variations.highlight1, label: "L1", fullLabel: "Light 1", labelKey: "stepLight1", delta: 15 },
+    { key: "highlight2", color: variations.highlight2, label: "L2", fullLabel: "Light 2", labelKey: "stepLight2", delta: 30 },
   ]
 
   return (
     <div className={cn("space-y-3", className)}>
       {/* Header with Style Toggle */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-sm">Value Variations</h3>
+        <h3 className="font-semibold text-sm">{t("title")}</h3>
         <div className="flex rounded-lg border border-border overflow-hidden">
           <button
             className={cn(
@@ -57,7 +59,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
             )}
             onClick={() => setStyle("stylized")}
           >
-            Hue Shift
+            {t("hueShift")}
           </button>
           <button
             className={cn(
@@ -68,7 +70,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
             )}
             onClick={() => setStyle("realistic")}
           >
-            OFF
+            {t("off")}
           </button>
         </div>
       </div>
@@ -132,11 +134,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
 
       {/* Info Text */}
       <p className="text-xs text-muted-foreground">
-        {style === "stylized" ? (
-          <>Shadows → Blue, Highlights → Yellow (shortest path)</>
-        ) : (
-          <>Pure lightness changes only, no hue shifting</>
-        )}
+        {style === "stylized" ? t("infoHueShift") : t("infoOff")}
       </p>
 
       {/* Action Buttons */}
@@ -155,12 +153,12 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
           {copiedHex === "all" ? (
             <>
               <IoCheckmarkOutline className="h-3 w-3 mr-1.5" />
-              Copied!
+              {t("copied")}
             </>
           ) : (
             <>
               <IoCopyOutline className="h-3 w-3 mr-1.5" />
-              Copy All
+              {t("copyAll")}
             </>
           )}
         </Button>
@@ -169,7 +167,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
           size="sm"
           onClick={() => setShowDetails(!showDetails)}
         >
-          {showDetails ? "Hide" : "Details"}
+          {showDetails ? t("hide") : t("details")}
         </Button>
       </div>
 
@@ -179,10 +177,10 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
           <table className="w-full">
             <thead>
               <tr className="bg-muted/50">
-                <th className="px-2 py-1.5 text-left font-medium">Step</th>
-                <th className="px-2 py-1.5 text-left font-medium">L%</th>
-                <th className="px-2 py-1.5 text-left font-medium">H°</th>
-                <th className="px-2 py-1.5 text-left font-medium">ΔH</th>
+                <th className="px-2 py-1.5 text-left font-medium">{t("thStep")}</th>
+                <th className="px-2 py-1.5 text-left font-medium">{t("thL")}</th>
+                <th className="px-2 py-1.5 text-left font-medium">{t("thH")}</th>
+                <th className="px-2 py-1.5 text-left font-medium">{t("thDeltaH")}</th>
               </tr>
             </thead>
             <tbody>
@@ -204,7 +202,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
                           className="w-3 h-3 rounded-sm"
                           style={{ backgroundColor: step.color.hex }}
                         />
-                        <span>{step.fullLabel}</span>
+                        <span>{t(step.labelKey)}</span>
                       </div>
                     </td>
                     <td className="px-2 py-1.5 font-mono">

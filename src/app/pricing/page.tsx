@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { useSearchParams, useRouter } from "next/navigation"
 import { IoCheckmarkOutline, IoCloseOutline, IoRefreshOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
@@ -8,20 +9,21 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 
 const features = [
-  { name: "Palette Extraction", free: true, pro: true },
-  { name: "Style Filters", free: "1 (Original)", pro: "All (4)" },
-  { name: "Saved Palettes", free: "10", pro: "Unlimited" },
-  { name: "Value Check", free: true, pro: true },
-  { name: "PNG/JSON/CSS Export", free: true, pro: true },
-  { name: "Unity Export", free: false, pro: true },
-  { name: "Unreal Export", free: false, pro: true },
-  { name: "Cloud Sync", free: false, pro: true },
-  { name: "Lighting Preview", free: false, pro: true },
-  { name: "PBR Value Recommendations", free: false, pro: true },
-  { name: "Ads", free: "Small banner", pro: "None" },
+  { key: "extraction", free: true, pro: true },
+  { key: "styleFilters", free: "styleFiltersFree", pro: "styleFiltersPro" },
+  { key: "savedPalettes", free: "savedFree", pro: "savedPro" },
+  { key: "valueCheck", free: true, pro: true },
+  { key: "basicExport", free: true, pro: true },
+  { key: "unityExport", free: false, pro: true },
+  { key: "unrealExport", free: false, pro: true },
+  { key: "cloudSync", free: false, pro: true },
+  { key: "lightingPreview", free: false, pro: true },
+  { key: "pbr", free: false, pro: true },
+  { key: "ads", free: "adsFree", pro: "adsPro" },
 ]
 
 function PricingContent() {
+  const t = useTranslations("pricing")
   const { user, isPremium, loading: authLoading } = useAuth()
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -30,12 +32,12 @@ function PricingContent() {
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
-      setMessage({ type: 'success', text: 'Payment successful! Welcome to Pro.' })
+      setMessage({ type: 'success', text: t("paymentSuccess") })
     }
     if (searchParams.get('canceled') === 'true') {
-      setMessage({ type: 'error', text: 'Payment canceled. You can try again anytime.' })
+      setMessage({ type: 'error', text: t("paymentCanceled") })
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -64,7 +66,7 @@ function PricingContent() {
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      setMessage({ type: 'error', text: 'Failed to start checkout. Please try again.' })
+      setMessage({ type: 'error', text: t("checkoutFail") })
     } finally {
       setCheckoutLoading(false)
     }
@@ -79,10 +81,9 @@ function PricingContent() {
   return (
     <div className="container py-16">
       <div className="text-center space-y-4 mb-12">
-        <h1 className="text-4xl font-bold">Simple, Fair Pricing</h1>
+        <h1 className="text-4xl font-bold">{t("title")}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Start free and upgrade when you need more power.
-          All Pro features included for one low monthly price.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -99,25 +100,25 @@ function PricingContent() {
         {/* Free Plan */}
         <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold">Free</h2>
-            <p className="text-muted-foreground">Perfect for trying out</p>
+            <h2 className="text-2xl font-bold">{t("free")}</h2>
+            <p className="text-muted-foreground">{t("freeDesc")}</p>
           </div>
 
           <div className="space-y-1">
             <div className="text-4xl font-bold">$0</div>
-            <div className="text-sm text-muted-foreground">Forever free</div>
+            <div className="text-sm text-muted-foreground">{t("foreverFree")}</div>
           </div>
 
           <Button variant="outline" className="w-full" size="lg" asChild>
-            <a href="/create">Get Started</a>
+            <a href="/create">{t("getStarted")}</a>
           </Button>
 
           <div className="space-y-3">
             {features.map((feature) => (
               <FeatureRow
-                key={feature.name}
-                name={feature.name}
-                value={feature.free}
+                key={feature.key}
+                name={t(`feat.${feature.key}`)}
+                value={typeof feature.free === "boolean" ? feature.free : t(`val.${feature.free}`)}
               />
             ))}
           </div>
@@ -127,21 +128,21 @@ function PricingContent() {
         <div className="relative rounded-xl border-2 border-primary bg-[#16161e] p-8 space-y-6">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <span className="px-4 py-1 rounded-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] text-white text-sm font-medium">
-              {isPremium ? "Current Plan" : "Most Popular"}
+              {isPremium ? t("currentPlan") : t("mostPopular")}
             </span>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold">Pro</h2>
-            <p className="text-muted-foreground">For serious game artists</p>
+            <h2 className="text-2xl font-bold">{t("pro")}</h2>
+            <p className="text-muted-foreground">{t("proDesc")}</p>
           </div>
 
           <div className="space-y-1">
             <div className="text-4xl font-bold">
               $3.99
-              <span className="text-lg font-normal text-muted-foreground">/mo</span>
+              <span className="text-lg font-normal text-muted-foreground">{t("perMonth")}</span>
             </div>
-            <div className="text-sm text-muted-foreground">Billed monthly</div>
+            <div className="text-sm text-muted-foreground">{t("billedMonthly")}</div>
           </div>
 
           {isPremium ? (
@@ -151,7 +152,7 @@ function PricingContent() {
               variant="outline"
               onClick={handleManageSubscription}
             >
-              Manage Subscription
+              {t("manageSubscription")}
             </Button>
           ) : (
             <Button
@@ -163,10 +164,10 @@ function PricingContent() {
               {checkoutLoading ? (
                 <>
                   <IoRefreshOutline className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
+                  {t("loading")}
                 </>
               ) : (
-                "Upgrade to Pro"
+                t("upgradeToPro")
               )}
             </Button>
           )}
@@ -174,9 +175,9 @@ function PricingContent() {
           <div className="space-y-3">
             {features.map((feature) => (
               <FeatureRow
-                key={feature.name}
-                name={feature.name}
-                value={feature.pro}
+                key={feature.key}
+                name={t(`feat.${feature.key}`)}
+                value={typeof feature.pro === "boolean" ? feature.pro : t(`val.${feature.pro}`)}
                 highlight
               />
             ))}
@@ -186,28 +187,28 @@ function PricingContent() {
 
       {/* FAQ Section */}
       <div className="max-w-2xl mx-auto mt-16 space-y-8">
-        <h2 className="text-2xl font-bold text-center">Frequently Asked Questions</h2>
+        <h2 className="text-2xl font-bold text-center">{t("faqTitle")}</h2>
 
         <div className="space-y-6">
           <FAQItem
-            question="Can I cancel anytime?"
-            answer="Yes! You can cancel your Pro subscription at any time. You'll continue to have access to Pro features until the end of your billing period."
+            question={t("faq1Q")}
+            answer={t("faq1A")}
           />
           <FAQItem
-            question="What payment methods do you accept?"
-            answer="We accept all major credit cards (Visa, MasterCard, American Express) and PayPal through our secure payment partner, Lemon Squeezy."
+            question={t("faq2Q")}
+            answer={t("faq2A")}
           />
           <FAQItem
-            question="Do you offer refunds?"
-            answer="Yes, we offer a 7-day money-back guarantee. If you're not satisfied with Pro, contact us for a full refund."
+            question={t("faq3Q")}
+            answer={t("faq3A")}
           />
           <FAQItem
-            question="Can I use Pixel Paw for commercial projects?"
-            answer="Absolutely! Both Free and Pro plans allow commercial use. Create palettes for any game project."
+            question={t("faq4Q")}
+            answer={t("faq4A")}
           />
           <FAQItem
-            question="Is my data safe?"
-            answer="Your palettes are stored securely. Free users have local storage, Pro users get encrypted cloud sync."
+            question={t("faq5Q")}
+            answer={t("faq5A")}
           />
         </div>
       </div>

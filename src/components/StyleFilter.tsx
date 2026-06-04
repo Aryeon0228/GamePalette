@@ -8,6 +8,7 @@ import {
   IoEyeOutline,
   IoOptionsOutline,
 } from "react-icons/io5"
+import { useTranslations } from "next-intl"
 import { StyleType, CustomStyleSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -24,48 +25,17 @@ interface StyleFilterProps {
 
 interface StyleOption {
   id: StyleType
-  label: string
-  description: string
+  descKey: string
   icon: IconType
   accent: string
 }
 
 const styleOptions: StyleOption[] = [
-  {
-    id: "original",
-    label: "Original",
-    description: "Keep extracted colors",
-    icon: IoPawOutline,
-    accent: "#a0a0b0",
-  },
-  {
-    id: "hypercasual",
-    label: "Hyper",
-    description: "Bright and punchy",
-    icon: IoSparklesOutline,
-    accent: "#fbbf24",
-  },
-  {
-    id: "stylized",
-    label: "Stylized",
-    description: "Art-friendly shifts",
-    icon: IoBrushOutline,
-    accent: "#c084fc",
-  },
-  {
-    id: "realistic",
-    label: "Realistic",
-    description: "Subtle and natural",
-    icon: IoEyeOutline,
-    accent: "#34d399",
-  },
-  {
-    id: "custom",
-    label: "Custom",
-    description: "Manual controls",
-    icon: IoOptionsOutline,
-    accent: "#60a5fa",
-  },
+  { id: "original", descKey: "originalDesc", icon: IoPawOutline, accent: "#a0a0b0" },
+  { id: "hypercasual", descKey: "hypercasualDesc", icon: IoSparklesOutline, accent: "#fbbf24" },
+  { id: "stylized", descKey: "stylizedDesc", icon: IoBrushOutline, accent: "#c084fc" },
+  { id: "realistic", descKey: "realisticDesc", icon: IoEyeOutline, accent: "#34d399" },
+  { id: "custom", descKey: "customDesc", icon: IoOptionsOutline, accent: "#60a5fa" },
 ]
 
 export function StyleFilter({
@@ -76,10 +46,12 @@ export function StyleFilter({
   valueCheckEnabled,
   onValueCheckToggle,
 }: StyleFilterProps) {
+  const t = useTranslations("styleFilter")
+  const ts = useTranslations("styles")
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium tracking-wide">Style Filter</h3>
+        <h3 className="text-sm font-medium tracking-wide">{t("title")}</h3>
         {onValueCheckToggle && (
           <Button
             variant={valueCheckEnabled ? "secondary" : "outline"}
@@ -87,7 +59,7 @@ export function StyleFilter({
             onClick={onValueCheckToggle}
           >
             <IoEyeOutline className="h-4 w-4 mr-2" />
-            Value Check
+            {t("valueCheck")}
           </Button>
         )}
       </div>
@@ -109,8 +81,8 @@ export function StyleFilter({
               style={isActive ? { borderColor: style.accent, backgroundColor: `${style.accent}20` } : undefined}
             >
               <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? style.accent : "#a0a0b0" }} />
-              <p className="text-xs font-semibold leading-tight">{style.label}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{style.description}</p>
+              <p className="text-xs font-semibold leading-tight">{ts(style.id)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{ts(style.descKey)}</p>
             </button>
           )
         })}
@@ -119,7 +91,7 @@ export function StyleFilter({
       {currentStyle === "custom" && customSettings && onCustomSettingsChange && (
         <div className="space-y-4 p-4 rounded-xl border border-[#2d2d38] bg-[#16161e]">
           <SliderControl
-            label="Saturation"
+            label={t("saturation")}
             value={customSettings.saturationMultiplier}
             min={0}
             max={2}
@@ -131,7 +103,7 @@ export function StyleFilter({
           />
 
           <SliderControl
-            label="Lightness"
+            label={t("lightness")}
             value={customSettings.lightnessMultiplier}
             min={0}
             max={2}
@@ -143,7 +115,7 @@ export function StyleFilter({
           />
 
           <SliderControl
-            label="Hue Shift"
+            label={t("hueShift")}
             value={customSettings.hueShift}
             min={-180}
             max={180}

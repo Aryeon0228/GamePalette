@@ -16,25 +16,28 @@ import {
   IoSparklesOutline,
   IoPawOutline,
 } from "react-icons/io5"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
+import { LocaleSwitcher } from "@/components/LocaleSwitcher"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 
 interface NavItem {
   href: string
-  label: string
+  labelKey: "home" | "library"
   icon: IconType
 }
 
 const navItems: NavItem[] = [
-  { href: "/", label: "Home", icon: IoColorPaletteOutline },
-  { href: "/library", label: "Library", icon: IoLibraryOutline },
+  { href: "/", labelKey: "home", icon: IoColorPaletteOutline },
+  { href: "/library", labelKey: "library", icon: IoLibraryOutline },
 ]
 
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isPremium, loading } = useAuth()
+  const t = useTranslations("header")
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/92 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
@@ -46,7 +49,7 @@ export function Header() {
           <div className="leading-none">
             <p className="font-display text-xl font-bold tracking-[-0.02em] text-foreground">Pixel Paw</p>
             <p className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-              <span>Color Extractor</span>
+              <span>{t("subtitle")}</span>
               <IoPawOutline className="h-3.5 w-3.5" />
             </p>
           </div>
@@ -65,12 +68,13 @@ export function Header() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          <LocaleSwitcher />
           {user ? (
             <Link
               href="/login"
@@ -78,7 +82,7 @@ export function Header() {
             >
               <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
-                {user.email?.split("@")[0] || "Account"}
+                {user.email?.split("@")[0] || t("account")}
               </span>
               {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
             </Link>
@@ -86,7 +90,7 @@ export function Header() {
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">
                 <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                Login
+                {t("login")}
               </Link>
             </Button>
           )}
@@ -94,7 +98,7 @@ export function Header() {
           <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
             <Link href="/create">
               <IoAddCircleOutline className="h-4 w-4 mr-1.5" />
-              Create Palette
+              {t("createPalette")}
             </Link>
           </Button>
         </div>
@@ -123,11 +127,12 @@ export function Header() {
                 )}
               >
                 <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             ))}
 
             <div className="pt-3 border-t border-border flex flex-col gap-2">
+              <LocaleSwitcher className="self-start" />
               {user ? (
                 <Link
                   href="/login"
@@ -136,7 +141,7 @@ export function Header() {
                 >
                   <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">
-                    {user.user_metadata?.full_name || user.email?.split("@")[0] || "Account"}
+                    {user.user_metadata?.full_name || user.email?.split("@")[0] || t("account")}
                   </span>
                   {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
                 </Link>
@@ -144,7 +149,7 @@ export function Header() {
                 <Button variant="ghost" asChild className="justify-start">
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                     <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                    Login
+                    {t("login")}
                   </Link>
                 </Button>
               )}
@@ -152,7 +157,7 @@ export function Header() {
               <Button className="bg-primary hover:bg-primary/90" asChild>
                 <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
                   <IoAddCircleOutline className="h-4 w-4 mr-1.5" />
-                  Create Palette
+                  {t("createPalette")}
                 </Link>
               </Button>
             </div>

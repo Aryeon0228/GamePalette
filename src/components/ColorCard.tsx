@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { IoCopyOutline, IoCheckmarkOutline } from "react-icons/io5"
 import { Color } from "@/types"
 import { cn, copyToClipboard } from "@/lib/utils"
@@ -15,6 +16,7 @@ interface ColorCardProps {
 }
 
 export function ColorCard({ color, selected, onClick, showDetails = false, fill = false }: ColorCardProps) {
+  const t = useTranslations("colorCard")
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const handleCopy = async (value: string, field: string) => {
@@ -42,8 +44,8 @@ export function ColorCard({ color, selected, onClick, showDetails = false, fill 
 
         <div className="p-4 space-y-3 bg-card">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Name</span>
-            <span className="text-sm font-medium">{color.name || 'Custom'}</span>
+            <span className="text-sm text-muted-foreground">{t("name")}</span>
+            <span className="text-sm font-medium">{color.name || t("custom")}</span>
           </div>
 
           <CopyRow
