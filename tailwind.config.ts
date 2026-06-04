@@ -71,8 +71,16 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        sans: ["var(--font-space-grotesk)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-space-grotesk)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: [
+          "var(--font-pretendard)",
+          "var(--font-space-grotesk)",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+        // Display/headings & numerals: geometric Space Grotesk, Pretendard for Korean fallback.
+        display: ["var(--font-space-grotesk)", "var(--font-pretendard)", "ui-sans-serif", "sans-serif"],
       },
     },
   },

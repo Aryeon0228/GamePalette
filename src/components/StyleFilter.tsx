@@ -75,7 +75,7 @@ export function StyleFilter({
               onClick={() => onStyleChange(style.id)}
               className={cn(
                 "rounded-xl border p-3 text-left transition-all",
-                "bg-[#1a1a24] border-[#24242e] hover:border-[#3a3a4a]",
+                "bg-muted border-border hover:border-primary/50",
                 isActive && "ring-2 ring-offset-2 ring-offset-background"
               )}
               style={isActive ? { borderColor: style.accent, backgroundColor: `${style.accent}20` } : undefined}
@@ -89,7 +89,7 @@ export function StyleFilter({
       </div>
 
       {currentStyle === "custom" && customSettings && onCustomSettingsChange && (
-        <div className="space-y-4 p-4 rounded-xl border border-[#2d2d38] bg-[#16161e]">
+        <div className="space-y-4 p-4 rounded-xl border border-border bg-card">
           <SliderControl
             label={t("saturation")}
             value={customSettings.saturationMultiplier}

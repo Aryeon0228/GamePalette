@@ -66,7 +66,7 @@ export default function LibraryPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <IoLibraryOutline className="h-7 w-7 text-[#4f7bb8]" />
+            <IoLibraryOutline className="h-7 w-7 text-primary" />
             {t("title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
@@ -91,10 +91,10 @@ export default function LibraryPage() {
             />
           </div>
 
-          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-4 space-y-2">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold flex items-center gap-1.5">
-                <IoFolderOpenOutline className="h-4 w-4 text-[#a0a0b0]" />
+                <IoFolderOpenOutline className="h-4 w-4 text-muted-foreground" />
                 {t("folders")}
               </h3>
               <Button variant="ghost" size="icon" onClick={() => setShowNewFolder(true)}>
@@ -108,7 +108,7 @@ export default function LibraryPage() {
                   "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
                   selectedFolder === null
                     ? "bg-primary/20 text-foreground"
-                    : "hover:bg-[#24242e] text-muted-foreground hover:text-foreground"
+                    : "hover:bg-accent text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => setSelectedFolder(null)}
               >
@@ -122,7 +122,7 @@ export default function LibraryPage() {
                     "flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors group",
                     selectedFolder === folder.id
                       ? "bg-primary/20 text-foreground"
-                      : "hover:bg-[#24242e] text-muted-foreground hover:text-foreground"
+                      : "hover:bg-accent text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <button
@@ -167,7 +167,7 @@ export default function LibraryPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-4 space-y-2">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
             <h3 className="font-semibold">{t("stats")}</h3>
             <div className="text-sm text-muted-foreground space-y-1">
               <p>{t("totalPalettes", { count: savedPalettes.length })}</p>
@@ -178,7 +178,7 @@ export default function LibraryPage() {
 
         <div className="lg:col-span-3">
           {filteredPalettes.length === 0 ? (
-            <div className="text-center py-16 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-[#16161e]/70">
+            <div className="text-center py-16 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-card/70">
               <p className="text-muted-foreground mb-4">
                 {searchQuery ? t("noMatch") : t("noPalettes")}
               </p>
@@ -192,7 +192,7 @@ export default function LibraryPage() {
                 <Link
                   key={palette.id}
                   href={`/palette/${palette.id}`}
-                  className="group block rounded-xl border border-[#2d2d38] bg-[#16161e] overflow-hidden hover:border-[#4f7bb8] transition-colors"
+                  className="group block rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
                 >
                   <PalettePreview colors={palette.colors} className="h-24" />
 
@@ -219,7 +219,7 @@ export default function LibraryPage() {
                         {palette.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="text-xs px-2 py-0.5 rounded-full bg-[#24242e] text-muted-foreground"
+                            className="text-xs px-2 py-0.5 rounded-full bg-accent text-muted-foreground"
                           >
                             {tag}
                           </span>

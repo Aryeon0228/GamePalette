@@ -32,7 +32,7 @@ const features: FeatureItem[] = [
   {
     id: "feature1",
     icon: IoColorPaletteOutline,
-    accent: "#4f7bb8",
+    accent: "#5db8e8",
   },
   {
     id: "feature2",
@@ -103,7 +103,7 @@ export default function HomePage() {
   return (
     <div className="container py-10 space-y-14">
       <section className="text-center space-y-5">
-        <div className="inline-flex items-center rounded-full border border-[#2d2d38] bg-[#16161e] px-3 py-1 text-xs text-muted-foreground">
+        <div className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
           {t("badge")}
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.025em]">
@@ -117,16 +117,16 @@ export default function HomePage() {
       </section>
 
       <section className="max-w-3xl mx-auto">
-        <div className="rounded-2xl border border-[#2d2d38] bg-[#16161e]/95 p-6 shadow-[0_16px_44px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl border border-border bg-card/95 p-6 shadow-[0_16px_44px_rgba(0,0,0,0.35)]">
           <ImageUploader onImageLoad={handleImageLoad} />
 
-          <div className="mt-5 rounded-xl border border-[#2d2d38] bg-[#1a1a24] px-4 py-3">
+          <div className="mt-5 rounded-xl border border-border bg-muted px-4 py-3">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <span>{t("extractionMethod")}</span>
                 <div className="relative group">
-                  <IoInformationCircleOutline className="w-4 h-4 cursor-help text-[#a0a0b0]" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 rounded-lg bg-[#101018] border border-[#2d2d38] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-left">
+                  <IoInformationCircleOutline className="w-4 h-4 cursor-help text-muted-foreground" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 rounded-lg bg-background border border-border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-left">
                     <p className="text-xs text-muted-foreground mb-2">
                       {t.rich("tooltipHistogram", { b: (chunks) => <strong className="text-foreground">{chunks}</strong> })}
                     </p>
@@ -136,13 +136,13 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="flex rounded-xl border border-[#2d2d38] overflow-hidden">
+              <div className="flex rounded-xl border border-border overflow-hidden">
                 <button
                   onClick={() => setExtractionMethod("histogram")}
                   className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                     isHydrated && extractionMethod === "histogram"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-transparent hover:bg-[#24242e] text-muted-foreground"
+                      : "bg-transparent hover:bg-accent text-muted-foreground"
                   }`}
                 >
                   <IoStatsChartOutline className="h-4 w-4" />
@@ -153,7 +153,7 @@ export default function HomePage() {
                   className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
                     isHydrated && extractionMethod === "kmeans"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-transparent hover:bg-[#24242e] text-muted-foreground"
+                      : "bg-transparent hover:bg-accent text-muted-foreground"
                   }`}
                 >
                   <IoColorFilterOutline className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function HomePage() {
               <Link
                 key={palette.id}
                 href={`/palette/${palette.id}`}
-                className="block rounded-xl border border-[#2d2d38] bg-[#16161e] p-4 hover:border-[#4f7bb8] transition-colors"
+                className="block rounded-xl border border-border bg-card p-4 hover:border-primary transition-colors"
               >
                 <PalettePreview colors={palette.colors} className="mb-3 h-10 rounded-lg" />
                 <div className="flex items-center justify-between gap-3">
@@ -215,7 +215,7 @@ export default function HomePage() {
           {features.map((feature) => (
             <div
               key={feature.id}
-              className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-5 space-y-3"
+              className="rounded-xl border border-border bg-card p-5 space-y-3"
             >
               <div
                 className="inline-flex p-2.5 rounded-lg"

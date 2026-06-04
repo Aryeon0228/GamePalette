@@ -59,7 +59,7 @@ export function MobileAppBanner() {
   return (
     <>
       {isVisible && (
-        <div className="border-b border-[#2d2d38] bg-gradient-to-r from-[#3b426a]/90 to-[#4f7bb8]/90">
+        <div className="border-b border-border bg-gradient-to-r from-sky-600/90 to-cyan-500/90">
           <div className="container py-3 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-start gap-2.5 text-white">
               <IoPhonePortraitOutline className="h-5 w-5 mt-0.5 shrink-0" />
@@ -98,7 +98,7 @@ export function MobileAppBanner() {
         <div className="fixed right-4 bottom-4 z-50">
           <Button
             size="sm"
-            className="bg-[#3b426a] hover:bg-[#33385d] shadow-[0_6px_20px_rgba(0,0,0,0.35)]"
+            className="bg-sky-700 hover:bg-sky-800 shadow-[0_6px_20px_rgba(0,0,0,0.35)]"
             onClick={handleShowAgain}
           >
             <IoRefreshOutline className="h-4 w-4 mr-1.5" />

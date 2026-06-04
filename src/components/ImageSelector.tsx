@@ -130,13 +130,13 @@ export function ImageSelector({
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.clearRect(x, y, width, height)
 
-      ctx.strokeStyle = "#4f7bb8"
+      ctx.strokeStyle = "#5db8e8"
       ctx.lineWidth = 2
       ctx.setLineDash([5, 5])
       ctx.strokeRect(x, y, width, height)
 
       const handleSize = 8
-      ctx.fillStyle = "#4f7bb8"
+      ctx.fillStyle = "#5db8e8"
       ctx.setLineDash([])
 
       const corners = [
@@ -151,7 +151,7 @@ export function ImageSelector({
       })
 
       if (width > 50 && height > 20) {
-        ctx.fillStyle = "rgba(79, 123, 184, 0.95)"
+        ctx.fillStyle = "rgba(93, 184, 232, 0.95)"
         ctx.fillRect(x + width / 2 - 30, y + height / 2 - 10, 60, 20)
         ctx.fillStyle = "white"
         ctx.font = "12px sans-serif"
@@ -187,13 +187,13 @@ export function ImageSelector({
       if (points.length >= 3) {
         ctx.closePath()
       }
-      ctx.strokeStyle = "#4f7bb8"
+      ctx.strokeStyle = "#5db8e8"
       ctx.lineWidth = 2
       ctx.setLineDash([5, 5])
       ctx.stroke()
 
       ctx.setLineDash([])
-      ctx.fillStyle = "#4f7bb8"
+      ctx.fillStyle = "#5db8e8"
       for (const point of points) {
         ctx.fillRect(point.x - 2, point.y - 2, 4, 4)
       }
@@ -408,7 +408,7 @@ export function ImageSelector({
     <div className={cn("space-y-4", className)}>
       <div
         ref={containerRef}
-        className="relative rounded-xl overflow-hidden border border-[#2d2d38] bg-[#101018]"
+        className="relative rounded-xl overflow-hidden border border-border bg-background"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

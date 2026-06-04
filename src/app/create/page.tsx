@@ -320,36 +320,40 @@ export default function CreatePage() {
             )}
           </div>
 
-          {sourceImageUrl && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h3 className="text-sm font-medium mb-4">{t("quickSettings")}</h3>
+          {/* Always rendered so the column layout stays constant with or without an image. */}
+          <div
+            className={`rounded-lg border border-border bg-card p-6 transition-opacity ${
+              sourceImageUrl ? "" : "opacity-60"
+            }`}
+          >
+            <h3 className="text-sm font-medium mb-4">{t("quickSettings")}</h3>
 
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="min-w-[180px] flex-1">
-                  <ColorCountSelector value={colorCount} onChange={setColorCount} />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={valueCheckEnabled ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={toggleValueCheck}
-                  >
-                    <IoEyeOutline className="h-4 w-4 mr-2" />
-                    {t("valueCheck")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReextract}
-                    disabled={isExtracting}
-                  >
-                    <IoRefreshOutline className={`h-4 w-4 mr-2 ${isExtracting ? "animate-spin" : ""}`} />
-                    {t("reextract")}
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="min-w-[180px] flex-1">
+                <ColorCountSelector value={colorCount} onChange={setColorCount} />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={valueCheckEnabled ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={toggleValueCheck}
+                  disabled={!sourceImageUrl}
+                >
+                  <IoEyeOutline className="h-4 w-4 mr-2" />
+                  {t("valueCheck")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReextract}
+                  disabled={!sourceImageUrl || isExtracting}
+                >
+                  <IoRefreshOutline className={`h-4 w-4 mr-2 ${isExtracting ? "animate-spin" : ""}`} />
+                  {t("reextract")}
+                </Button>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="rounded-lg border border-border bg-card p-6">
             <StyleFilter
@@ -413,9 +417,9 @@ export default function CreatePage() {
             )
           })()}
 
-          {selectedColor && <ColorDetailPanel color={selectedColor} />}
-
-          {displayColors.length > 0 && !selectedColor && (
+          {selectedColor ? (
+            <ColorDetailPanel color={selectedColor} />
+          ) : (
             <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
               <p className="text-muted-foreground">
                 {t("inspectHint")}

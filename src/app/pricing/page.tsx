@@ -98,7 +98,7 @@ function PricingContent() {
 
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {/* Free Plan */}
-        <div className="rounded-xl border border-[#2d2d38] bg-[#16161e] p-8 space-y-6">
+        <div className="rounded-xl border border-border bg-card p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold">{t("free")}</h2>
             <p className="text-muted-foreground">{t("freeDesc")}</p>
@@ -125,9 +125,9 @@ function PricingContent() {
         </div>
 
         {/* Pro Plan */}
-        <div className="relative rounded-xl border-2 border-primary bg-[#16161e] p-8 space-y-6">
+        <div className="relative rounded-xl border-2 border-primary bg-card p-8 space-y-6">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] text-white text-sm font-medium">
+            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 text-white text-sm font-medium">
               {isPremium ? t("currentPlan") : t("mostPopular")}
             </span>
           </div>
@@ -156,7 +156,7 @@ function PricingContent() {
             </Button>
           ) : (
             <Button
-              className="w-full bg-gradient-to-r from-[#3b426a] to-[#4f7bb8] hover:from-[#33385d] hover:to-[#466da2]"
+              className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600"
               size="lg"
               onClick={handleUpgrade}
               disabled={checkoutLoading || authLoading}
