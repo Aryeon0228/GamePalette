@@ -21,7 +21,7 @@ interface ColdwarmGridProps {
 
 const INTENSITIES: ColdwarmIntensity[] = ["subtle", "normal", "strong"]
 
-export function ColdwarmGrid({ color, className, steps = 3 }: ColdwarmGridProps) {
+export function ColdwarmGrid({ color, className, steps = 4 }: ColdwarmGridProps) {
   const t = useTranslations("coldwarm")
   const [intensity, setIntensity] = useState<ColdwarmIntensity>("normal")
   const [copiedHex, setCopiedHex] = useState<string | null>(null)
@@ -30,7 +30,7 @@ export function ColdwarmGrid({ color, className, steps = 3 }: ColdwarmGridProps)
     () =>
       generateColdwarmGrid(color, {
         steps,
-        hueShiftPerStep: hueShiftForIntensity(intensity),
+        maxHueShift: hueShiftForIntensity(intensity),
       }),
     [color, intensity, steps]
   )

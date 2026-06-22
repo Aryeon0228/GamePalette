@@ -17,6 +17,33 @@
     "harmonySub": "색상환 위의 색 관계.",
     "coldwarmTitle": "콜드웜 그리드",
     "coldwarmSub": "색온도 × 명도 변형.",
+    "shadingTitle": "셰이딩 스킴",
+    "shadingSub": "이 색 하나에서 만든 명암 램프 — 따뜻한 빛·차가운 그림자, 역광과 배경까지.",
+    "shade": {
+      "highlight": "하이라이트",
+      "light": "라이트",
+      "midtone": "미드톤",
+      "shadowTone": "쉐도우톤",
+      "shadow": "코어 섀도우",
+      "rim": "역광",
+      "background": "배경"
+    },
+    "gradientTitle": "그라데이션 팔레트",
+    "gradientSub": "극좌표 색상 아크를 따라 이징한 부드러운 램프 (poline 방식).",
+    "partner": "타깃",
+    "easing": "이징",
+    "stops": "단계",
+    "gradPartner": {
+      "complement": "보색",
+      "analogous": "유사색",
+      "triad": "삼색조"
+    },
+    "gradEasing": {
+      "linear": "선형",
+      "sinusoidal": "사인",
+      "quadratic": "2차",
+      "exponential": "지수"
+    },
     "contrastTitle": "대비·접근성",
     "contrastSub": "흰색·검정 대비 WCAG 비율.",
     "onWhite": "흰 배경",

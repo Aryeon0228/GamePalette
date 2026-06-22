@@ -3,6 +3,8 @@ import {
   getColorName,
   hexToRgb,
   rgbToHsl,
+  hslToRgb,
+  rgbToHex,
   contrastRatio,
 } from './utils';
 
@@ -149,4 +151,137 @@ export function hueFamily(color: Color): HueFamily {
   if (h < 255) return 'blue';
   if (h < 290) return 'purple';
   return 'magenta';
+}
+
+// ── Shading scheme (single color → full lighting ramp) ──
+
+function makeHsl(h: number, s: number, l: number): Color {
+  const hh = ((h % 360) + 360) % 360;
+  const ss = Math.min(Math.max(s, 0), 100);
+  const ll = Math.min(Math.max(l, 0), 100);
+  const rgb = hslToRgb(hh, ss, ll);
+  const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+  return { hex, rgb, hsl: { h: Math.round(hh), s: Math.round(ss), l: Math.round(ll) }, name: getColorName(hex) };
+}
+
+function towardL(l: number, target: number, frac: number): number {
+  return l + (target - l) * frac;
+}
+
+function hueDir(h: number, pole: number): number {
+  let d = ((pole - h) % 360 + 360) % 360;
+  if (d > 180) d -= 360;
+  return Math.sign(d) || 1;
+}
+
+export type ShadingRole =
+  | 'highlight'
+  | 'light'
+  | 'midtone'
+  | 'shadowTone'
+  | 'shadow'
+  | 'rim'
+  | 'background';
+
+export interface ShadingStep {
+  role: ShadingRole;
+  color: Color;
+}
+
+/**
+ * Derive a classic lighting ramp from a single base color, following the
+ * "warm light / cool shadow" convention painters use:
+ *  highlight · light · midtone (base) · shadow tone · core shadow,
+ *  plus a rim/back light (luminous near-complement) and an ambient background.
+ */
+export function generateShadingScheme(base: Color): ShadingStep[] {
+  const { h, s, l } = base.hsl;
+  const warm = hueDir(h, 45); // toward orange
+  const cool = hueDir(h, 250); // toward blue
+
+  return [
+    { role: 'highlight', color: makeHsl(h + warm * 18, s * 0.7, towardL(l, 96, 0.78)) },
+    { role: 'light', color: makeHsl(h + warm * 9, s * 0.88, towardL(l, 96, 0.42)) },
+    { role: 'midtone', color: base },
+    { role: 'shadowTone', color: makeHsl(h + cool * 12, Math.min(s * 1.12, 100), towardL(l, 8, 0.34)) },
+    { role: 'shadow', color: makeHsl(h + cool * 24, Math.min(s * 1.25, 100), towardL(l, 6, 0.62)) },
+    { role: 'rim', color: makeHsl(h + 165, Math.min(s * 1.1 + 12, 100), towardL(l, 88, 0.62)) },
+    { role: 'background', color: makeHsl(h + 200, s * 0.34, Math.min(Math.max(towardL(l, 26, 0.65), 14), 46)) },
+  ];
+}
+
+// ── Poline-inspired gradient palette ──
+// HSL anchors are projected to a polar XY plane (hue → angle, saturation →
+// radius) with lightness as Z. Sampling a straight line between anchors in that
+// space — eased per the position function — bows through hue space, giving the
+// smooth, slightly "otherworldly" ramps poline is known for. No dependency.
+
+export type EasingName = 'linear' | 'sinusoidal' | 'quadratic' | 'exponential';
+
+const EASINGS: Record<EasingName, (t: number) => number> = {
+  linear: (t) => t,
+  sinusoidal: (t) => 0.5 - 0.5 * Math.cos(Math.PI * t),
+  quadratic: (t) => t * t,
+  exponential: (t) => (t === 0 ? 0 : Math.pow(2, 10 * (t - 1))),
+};
+
+export const EASING_NAMES: EasingName[] = ['linear', 'sinusoidal', 'quadratic', 'exponential'];
+
+export type GradientPartner = 'complement' | 'analogous' | 'triad';
+
+const PARTNER_OFFSET: Record<GradientPartner, number> = {
+  complement: 180,
+  analogous: 45,
+  triad: 120,
+};
+
+interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+function anchorToXYZ(h: number, s: number, l: number): Vec3 {
+  const a = (h * Math.PI) / 180;
+  return { x: Math.cos(a) * s, y: Math.sin(a) * s, z: l };
+}
+
+function xyzToColor(v: Vec3): Color {
+  let h = (Math.atan2(v.y, v.x) * 180) / Math.PI;
+  if (h < 0) h += 360;
+  const s = Math.min(1, Math.hypot(v.x, v.y));
+  const l = Math.min(1, Math.max(0, v.z));
+  return makeHsl(h, s * 100, l * 100);
+}
+
+export interface GradientOptions {
+  stops?: number;
+  easing?: EasingName;
+  partner?: GradientPartner;
+}
+
+/** Generate a smooth gradient palette starting from the base color. */
+export function generateGradientPalette(base: Color, options: GradientOptions = {}): Color[] {
+  const stops = Math.max(2, options.stops ?? 7);
+  const ease = EASINGS[options.easing ?? 'sinusoidal'];
+  const offset = PARTNER_OFFSET[options.partner ?? 'complement'];
+
+  const a0 = anchorToXYZ(base.hsl.h, base.hsl.s / 100, base.hsl.l / 100);
+  // Partner anchor: rotated hue, nudged toward the opposite value for range.
+  const partnerL = base.hsl.l < 50 ? Math.min(base.hsl.l + 45, 92) : Math.max(base.hsl.l - 45, 12);
+  const a1 = anchorToXYZ(base.hsl.h + offset, base.hsl.s / 100, partnerL / 100);
+
+  const out: Color[] = [];
+  for (let i = 0; i < stops; i++) {
+    const t = stops === 1 ? 0 : i / (stops - 1);
+    const tp = ease(t);
+    out.push(
+      xyzToColor({
+        x: a0.x + (a1.x - a0.x) * tp,
+        y: a0.y + (a1.y - a0.y) * tp,
+        z: a0.z + (a1.z - a0.z) * tp,
+      })
+    );
+  }
+  return out;
 }

@@ -27,6 +27,11 @@ import {
   bestTextColor,
   contrastReport,
   hueFamily,
+  generateShadingScheme,
+  generateGradientPalette,
+  EASING_NAMES,
+  EasingName,
+  GradientPartner,
 } from "@/lib/colorAnalysis"
 import { COLOR_FORMATS, ColorFormat, formatColor, getChannels } from "@/lib/colorFormats"
 import { HarmonyType, generateColorHarmonies, simulateColorBlindness } from "@/lib/colorVision"
@@ -44,6 +49,8 @@ const HARMONY_KEY: Record<HarmonyType, string> = {
 }
 
 const CVD_TYPES = ["protanopia", "deuteranopia", "tritanopia"] as const
+const GRADIENT_PARTNERS: GradientPartner[] = ["complement", "analogous", "triad"]
+const GRADIENT_STOPS = [5, 7, 9, 12]
 
 interface SectionProps {
   title: string
@@ -75,6 +82,9 @@ export function ColorAnalyzer() {
   const [copied, setCopied] = useState<string | null>(null)
   const [sourceColors, setSourceColors] = useState<Color[]>([])
   const [showImage, setShowImage] = useState(false)
+  const [gradientStops, setGradientStops] = useState(7)
+  const [gradientEasing, setGradientEasing] = useState<EasingName>("sinusoidal")
+  const [gradientPartner, setGradientPartner] = useState<GradientPartner>("complement")
   const [supportsEyedropper, setSupportsEyedropper] = useState(false)
   const initializedHash = useRef(false)
 
@@ -137,6 +147,11 @@ export function ColorAnalyzer() {
   const tints = useMemo(() => generateTints(color), [color])
   const shades = useMemo(() => generateShades(color), [color])
   const tones = useMemo(() => generateTones(color), [color])
+  const shading = useMemo(() => generateShadingScheme(color), [color])
+  const gradient = useMemo(
+    () => generateGradientPalette(color, { stops: gradientStops, easing: gradientEasing, partner: gradientPartner }),
+    [color, gradientStops, gradientEasing, gradientPartner]
+  )
   const harmonies = useMemo(() => generateColorHarmonies(color.hex), [color])
   const activeHarmony = useMemo(
     () => harmonies.find((item) => item.type === harmony) ?? harmonies[0],
@@ -358,6 +373,87 @@ export function ColorAnalyzer() {
           <Ramp label={t("tones")} colors={tones} />
         </Section>
 
+        {/* Gradient palette (poline-inspired) */}
+        <Section title={t("gradientTitle")} subtitle={t("gradientSub")}>
+          <div className="flex rounded-lg overflow-hidden border border-border h-14">
+            {gradient.map((c, i) => (
+              <button
+                key={`grad-${i}-${c.hex}`}
+                type="button"
+                title={c.hex}
+                className="flex-1 relative group"
+                style={{ backgroundColor: c.hex }}
+                onClick={() => handleCopy(c.hex, `grad:${i}`)}
+              >
+                <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                  {copied === `grad:${i}` ? (
+                    <IoCheckmarkOutline className="h-3.5 w-3.5 text-white" />
+                  ) : (
+                    <IoCopyOutline className="h-3 w-3 text-white" />
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground w-14 shrink-0">{t("partner")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {GRADIENT_PARTNERS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setGradientPartner(p)}
+                    className={cn(
+                      "px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
+                      gradientPartner === p ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                    )}
+                  >
+                    {t(`gradPartner.${p}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground w-14 shrink-0">{t("easing")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {EASING_NAMES.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => setGradientEasing(e)}
+                    className={cn(
+                      "px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
+                      gradientEasing === e ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                    )}
+                  >
+                    {t(`gradEasing.${e}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground w-14 shrink-0">{t("stops")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {GRADIENT_STOPS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setGradientStops(n)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
+                      gradientStops === n ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Section>
+
         {/* Harmonies */}
         <Section title={t("harmonyTitle")} subtitle={t("harmonySub")}>
           <div className="flex flex-wrap gap-1.5">
@@ -407,6 +503,34 @@ export function ColorAnalyzer() {
         {/* Coldwarm */}
         <Section title={t("coldwarmTitle")} subtitle={t("coldwarmSub")}>
           <ColdwarmGrid color={color} />
+        </Section>
+
+        {/* Shading scheme */}
+        <Section title={t("shadingTitle")} subtitle={t("shadingSub")} className="lg:col-span-2">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            {shading.map(({ role, color: c }) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => handleCopy(c.hex, `shade:${role}`)}
+                className="rounded-lg overflow-hidden border border-border text-left group"
+              >
+                <div className="h-16 relative" style={{ backgroundColor: c.hex }}>
+                  <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                    {copied === `shade:${role}` ? (
+                      <IoCheckmarkOutline className="h-4 w-4 text-white" />
+                    ) : (
+                      <IoCopyOutline className="h-3.5 w-3.5 text-white" />
+                    )}
+                  </span>
+                </div>
+                <div className="px-2 py-1.5 bg-background">
+                  <p className="text-[10px] font-medium leading-tight">{t(`shade.${role}`)}</p>
+                  <p className="text-[10px] font-mono text-muted-foreground">{c.hex}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </Section>
 
         {/* Contrast + accessibility (kept compact) */}

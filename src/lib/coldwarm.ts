@@ -16,6 +16,8 @@ import { hslToRgb, rgbToHex, getColorName } from './utils';
  *     Lightness is distributed proportionally into the available head/foot
  *     room so colours never clip to pure white/black.
  *
+ * Both axes are normalized: the column/row *count* only changes the
+ * resolution, not the total range — so a denser grid is smoother, not wider.
  * The centre cell is always the untouched base colour.
  */
 
@@ -25,13 +27,15 @@ const COLD_HUE = 220; // blue — the cold pole
 const MIN_L = 6;
 const MAX_L = 94;
 const VALUE_SPACE_USAGE = 0.85; // how much of the available value range to span
+const MAX_SAT_SHIFT = 12; // saturation swing at the warm/cold extremes, in percent
 
 export type ColdwarmIntensity = 'subtle' | 'normal' | 'strong';
 
-const INTENSITY_HUE_SHIFT: Record<ColdwarmIntensity, number> = {
-  subtle: 8,
-  normal: 14,
-  strong: 22,
+/** Maximum hue rotation (degrees) at the warm/cold extremes, per intensity. */
+const INTENSITY_MAX_HUE_SHIFT: Record<ColdwarmIntensity, number> = {
+  subtle: 18,
+  normal: 32,
+  strong: 50,
 };
 
 export interface ColdwarmCell {
@@ -47,12 +51,10 @@ export interface ColdwarmGrid {
 }
 
 export interface ColdwarmOptions {
-  /** Number of steps on each side of the base (2 → a 5×5 grid). */
+  /** Number of steps on each side of the base (4 → a 9×9 grid). */
   steps?: number;
-  /** Hue rotation per temperature step, in degrees. */
-  hueShiftPerStep?: number;
-  /** Saturation adjustment per temperature step, in percent. */
-  satShiftPerStep?: number;
+  /** Hue rotation at the extreme columns, in degrees. */
+  maxHueShift?: number;
 }
 
 /** Signed shortest angular distance from `from` to `to` (-180..180). */
@@ -62,26 +64,23 @@ function shortestDelta(from: number, to: number): number {
   return d;
 }
 
-/** Apply a temperature shift to hue/saturation. */
+/** Apply a temperature shift to hue/saturation based on normalized position. */
 function shiftTemperature(
   h: number,
   s: number,
   tempStep: number,
-  hueShiftPerStep: number,
-  satShiftPerStep: number
+  steps: number,
+  maxHueShift: number
 ): { h: number; s: number } {
   if (tempStep === 0) return { h, s };
 
+  const ratio = tempStep / steps; // -1..1
   const pole = tempStep > 0 ? WARM_HUE : COLD_HUE;
   const dir = Math.sign(shortestDelta(h, pole)) || 1;
-  const magnitude = Math.abs(tempStep) * hueShiftPerStep;
-  const newH = (h + dir * magnitude + 360) % 360;
+  const newH = (h + dir * Math.abs(ratio) * maxHueShift + 360) % 360;
 
   // Warm light gains a touch of saturation, cool shadow loses a touch.
-  const newS = Math.min(
-    Math.max(s + tempStep * satShiftPerStep, 0),
-    100
-  );
+  const newS = Math.min(Math.max(s + ratio * MAX_SAT_SHIFT, 0), 100);
 
   return { h: newH, s: newS };
 }
@@ -105,13 +104,7 @@ function buildCell(base: Color, tempStep: number, valueStep: number, opts: Requi
     return { color: base, tempStep, valueStep, isBase: true };
   }
 
-  const { h, s } = shiftTemperature(
-    base.hsl.h,
-    base.hsl.s,
-    tempStep,
-    opts.hueShiftPerStep,
-    opts.satShiftPerStep
-  );
+  const { h, s } = shiftTemperature(base.hsl.h, base.hsl.s, tempStep, opts.steps, opts.maxHueShift);
   const l = Math.min(Math.max(shiftValue(base.hsl.l, valueStep, opts.steps), MIN_L), MAX_L);
 
   const rgb = hslToRgb(h, s, l);
@@ -136,9 +129,8 @@ function buildCell(base: Color, tempStep: number, valueStep: number, opts: Requi
  */
 export function generateColdwarmGrid(base: Color, options: ColdwarmOptions = {}): ColdwarmGrid {
   const opts: Required<ColdwarmOptions> = {
-    steps: options.steps ?? 2,
-    hueShiftPerStep: options.hueShiftPerStep ?? INTENSITY_HUE_SHIFT.normal,
-    satShiftPerStep: options.satShiftPerStep ?? 6,
+    steps: options.steps ?? 4,
+    maxHueShift: options.maxHueShift ?? INTENSITY_MAX_HUE_SHIFT.normal,
   };
 
   const { steps } = opts;
@@ -158,5 +150,5 @@ export function generateColdwarmGrid(base: Color, options: ColdwarmOptions = {})
 }
 
 export function hueShiftForIntensity(intensity: ColdwarmIntensity): number {
-  return INTENSITY_HUE_SHIFT[intensity];
+  return INTENSITY_MAX_HUE_SHIFT[intensity];
 }

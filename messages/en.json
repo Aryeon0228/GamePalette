@@ -17,6 +17,33 @@
     "harmonySub": "Color relationships on the wheel.",
     "coldwarmTitle": "Coldwarm grid",
     "coldwarmSub": "Temperature × value variations.",
+    "shadingTitle": "Shading scheme",
+    "shadingSub": "A full lighting ramp from this one color — warm light, cool shadow, plus rim & background.",
+    "shade": {
+      "highlight": "Highlight",
+      "light": "Light",
+      "midtone": "Midtone",
+      "shadowTone": "Shadow tone",
+      "shadow": "Core shadow",
+      "rim": "Rim / Back",
+      "background": "Background"
+    },
+    "gradientTitle": "Gradient palette",
+    "gradientSub": "Smooth ramp eased through a polar hue arc (poline-style).",
+    "partner": "Target",
+    "easing": "Easing",
+    "stops": "Stops",
+    "gradPartner": {
+      "complement": "Complement",
+      "analogous": "Analogous",
+      "triad": "Triad"
+    },
+    "gradEasing": {
+      "linear": "Linear",
+      "sinusoidal": "Sine",
+      "quadratic": "Quad",
+      "exponential": "Expo"
+    },
     "contrastTitle": "Contrast & accessibility",
     "contrastSub": "WCAG ratios against white and black.",
     "onWhite": "On white",
