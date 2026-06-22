@@ -1,4 +1,109 @@
 {
+  "analyzer": {
+    "pickColor": "Pick a color",
+    "hexInput": "Hex value",
+    "random": "Random",
+    "eyedropper": "Pick from screen",
+    "fromImage": "From image",
+    "copied": "Copied!",
+    "formatsTitle": "Color formats",
+    "formatsSub": "Every model, one click to copy. Toggle to break down the channels.",
+    "rampsTitle": "Tints, shades & tones",
+    "rampsSub": "Mixed toward white, black and gray.",
+    "tints": "Tints (+ white)",
+    "shades": "Shades (+ black)",
+    "tones": "Tones (+ gray)",
+    "harmonyTitle": "Harmonies",
+    "harmonySub": "Color relationships on the wheel.",
+    "coldwarmTitle": "Coldwarm grid",
+    "coldwarmSub": "Temperature × value variations.",
+    "contrastTitle": "Contrast & accessibility",
+    "contrastSub": "WCAG ratios against white and black.",
+    "onWhite": "On white",
+    "onBlack": "On black",
+    "bestText": "Best overlay text color:",
+    "white": "White",
+    "black": "Black",
+    "cvdTitle": "Color vision",
+    "cvdSub": "How this color reads with common color blindness.",
+    "cvdNormal": "Normal",
+    "cvd": {
+      "protanopia": "Protanopia",
+      "deuteranopia": "Deuteranopia",
+      "tritanopia": "Tritanopia"
+    },
+    "psyTitle": "Naming & psychology",
+    "psySub": "Closest named color and what this hue tends to communicate.",
+    "closestName": "Closest named color",
+    "usage": "Good for",
+    "moreTitle": "Need more than one color?",
+    "moreSub": "Extract a full palette from an image or browse your saved palettes.",
+    "toExtract": "Extract from image",
+    "toLibrary": "My library",
+    "temp": {
+      "warm": "Warm",
+      "cool": "Cool",
+      "neutral": "Neutral"
+    },
+    "family": {
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "purple": "Purple",
+      "magenta": "Magenta / Pink",
+      "neutral": "Neutral"
+    },
+    "psy": {
+      "red": {
+        "title": "Energy, passion, urgency",
+        "desc": "Red grabs attention faster than any other hue. It raises arousal and reads as bold, powerful and sometimes dangerous.",
+        "usage": "Calls to action, alerts, sales, sports, food"
+      },
+      "orange": {
+        "title": "Warmth, friendliness, play",
+        "desc": "Orange blends red's energy with yellow's optimism. It feels approachable, affordable and energetic without the aggression of red.",
+        "usage": "CTAs, kids' brands, creative & casual products"
+      },
+      "yellow": {
+        "title": "Optimism, attention, caution",
+        "desc": "The brightest hue to the eye. Yellow signals happiness and clarity, but in large doses it tires the eye and reads as warning.",
+        "usage": "Highlights, warnings, cheerful & budget brands"
+      },
+      "green": {
+        "title": "Growth, nature, balance",
+        "desc": "Green is the easiest color on the eye and reads as calm, healthy and safe. It carries strong associations with money and the environment.",
+        "usage": "Success states, health, finance, eco brands"
+      },
+      "cyan": {
+        "title": "Clarity, freshness, tech",
+        "desc": "Cyan and teal feel clean, cool and modern. They balance blue's trust with green's calm for a crisp, refreshing tone.",
+        "usage": "Tech, medical, clean & modern UI"
+      },
+      "blue": {
+        "title": "Trust, calm, stability",
+        "desc": "The world's most preferred color. Blue lowers arousal and reads as dependable, professional and secure.",
+        "usage": "Corporate, finance, social & productivity apps"
+      },
+      "purple": {
+        "title": "Luxury, creativity, mystery",
+        "desc": "Historically tied to royalty, purple signals premium quality, imagination and spirituality.",
+        "usage": "Premium, beauty, creative & wellness brands"
+      },
+      "magenta": {
+        "title": "Fun, romance, boldness",
+        "desc": "Pink and magenta feel playful, romantic and confident. They range from soft and sweet to loud and rebellious.",
+        "usage": "Beauty, fashion, youthful & playful brands"
+      },
+      "neutral": {
+        "title": "Balance, simplicity, structure",
+        "desc": "Neutrals carry little hue, so they read as timeless and professional. They let other colors lead and structure a layout.",
+        "usage": "Backgrounds, text, minimal & premium design"
+      }
+    }
+  },
   "metadata": {
     "title": "Pixel Paw - Color Palette Tool for Game Artists",
     "description": "Extract, transform, and export color palettes optimized for game development. Includes style presets, value check, and Unity/Unreal export.",
