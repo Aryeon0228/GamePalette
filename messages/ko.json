@@ -348,6 +348,19 @@
     "stepL1": "L1",
     "stepL2": "L2"
   },
+  "coldwarm": {
+    "title": "콜드웜 그리드",
+    "subtitle": "가로=색온도, 세로=명도. 칸을 누르면 복사됩니다.",
+    "cold": "차갑게",
+    "warm": "따뜻하게",
+    "light": "밝게",
+    "dark": "어둡게",
+    "base": "기준",
+    "subtle": "약하게",
+    "normal": "보통",
+    "strong": "강하게",
+    "hint": "그림자는 차가운 칸, 하이라이트는 따뜻한 칸에서 골라보세요."
+  },
   "harmony": {
     "complementaryName": "보색",
     "complementaryDesc": "휠에서 정반대에 있는 색",

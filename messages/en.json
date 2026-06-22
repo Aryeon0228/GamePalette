@@ -348,6 +348,19 @@
     "stepL1": "L1",
     "stepL2": "L2"
   },
+  "coldwarm": {
+    "title": "Coldwarm Grid",
+    "subtitle": "Columns = temperature, rows = value. Click a cell to copy.",
+    "cold": "Cold",
+    "warm": "Warm",
+    "light": "Light",
+    "dark": "Dark",
+    "base": "Base",
+    "subtle": "Subtle",
+    "normal": "Normal",
+    "strong": "Strong",
+    "hint": "Pick shadows from the cold side, highlights from the warm side."
+  },
   "harmony": {
     "complementaryName": "Complementary",
     "complementaryDesc": "Opposite colors on wheel",

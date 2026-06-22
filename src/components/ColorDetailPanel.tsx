@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { IoCheckmarkOutline, IoCopyOutline } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { ColorChannelBar } from "@/components/ColorChannelBar"
+import { ColdwarmGrid } from "@/components/ColdwarmGrid"
 import { HarmonyWheel } from "@/components/HarmonyWheel"
 import { Color, VariationStyle } from "@/types"
 import { generateColorVariations } from "@/lib/styleFilters"
@@ -231,6 +232,10 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <ColdwarmGrid color={color} />
       </section>
 
       <section className="space-y-3">
