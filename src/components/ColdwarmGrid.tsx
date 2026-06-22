@@ -15,11 +15,13 @@ import { Button } from "@/components/ui/button"
 interface ColdwarmGridProps {
   color: Color
   className?: string
+  /** Half-steps per axis (3 → a 7×7 grid). */
+  steps?: number
 }
 
 const INTENSITIES: ColdwarmIntensity[] = ["subtle", "normal", "strong"]
 
-export function ColdwarmGrid({ color, className }: ColdwarmGridProps) {
+export function ColdwarmGrid({ color, className, steps = 3 }: ColdwarmGridProps) {
   const t = useTranslations("coldwarm")
   const [intensity, setIntensity] = useState<ColdwarmIntensity>("normal")
   const [copiedHex, setCopiedHex] = useState<string | null>(null)
@@ -27,9 +29,10 @@ export function ColdwarmGrid({ color, className }: ColdwarmGridProps) {
   const grid = useMemo(
     () =>
       generateColdwarmGrid(color, {
+        steps,
         hueShiftPerStep: hueShiftForIntensity(intensity),
       }),
-    [color, intensity]
+    [color, intensity, steps]
   )
 
   const handleCopy = async (hex: string) => {
@@ -81,7 +84,7 @@ export function ColdwarmGrid({ color, className }: ColdwarmGridProps) {
 
         {/* The grid */}
         <div
-          className="grid flex-1 gap-1.5"
+          className="grid flex-1 gap-1"
           style={{ gridTemplateColumns: `repeat(${grid.size}, minmax(0, 1fr))` }}
         >
           {grid.rows.map((row) =>
@@ -91,22 +94,17 @@ export function ColdwarmGrid({ color, className }: ColdwarmGridProps) {
                 type="button"
                 title={`${cell.color.hex.toUpperCase()} · H${cell.color.hsl.h} S${cell.color.hsl.s} L${cell.color.hsl.l}`}
                 className={cn(
-                  "group relative aspect-square rounded-md border transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  "group relative aspect-square rounded-sm transition-transform hover:scale-110 hover:z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   cell.isBase
-                    ? "border-primary ring-2 ring-primary"
-                    : "border-border/60"
+                    ? "ring-2 ring-primary ring-offset-1 ring-offset-card z-10"
+                    : "ring-1 ring-inset ring-black/10"
                 )}
                 style={{ backgroundColor: cell.color.hex }}
                 onClick={() => handleCopy(cell.color.hex)}
               >
                 {copiedHex === cell.color.hex && (
-                  <span className="absolute inset-0 flex items-center justify-center rounded-md bg-black/40">
-                    <IoCheckmarkOutline className="h-4 w-4 text-white" />
-                  </span>
-                )}
-                {cell.isBase && copiedHex !== cell.color.hex && (
-                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white/90 drop-shadow">
-                    {t("base")}
+                  <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/40">
+                    <IoCheckmarkOutline className="h-3 w-3 text-white" />
                   </span>
                 )}
               </button>
