@@ -181,7 +181,21 @@ export function ColorAnalyzer() {
   )
 
   const allFormats = useMemo(
-    () => COLOR_FORMATS.map((fmt) => ({ fmt, value: formatColor(color, fmt) })),
+    () =>
+      COLOR_FORMATS.map((fmt) => {
+        // `value` is the full CSS string we copy; `display` drops the
+        // redundant function wrapper (the label badge already says the
+        // format) so only the numbers show — e.g. rgb(93, 184, 232) → 93 184 232.
+        const value = formatColor(color, fmt)
+        const display =
+          fmt === "HEX"
+            ? value
+            : value
+                .replace(/^[a-z]+\(/i, "")
+                .replace(/\)$/, "")
+                .replace(/,\s*/g, " ")
+        return { fmt, value, display }
+      }),
     [color]
   )
 
@@ -356,17 +370,18 @@ export function ColorAnalyzer() {
         {/* Formats + channels */}
         <Section title={t("formatsTitle")} subtitle={t("formatsSub")}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {allFormats.map(({ fmt, value }) => (
+            {allFormats.map(({ fmt, value, display }) => (
               <button
                 key={fmt}
                 type="button"
+                title={value}
                 onClick={() => handleCopy(value, `fmt:${fmt}`)}
                 className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
               >
-                <span className="shrink-0 w-16 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
+                <span className="shrink-0 w-14 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
                   {fmt}
                 </span>
-                <span className="flex-1 min-w-0 font-mono text-xs truncate">{value}</span>
+                <span className="flex-1 min-w-0 font-mono text-xs truncate">{display}</span>
                 {copied === `fmt:${fmt}` ? (
                   <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
                 ) : (
