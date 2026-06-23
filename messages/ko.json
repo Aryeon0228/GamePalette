@@ -1,4 +1,138 @@
 {
+  "analyzer": {
+    "pickColor": "색 고르기",
+    "hexInput": "Hex 값",
+    "random": "랜덤",
+    "eyedropper": "화면에서 추출",
+    "fromImage": "이미지에서",
+    "copied": "복사됨!",
+    "formatsTitle": "색 포맷",
+    "formatsSub": "모든 색 모델을 한 번에 복사하세요.",
+    "channels": "채널 분해",
+    "rampsTitle": "틴트·셰이드·톤",
+    "rampsSub": "흰색·검정·회색 방향으로 섞은 단계.",
+    "tints": "틴트 (+흰색)",
+    "shades": "셰이드 (+검정)",
+    "tones": "톤 (+회색)",
+    "harmonyTitle": "색 조화",
+    "harmonySub": "색상환 위의 색 관계.",
+    "coldwarmTitle": "콜드웜 그리드",
+    "coldwarmSub": "색온도 × 명도 변형.",
+    "shadingTitle": "셰이딩 스킴",
+    "shadingSub": "이 색 하나에서 만든 명암 램프 — 따뜻한 빛·차가운 그림자, 역광과 배경까지.",
+    "shade": {
+      "highlight": "하이라이트",
+      "light": "라이트",
+      "midtone": "미드톤",
+      "shadowTone": "쉐도우톤",
+      "shadow": "코어 섀도우",
+      "rim": "역광",
+      "background": "배경"
+    },
+    "gradientTitle": "그라데이션 팔레트",
+    "gradientSub": "보색·유사색으로 부드럽게 이어지는 색 띠 (poline 방식).",
+    "partner": "타깃",
+    "easing": "분포",
+    "stops": "단계",
+    "gradPartner": {
+      "complement": "보색",
+      "analogous": "유사색",
+      "triad": "삼색조"
+    },
+    "gradEasing": {
+      "linear": "균등",
+      "sinusoidal": "부드럽게",
+      "quadratic": "느리게",
+      "exponential": "급하게"
+    },
+    "contrastTitle": "대비·가독성",
+    "contrastSub": "이 색 위 글자가 잘 읽히는지 (WCAG 기준).",
+    "contrastHint": "AA는 본문 최소 기준, AAA는 더 엄격한 기준이에요.",
+    "onWhite": "흰 배경",
+    "onBlack": "검은 배경",
+    "bestText": "가독성 좋은 글자색:",
+    "white": "흰색",
+    "black": "검정",
+    "cvdTitle": "색각 이상",
+    "cvdSub": "흔한 색맹에서 이 색이 어떻게 보이는지.",
+    "cvdNormal": "정상",
+    "cvd": {
+      "protanopia": "적색맹",
+      "deuteranopia": "녹색맹",
+      "tritanopia": "청색맹"
+    },
+    "psyTitle": "이름·색채 심리",
+    "psySub": "가장 가까운 명명색과 이 색이 전하는 인상.",
+    "closestName": "가장 가까운 명명색",
+    "usage": "어울리는 곳",
+    "moreTitle": "색 하나 이상이 필요하세요?",
+    "moreSub": "이미지에서 팔레트를 통째로 추출하거나 저장한 팔레트를 둘러보세요.",
+    "toExtract": "이미지에서 추출",
+    "toLibrary": "내 라이브러리",
+    "temp": {
+      "warm": "따뜻한 색",
+      "cool": "차가운 색",
+      "neutral": "중성색"
+    },
+    "family": {
+      "red": "빨강",
+      "orange": "주황",
+      "yellow": "노랑",
+      "green": "초록",
+      "cyan": "청록",
+      "blue": "파랑",
+      "purple": "보라",
+      "magenta": "마젠타 / 핑크",
+      "neutral": "무채색"
+    },
+    "psy": {
+      "red": {
+        "title": "에너지·열정·긴급함",
+        "desc": "빨강은 어떤 색보다 빠르게 시선을 끕니다. 흥분을 높이고 대담하고 강력하며 때로는 위험하게 읽힙니다.",
+        "usage": "행동 유도, 경고, 세일, 스포츠, 음식"
+      },
+      "orange": {
+        "title": "따뜻함·친근함·활기",
+        "desc": "주황은 빨강의 에너지와 노랑의 낙천성을 섞은 색입니다. 빨강만큼 공격적이지 않으면서 친근하고 활기차게 느껴집니다.",
+        "usage": "행동 유도 버튼, 키즈 브랜드, 캐주얼·창의적 제품"
+      },
+      "yellow": {
+        "title": "낙천·주목·주의",
+        "desc": "눈에 가장 밝게 보이는 색입니다. 행복과 명료함을 전하지만 많이 쓰면 눈이 피로하고 경고로 읽힙니다.",
+        "usage": "강조, 경고, 발랄하거나 저가 지향 브랜드"
+      },
+      "green": {
+        "title": "성장·자연·균형",
+        "desc": "눈이 가장 편안한 색으로 차분하고 건강하며 안전하게 읽힙니다. 돈과 환경에 대한 연상이 강합니다.",
+        "usage": "성공 상태, 헬스케어, 금융, 친환경 브랜드"
+      },
+      "cyan": {
+        "title": "맑음·청량·테크",
+        "desc": "청록은 깨끗하고 시원하며 현대적입니다. 파랑의 신뢰와 초록의 차분함을 섞어 산뜻한 인상을 줍니다.",
+        "usage": "테크, 의료, 깔끔하고 모던한 UI"
+      },
+      "blue": {
+        "title": "신뢰·차분함·안정",
+        "desc": "전 세계에서 가장 선호되는 색입니다. 흥분을 낮추고 믿음직하고 전문적이며 안전하게 읽힙니다.",
+        "usage": "기업, 금융, 소셜·생산성 앱"
+      },
+      "purple": {
+        "title": "고급·창의·신비",
+        "desc": "역사적으로 왕족과 연결된 보라는 프리미엄 품질, 상상력, 영성을 전합니다.",
+        "usage": "프리미엄, 뷰티, 창의·웰니스 브랜드"
+      },
+      "magenta": {
+        "title": "발랄·로맨스·대담함",
+        "desc": "핑크와 마젠타는 발랄하고 로맨틱하며 자신감 있게 느껴집니다. 부드럽고 달콤한 톤부터 강렬하고 반항적인 톤까지 폭이 넓습니다.",
+        "usage": "뷰티, 패션, 젊고 발랄한 브랜드"
+      },
+      "neutral": {
+        "title": "균형·단순·구조",
+        "desc": "무채색은 색기가 거의 없어 시대를 타지 않고 전문적으로 읽힙니다. 다른 색을 돋보이게 하고 레이아웃을 잡아줍니다.",
+        "usage": "배경, 텍스트, 미니멀·프리미엄 디자인"
+      }
+    }
+  },
   "metadata": {
     "title": "Pixel Paw - 게임 아티스트를 위한 컬러 팔레트 도구",
     "description": "게임 개발에 최적화된 컬러 팔레트를 추출하고, 변형하고, 내보내세요. 스타일 프리셋, 밸류 체크, Unity/Unreal 내보내기를 지원합니다.",
@@ -9,7 +143,7 @@
     "contact": "문의"
   },
   "header": {
-    "subtitle": "컬러 추출기",
+    "subtitle": "컬러 추출 · 색 완전 분석",
     "home": "홈",
     "library": "라이브러리",
     "login": "로그인",
@@ -347,6 +481,19 @@
     "stepBase": "베이스",
     "stepL1": "L1",
     "stepL2": "L2"
+  },
+  "coldwarm": {
+    "title": "콜드웜 그리드",
+    "subtitle": "가로=색온도, 세로=명도. 칸을 누르면 복사됩니다.",
+    "cold": "차갑게",
+    "warm": "따뜻하게",
+    "light": "밝게",
+    "dark": "어둡게",
+    "base": "기준",
+    "subtle": "약하게",
+    "normal": "보통",
+    "strong": "강하게",
+    "hint": "그림자는 차가운 칸, 하이라이트는 따뜻한 칸에서 골라보세요."
   },
   "harmony": {
     "complementaryName": "보색",
