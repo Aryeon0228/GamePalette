@@ -69,7 +69,7 @@ export function MobileAppBanner() {
           </button>
 
           <div className="flex items-start gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-500 text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 text-white">
               <IoPhonePortraitOutline className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -93,7 +93,7 @@ export function MobileAppBanner() {
           onClick={handleShowAgain}
           aria-label={t("title")}
           title={t("title")}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-[0_6px_20px_rgba(0,0,0,0.25)] transition-transform hover:scale-105"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-slate-500 to-slate-600 text-white shadow-[0_6px_20px_rgba(0,0,0,0.25)] transition-transform hover:scale-105"
         >
           <IoPhonePortraitOutline className="h-5 w-5" />
         </button>

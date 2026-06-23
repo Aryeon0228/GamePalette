@@ -127,7 +127,7 @@ function PricingContent() {
         {/* Pro Plan */}
         <div className="relative rounded-xl border-2 border-primary bg-card p-8 space-y-6">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 text-white text-sm font-medium">
+            <span className="px-4 py-1 rounded-full bg-gradient-to-r from-slate-600 to-slate-500 text-white text-sm font-medium">
               {isPremium ? t("currentPlan") : t("mostPopular")}
             </span>
           </div>
@@ -156,7 +156,7 @@ function PricingContent() {
             </Button>
           ) : (
             <Button
-              className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600"
+              className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600"
               size="lg"
               onClick={handleUpgrade}
               disabled={checkoutLoading || authLoading}

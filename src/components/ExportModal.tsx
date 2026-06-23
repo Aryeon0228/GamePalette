@@ -258,7 +258,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                           {previewColors.map((color, index) => (
                             <div
                               key={`${color.hex}-${index}`}
-                              className="flex-1 bg-sky-400/80 rounded-sm"
+                              className="flex-1 bg-slate-400/80 rounded-sm"
                               style={{ height: `${18 + (index % 4) * 12}%` }}
                             />
                           ))}
@@ -385,7 +385,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                     <div className="flex items-center space-x-2">
                       <span className="font-medium">{t(`opt.${option.optKey}Label`)}</span>
                       {isLocked && (
-                        <span className="text-xs bg-gradient-to-r from-sky-600 to-cyan-500 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-xs bg-gradient-to-r from-slate-600 to-slate-500 text-white px-2 py-0.5 rounded-full">
                           {t("pro")}
                         </span>
                       )}
@@ -425,7 +425,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
 
           {!isPro && (
             <div className="border-t border-border pt-4">
-              <Button className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600">
+              <Button className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600">
                 {t("upgradeButton")}
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">
