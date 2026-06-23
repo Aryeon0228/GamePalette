@@ -412,6 +412,8 @@ export function ColorAnalyzer() {
                 ))}
               </div>
             </div>
+            {/* Reserve 4 rows so switching to a 4-channel format (CMYK)
+                doesn't change the card height and reflow the masonry. */}
             <div className="space-y-2">
               {channels.map((ch) => (
                 <ColorChannelBar
@@ -424,6 +426,9 @@ export function ColorAnalyzer() {
                   bipolar={ch.bipolar}
                   display={ch.display}
                 />
+              ))}
+              {Array.from({ length: Math.max(0, 4 - channels.length) }).map((_, i) => (
+                <div key={`ch-spacer-${i}`} className="h-4" aria-hidden />
               ))}
             </div>
           </div>
