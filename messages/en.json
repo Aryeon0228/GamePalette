@@ -30,9 +30,9 @@
       "background": "Background"
     },
     "gradientTitle": "Gradient palette",
-    "gradientSub": "Smooth ramp eased through a polar hue arc (poline-style).",
+    "gradientSub": "A smooth color band toward a related hue (poline-style).",
     "partner": "Target",
-    "easing": "Easing",
+    "easing": "Spread",
     "stops": "Stops",
     "gradPartner": {
       "complement": "Complement",
@@ -40,13 +40,14 @@
       "triad": "Triad"
     },
     "gradEasing": {
-      "linear": "Linear",
-      "sinusoidal": "Sine",
-      "quadratic": "Quad",
-      "exponential": "Expo"
+      "linear": "Even",
+      "sinusoidal": "Smooth",
+      "quadratic": "Slow",
+      "exponential": "Steep"
     },
-    "contrastTitle": "Contrast & accessibility",
-    "contrastSub": "WCAG ratios against white and black.",
+    "contrastTitle": "Contrast & legibility",
+    "contrastSub": "How legible text is on this color (WCAG).",
+    "contrastHint": "AA = minimum for body text, AAA = stricter.",
     "onWhite": "On white",
     "onBlack": "On black",
     "bestText": "Best overlay text color:",

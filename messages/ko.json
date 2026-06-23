@@ -30,9 +30,9 @@
       "background": "배경"
     },
     "gradientTitle": "그라데이션 팔레트",
-    "gradientSub": "극좌표 색상 아크를 따라 이징한 부드러운 램프 (poline 방식).",
+    "gradientSub": "보색·유사색으로 부드럽게 이어지는 색 띠 (poline 방식).",
     "partner": "타깃",
-    "easing": "이징",
+    "easing": "분포",
     "stops": "단계",
     "gradPartner": {
       "complement": "보색",
@@ -40,13 +40,14 @@
       "triad": "삼색조"
     },
     "gradEasing": {
-      "linear": "선형",
-      "sinusoidal": "사인",
-      "quadratic": "2차",
-      "exponential": "지수"
+      "linear": "균등",
+      "sinusoidal": "부드럽게",
+      "quadratic": "느리게",
+      "exponential": "급하게"
     },
-    "contrastTitle": "대비·접근성",
-    "contrastSub": "흰색·검정 대비 WCAG 비율.",
+    "contrastTitle": "대비·가독성",
+    "contrastSub": "이 색 위 글자가 잘 읽히는지 (WCAG 기준).",
+    "contrastHint": "AA는 본문 최소 기준, AAA는 더 엄격한 기준이에요.",
     "onWhite": "흰 배경",
     "onBlack": "검은 배경",
     "bestText": "가독성 좋은 글자색:",

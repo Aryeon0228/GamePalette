@@ -575,6 +575,7 @@ export function ColorAnalyzer() {
               {textColor === "#FFFFFF" ? t("white") : t("black")}
             </span>
           </p>
+          <p className="text-[10px] text-muted-foreground/80">{t("contrastHint")}</p>
         </Section>
 
         {/* Color blindness */}
