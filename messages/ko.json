@@ -5,6 +5,31 @@
     "random": "랜덤",
     "eyedropper": "화면에서 추출",
     "fromImage": "이미지에서",
+    "fromImageSub": "이미지 아무 곳이나 클릭해 픽셀을 추출하거나, 추출된 색을 고르세요.",
+    "clearImage": "이미지 제거",
+    "pickHint": "올리면 미리보기, 클릭하면 십자 지점의 픽셀을 추출해요.",
+    "extractedColors": "추출된 색",
+    "method": {
+      "histogram": "휴 히스토그램",
+      "kmeans": "K-평균"
+    },
+    "fmtDesc": {
+      "HEX": "16진수 RGB — 웹·코드 표준",
+      "RGB": "빨강 · 초록 · 파랑 (0–255) — 화면용",
+      "HSL": "색상 · 채도 · 밝기(Lightness)",
+      "HSV": "색상 · 채도 · 명도(Value)",
+      "HWB": "색상 · 흰색량 · 검정량",
+      "CMYK": "청록 · 자홍 · 노랑 · 검정 — 인쇄용",
+      "LAB": "CIELAB — 지각 기반, 기기 독립",
+      "OKLAB": "지각 균일 밝기 + 대립색 축",
+      "OKLCH": "지각 균일 밝기 · 채도 · 색상"
+    },
+    "save": "저장",
+    "saved": "저장됨",
+    "savedTitle": "저장한 색",
+    "savedSub": "클릭해 다시 분석, ×로 삭제.",
+    "removeColor": "삭제",
+    "copyAll": "전체 복사",
     "copied": "복사됨!",
     "formatsTitle": "색 포맷",
     "formatsSub": "모든 색 모델을 한 번에 복사하세요.",
@@ -152,8 +177,8 @@
   },
   "mobileBanner": {
     "title": "Pixel Paw 모바일 버전도 운영 중입니다.",
-    "subtitle": "모바일 최신 기능은 아래 저장소에서 바로 확인할 수 있어요.",
-    "repoButton": "모바일 저장소",
+    "subtitle": "앱스토어에서 모바일 앱을 만나보세요.",
+    "storeButton": "App Store",
     "showAgain": "모바일 배너 다시 보기",
     "dismiss": "모바일 배너 닫기"
   },

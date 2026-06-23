@@ -9,6 +9,10 @@ import {
   IoColorWandOutline,
   IoImageOutline,
   IoEyedropOutline,
+  IoBookmark,
+  IoBookmarkOutline,
+  IoDownloadOutline,
+  IoCloseOutline,
 } from "react-icons/io5"
 import { Color } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -16,6 +20,8 @@ import { ColorChannelBar } from "@/components/ColorChannelBar"
 import { ColdwarmGrid } from "@/components/ColdwarmGrid"
 import { HarmonyWheel } from "@/components/HarmonyWheel"
 import { ImageUploader } from "@/components/ImageUploader"
+import { ImagePicker } from "@/components/ImagePicker"
+import { HistogramSection } from "@/components/HistogramSection"
 import {
   colorFromHex,
   normalizeHex,
@@ -33,9 +39,17 @@ import {
   EasingName,
   GradientPartner,
 } from "@/lib/colorAnalysis"
+import { colorToAllFormatsText, colorToJson, colorToCss } from "@/lib/colorExport"
+import { downloadFile } from "@/lib/exporters"
+import { useSavedColors } from "@/stores/savedColorsStore"
 import { COLOR_FORMATS, ColorFormat, formatColor, getChannels } from "@/lib/colorFormats"
 import { HarmonyType, generateColorHarmonies, simulateColorBlindness } from "@/lib/colorVision"
-import { extractColors } from "@/lib/colorExtractor"
+import {
+  extractColors,
+  analyzeLuminosityHistogram,
+  type ExtractionMethod,
+  type LuminosityHistogram,
+} from "@/lib/colorExtractor"
 import { copyToClipboard, cn } from "@/lib/utils"
 
 const DEFAULT_HEX = "#5DB8E8"
@@ -96,12 +110,21 @@ export function ColorAnalyzer() {
   const [harmony, setHarmony] = useState<HarmonyType>("complementary")
   const [copied, setCopied] = useState<string | null>(null)
   const [sourceColors, setSourceColors] = useState<Color[]>([])
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [extractMethod, setExtractMethod] = useState<ExtractionMethod>("histogram")
+  const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [showImage, setShowImage] = useState(false)
   const [gradientStops, setGradientStops] = useState(7)
   const [gradientEasing, setGradientEasing] = useState<EasingName>("sinusoidal")
   const [gradientPartner, setGradientPartner] = useState<GradientPartner>("complement")
   const [supportsEyedropper, setSupportsEyedropper] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const initializedHash = useRef(false)
+
+  const savedColors = useSavedColors((s) => s.colors)
+  const toggleSaved = useSavedColors((s) => s.toggle)
+  const removeSaved = useSavedColors((s) => s.remove)
+  const isSaved = mounted && savedColors.includes(color.hex.toUpperCase())
 
   // Initialize from URL hash (#5db8e8) once, then keep it in sync — shareable.
   useEffect(() => {
@@ -112,6 +135,7 @@ export function ColorAnalyzer() {
     }
     initializedHash.current = true
     setSupportsEyedropper("EyeDropper" in window)
+    setMounted(true)
   }, [])
 
   const applyColor = useCallback((hex: string) => {
@@ -135,13 +159,41 @@ export function ColorAnalyzer() {
     setTimeout(() => setCopied(null), 1400)
   }
 
-  const handleImageLoad = async (imageUrl: string) => {
+  const exportBaseName = () =>
+    (color.name || "color").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") +
+    "-" +
+    color.hex.replace(/^#/, "").toLowerCase()
+
+  const handleExportJson = () =>
+    downloadFile(colorToJson(color), `${exportBaseName()}.json`, "application/json")
+  const handleExportCss = () => downloadFile(colorToCss(color), `${exportBaseName()}.css`, "text/css")
+
+  const runExtraction = async (url: string, method: ExtractionMethod) => {
     try {
-      const colors = await extractColors(imageUrl, 8, "histogram")
+      const colors = await extractColors(url, 8, method)
       setSourceColors(colors)
     } catch (error) {
       console.error("Failed to extract colors:", error)
     }
+  }
+
+  const handleImageLoad = async (url: string) => {
+    setImageUrl(url)
+    runExtraction(url, extractMethod)
+    analyzeLuminosityHistogram(url)
+      .then(setHistogram)
+      .catch(() => setHistogram(null))
+  }
+
+  const handleMethodChange = (method: ExtractionMethod) => {
+    setExtractMethod(method)
+    if (imageUrl) runExtraction(imageUrl, method)
+  }
+
+  const handleClearImage = () => {
+    setImageUrl(null)
+    setSourceColors([])
+    setHistogram(null)
   }
 
   const handleEyedropper = async () => {
@@ -279,32 +331,78 @@ export function ColorAnalyzer() {
             {t("fromImage")}
           </Button>
 
+          <Button
+            variant={isSaved ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleSaved(color.hex)}
+            className="h-11"
+          >
+            {isSaved ? <IoBookmark className="h-4 w-4 mr-1.5" /> : <IoBookmarkOutline className="h-4 w-4 mr-1.5" />}
+            {isSaved ? t("saved") : t("save")}
+          </Button>
+
           <div className="ml-auto flex items-center gap-1.5">
             <IoColorWandOutline className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{color.name}</span>
           </div>
         </div>
-
-        {showImage && (
-          <div className="mt-3 space-y-3">
-            <ImageUploader onImageLoad={handleImageLoad} />
-            {sourceColors.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {sourceColors.map((c, i) => (
-                  <button
-                    key={`src-${i}-${c.hex}`}
-                    type="button"
-                    title={c.hex}
-                    onClick={() => applyColor(c.hex)}
-                    className="h-8 w-8 rounded-lg border border-border transition-transform hover:scale-110"
-                    style={{ backgroundColor: c.hex }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* ── Image source panel (in flow, not sticky) ── */}
+      {showImage && (
+        <Section title={t("fromImage")} subtitle={t("fromImageSub")}>
+          {imageUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex gap-1">
+                  {(["histogram", "kmeans"] as ExtractionMethod[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleMethodChange(m)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
+                        extractMethod === m ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                      )}
+                    >
+                      {t(`method.${m}`)}
+                    </button>
+                  ))}
+                </div>
+                <Button variant="outline" size="sm" className="h-7" onClick={handleClearImage}>
+                  <IoCloseOutline className="h-3.5 w-3.5 mr-1" />
+                  {t("clearImage")}
+                </Button>
+              </div>
+
+              <ImagePicker src={imageUrl} onPick={applyColor} />
+              <p className="text-[11px] text-muted-foreground">{t("pickHint")}</p>
+
+              {sourceColors.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">{t("extractedColors")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {sourceColors.map((c, i) => (
+                      <button
+                        key={`src-${i}-${c.hex}`}
+                        type="button"
+                        title={c.hex}
+                        onClick={() => applyColor(c.hex)}
+                        className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {histogram && <HistogramSection histogram={histogram} />}
+            </div>
+          ) : (
+            <ImageUploader onImageLoad={handleImageLoad} />
+          )}
+        </Section>
+      )}
 
       {/* ── Hero ── */}
       <div
@@ -336,6 +434,33 @@ export function ColorAnalyzer() {
           {t(`family.${family}`)}
         </span>
       </div>
+
+      {/* ── Saved colors ── */}
+      {mounted && savedColors.length > 0 && (
+        <Section title={t("savedTitle")} subtitle={t("savedSub")}>
+          <div className="flex flex-wrap gap-2">
+            {savedColors.map((hex) => (
+              <div key={hex} className="group relative">
+                <button
+                  type="button"
+                  title={hex}
+                  onClick={() => applyColor(hex)}
+                  className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
+                  style={{ backgroundColor: hex }}
+                />
+                <button
+                  type="button"
+                  aria-label={t("removeColor")}
+                  onClick={() => removeSaved(hex)}
+                  className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-foreground group-hover:opacity-100"
+                >
+                  <IoCloseOutline className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* ── Shading scheme (full-width ramp) ── */}
       <Section title={t("shadingTitle")} subtitle={t("shadingSub")}>
@@ -369,29 +494,7 @@ export function ColorAnalyzer() {
       <div className="gap-3 columns-1 md:columns-2 xl:columns-3 [&>section]:mb-3 [&>section]:break-inside-avoid">
         {/* Formats + channels */}
         <Section title={t("formatsTitle")} subtitle={t("formatsSub")}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {allFormats.map(({ fmt, value, display }) => (
-              <button
-                key={fmt}
-                type="button"
-                title={value}
-                onClick={() => handleCopy(value, `fmt:${fmt}`)}
-                className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
-              >
-                <span className="shrink-0 w-14 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
-                  {fmt}
-                </span>
-                <span className="flex-1 min-w-0 font-mono text-xs truncate">{display}</span>
-                {copied === `fmt:${fmt}` ? (
-                  <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
-                ) : (
-                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="pt-3 mt-1 border-t border-border space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 {t("channels")}
@@ -431,6 +534,60 @@ export function ColorAnalyzer() {
                 <div key={`ch-spacer-${i}`} className="h-4" aria-hidden />
               ))}
             </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full border-collapse text-left">
+              <tbody>
+                {allFormats.map(({ fmt, value, display }) => (
+                  <tr
+                    key={fmt}
+                    title={`${fmt} — ${t(`fmtDesc.${fmt}`)}\n${value}`}
+                    onClick={() => handleCopy(value, `fmt:${fmt}`)}
+                    className="group cursor-pointer border-b border-border last:border-b-0 hover:bg-muted/50"
+                  >
+                    <td className="w-16 py-1.5 pl-2.5 align-middle">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-primary">{fmt}</span>
+                    </td>
+                    <td className="py-1.5 px-2 align-middle font-mono text-xs">
+                      <span className="block max-w-[14rem] truncate">{display}</span>
+                    </td>
+                    <td className="w-7 py-1.5 pr-2.5 text-right align-middle">
+                      {copied === `fmt:${fmt}` ? (
+                        <IoCheckmarkOutline className="inline h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <IoCopyOutline className="inline h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Export */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 flex-1"
+              onClick={() => handleCopy(colorToAllFormatsText(color), "copyAll")}
+            >
+              {copied === "copyAll" ? (
+                <IoCheckmarkOutline className="h-3.5 w-3.5 mr-1.5" />
+              ) : (
+                <IoCopyOutline className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {t("copyAll")}
+            </Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={handleExportJson}>
+              <IoDownloadOutline className="h-3.5 w-3.5 mr-1.5" />
+              JSON
+            </Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={handleExportCss}>
+              <IoDownloadOutline className="h-3.5 w-3.5 mr-1.5" />
+              CSS
+            </Button>
           </div>
         </Section>
 
@@ -543,6 +700,8 @@ export function ColorAnalyzer() {
                 ))}
               </div>
 
+              {/* Reserve 4 rows (max, tetradic) so switching harmonies
+                  doesn't change the card height and reflow the masonry. */}
               <div className="space-y-1">
                 {activeHarmony.colors.map((c, i) => (
                   <button
@@ -567,6 +726,15 @@ export function ColorAnalyzer() {
                       <IoCopyOutline className="ml-auto h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
                   </button>
+                ))}
+                {Array.from({ length: Math.max(0, 4 - activeHarmony.colors.length) }).map((_, i) => (
+                  <div
+                    key={`harm-spacer-${i}`}
+                    aria-hidden
+                    className="flex items-center gap-2 w-full rounded-lg border border-transparent px-2 py-1.5"
+                  >
+                    <span className="h-7 w-7 shrink-0" />
+                  </div>
                 ))}
               </div>
             </div>

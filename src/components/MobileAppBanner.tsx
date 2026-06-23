@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { IoCloseOutline, IoLogoGithub, IoPhonePortraitOutline } from "react-icons/io5"
+import { IoCloseOutline, IoLogoAppleAppstore, IoPhonePortraitOutline } from "react-icons/io5"
 
 const DISMISS_KEY = "pixelpaw_mobile_banner_dismissed"
 const SESSION_HIDE_KEY = "pixelpaw_mobile_banner_session_hidden"
-const MOBILE_REPO_URL = process.env.NEXT_PUBLIC_MOBILE_REPO_URL || "https://github.com/Aryeon0228/GamePalette-Mobile"
+const MOBILE_APP_URL =
+  process.env.NEXT_PUBLIC_MOBILE_APP_URL || "https://apps.apple.com/kr/app/pixel-pow/id6758751368"
 const AUTO_HIDE_MS = 12000
 
 export function MobileAppBanner() {
@@ -76,13 +77,13 @@ export function MobileAppBanner() {
               <p className="text-xs font-semibold leading-snug">{t("title")}</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{t("subtitle")}</p>
               <a
-                href={MOBILE_REPO_URL}
+                href={MOBILE_APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
               >
-                <IoLogoGithub className="h-3.5 w-3.5" />
-                {t("repoButton")}
+                <IoLogoAppleAppstore className="h-3.5 w-3.5" />
+                {t("storeButton")}
               </a>
             </div>
           </div>
