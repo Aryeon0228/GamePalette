@@ -369,29 +369,7 @@ export function ColorAnalyzer() {
       <div className="gap-3 columns-1 md:columns-2 xl:columns-3 [&>section]:mb-3 [&>section]:break-inside-avoid">
         {/* Formats + channels */}
         <Section title={t("formatsTitle")} subtitle={t("formatsSub")}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {allFormats.map(({ fmt, value, display }) => (
-              <button
-                key={fmt}
-                type="button"
-                title={value}
-                onClick={() => handleCopy(value, `fmt:${fmt}`)}
-                className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
-              >
-                <span className="shrink-0 w-14 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
-                  {fmt}
-                </span>
-                <span className="flex-1 min-w-0 font-mono text-xs truncate">{display}</span>
-                {copied === `fmt:${fmt}` ? (
-                  <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
-                ) : (
-                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="pt-3 mt-1 border-t border-border space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 {t("channels")}
@@ -431,6 +409,28 @@ export function ColorAnalyzer() {
                 <div key={`ch-spacer-${i}`} className="h-4" aria-hidden />
               ))}
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-3 mt-1 border-t border-border">
+            {allFormats.map(({ fmt, value, display }) => (
+              <button
+                key={fmt}
+                type="button"
+                title={value}
+                onClick={() => handleCopy(value, `fmt:${fmt}`)}
+                className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
+              >
+                <span className="shrink-0 w-14 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
+                  {fmt}
+                </span>
+                <span className="flex-1 min-w-0 font-mono text-xs truncate">{display}</span>
+                {copied === `fmt:${fmt}` ? (
+                  <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
+                ) : (
+                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+              </button>
+            ))}
           </div>
         </Section>
 
