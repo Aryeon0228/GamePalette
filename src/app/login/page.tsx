@@ -116,7 +116,7 @@ function LoginContent() {
               </Link>
             </Button>
           ) : (
-            <Button className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-700 hover:to-cyan-600" asChild>
+            <Button className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600" asChild>
               <Link href="/pricing">{t("upgradeToPro")}</Link>
             </Button>
           )}

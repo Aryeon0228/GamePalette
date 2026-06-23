@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { IoCloseOutline, IoLogoGithub, IoPhonePortraitOutline, IoRefreshOutline } from "react-icons/io5"
-import { Button } from "@/components/ui/button"
+import { IoCloseOutline, IoLogoGithub, IoPhonePortraitOutline } from "react-icons/io5"
 
 const DISMISS_KEY = "pixelpaw_mobile_banner_dismissed"
 const SESSION_HIDE_KEY = "pixelpaw_mobile_banner_session_hidden"
@@ -57,55 +56,48 @@ export function MobileAppBanner() {
   const isVisible = !isDismissed && !isSessionHidden
 
   return (
-    <>
-      {isVisible && (
-        <div className="border-b border-border bg-gradient-to-r from-sky-600/90 to-cyan-500/90">
-          <div className="container py-3 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-start gap-2.5 text-white">
-              <IoPhonePortraitOutline className="h-5 w-5 mt-0.5 shrink-0" />
-              <div className="text-sm leading-relaxed">
-                <p className="font-semibold">{t("title")}</p>
-                <p className="text-white/85 text-xs">{t("subtitle")}</p>
-              </div>
-            </div>
+    <div className="fixed right-4 bottom-4 z-50">
+      {isVisible ? (
+        <div className="relative w-60 rounded-xl border border-border bg-card p-3 pr-7 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+          <button
+            type="button"
+            onClick={handleDismissPermanently}
+            aria-label={t("dismiss")}
+            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <IoCloseOutline className="h-4 w-4" />
+          </button>
 
-            <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 text-white">
+              <IoPhonePortraitOutline className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold leading-snug">{t("title")}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{t("subtitle")}</p>
               <a
                 href={MOBILE_REPO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
               >
-                <Button size="sm" className="bg-white/16 hover:bg-white/22 border border-white/25 text-white">
-                  <IoLogoGithub className="h-4 w-4 mr-1.5" />
-                  {t("repoButton")}
-                </Button>
+                <IoLogoGithub className="h-3.5 w-3.5" />
+                {t("repoButton")}
               </a>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-white hover:bg-white/20 hover:text-white"
-                onClick={handleDismissPermanently}
-                aria-label={t("dismiss")}
-              >
-                <IoCloseOutline className="h-5 w-5" />
-              </Button>
             </div>
           </div>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleShowAgain}
+          aria-label={t("title")}
+          title={t("title")}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-slate-500 to-slate-600 text-white shadow-[0_6px_20px_rgba(0,0,0,0.25)] transition-transform hover:scale-105"
+        >
+          <IoPhonePortraitOutline className="h-5 w-5" />
+        </button>
       )}
-
-      {!isVisible && (
-        <div className="fixed right-4 bottom-4 z-50">
-          <Button
-            size="sm"
-            className="bg-sky-700 hover:bg-sky-800 shadow-[0_6px_20px_rgba(0,0,0,0.35)]"
-            onClick={handleShowAgain}
-          >
-            <IoRefreshOutline className="h-4 w-4 mr-1.5" />
-            {t("showAgain")}
-          </Button>
-        </div>
-      )}
-    </>
+    </div>
   )
 }
