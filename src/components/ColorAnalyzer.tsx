@@ -649,6 +649,8 @@ export function ColorAnalyzer() {
                 ))}
               </div>
 
+              {/* Reserve 4 rows (max, tetradic) so switching harmonies
+                  doesn't change the card height and reflow the masonry. */}
               <div className="space-y-1">
                 {activeHarmony.colors.map((c, i) => (
                   <button
@@ -673,6 +675,15 @@ export function ColorAnalyzer() {
                       <IoCopyOutline className="ml-auto h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
                   </button>
+                ))}
+                {Array.from({ length: Math.max(0, 4 - activeHarmony.colors.length) }).map((_, i) => (
+                  <div
+                    key={`harm-spacer-${i}`}
+                    aria-hidden
+                    className="flex items-center gap-2 w-full rounded-lg border border-transparent px-2 py-1.5"
+                  >
+                    <span className="h-7 w-7 shrink-0" />
+                  </div>
                 ))}
               </div>
             </div>
