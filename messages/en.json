@@ -158,8 +158,8 @@
   },
   "mobileBanner": {
     "title": "A Pixel Paw mobile version is also available.",
-    "subtitle": "Check out the latest mobile features in the repository below.",
-    "repoButton": "Mobile Repo",
+    "subtitle": "Get the mobile app on the App Store.",
+    "storeButton": "App Store",
     "showAgain": "Show mobile banner again",
     "dismiss": "Dismiss mobile banner"
   },
