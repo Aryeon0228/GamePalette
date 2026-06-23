@@ -65,9 +65,9 @@ interface SectionProps {
 function Section({ title, subtitle, children, className }: SectionProps) {
   return (
     <section className={cn("rounded-xl border border-border bg-card p-3.5 space-y-2.5", className)}>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="space-y-0.5">
         <h2 className="text-sm font-semibold">{title}</h2>
-        {subtitle && <p className="text-[11px] text-muted-foreground text-right truncate">{subtitle}</p>}
+        {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
       </div>
       {children}
     </section>
@@ -538,7 +538,7 @@ export function ColorAnalyzer() {
 
         {/* Coldwarm */}
         <Section title={t("coldwarmTitle")} subtitle={t("coldwarmSub")}>
-          <ColdwarmGrid color={color} />
+          <ColdwarmGrid color={color} showTitle={false} />
         </Section>
 
         {/* Contrast + accessibility (kept compact) */}

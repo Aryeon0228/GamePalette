@@ -15,13 +15,15 @@ import { Button } from "@/components/ui/button"
 interface ColdwarmGridProps {
   color: Color
   className?: string
-  /** Half-steps per axis (3 → a 7×7 grid). */
+  /** Half-steps per axis (4 → a 9×9 grid). */
   steps?: number
+  /** Show the built-in title/subtitle. Off when a parent already labels it. */
+  showTitle?: boolean
 }
 
 const INTENSITIES: ColdwarmIntensity[] = ["subtle", "normal", "strong"]
 
-export function ColdwarmGrid({ color, className, steps = 4 }: ColdwarmGridProps) {
+export function ColdwarmGrid({ color, className, steps = 4, showTitle = true }: ColdwarmGridProps) {
   const t = useTranslations("coldwarm")
   const [intensity, setIntensity] = useState<ColdwarmIntensity>("normal")
   const [copiedHex, setCopiedHex] = useState<string | null>(null)
@@ -44,11 +46,13 @@ export function ColdwarmGrid({ color, className, steps = 4 }: ColdwarmGridProps)
   return (
     <div className={cn("space-y-3", className)}>
       {/* Header + intensity toggle */}
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold">{t("title")}</h3>
-          <p className="text-[11px] text-muted-foreground">{t("subtitle")}</p>
-        </div>
+      <div className={cn("flex items-center gap-2", showTitle ? "justify-between" : "justify-end")}>
+        {showTitle && (
+          <div>
+            <h3 className="text-sm font-semibold">{t("title")}</h3>
+            <p className="text-[11px] text-muted-foreground">{t("subtitle")}</p>
+          </div>
+        )}
         <div className="flex gap-1.5">
           {INTENSITIES.map((option) => (
             <Button
@@ -76,10 +80,10 @@ export function ColdwarmGrid({ color, className, steps = 4 }: ColdwarmGridProps)
       </div>
 
       <div className="flex gap-2">
-        {/* Axis labels (left): Light / Dark */}
+        {/* Axis labels (left): Light (top) / Dark (bottom) */}
         <div className="flex flex-col items-center justify-between text-[10px] text-muted-foreground py-1">
-          <span className="[writing-mode:vertical-rl] rotate-180">{t("light")}</span>
-          <span className="[writing-mode:vertical-rl] rotate-180">{t("dark")}</span>
+          <span>{t("light")}</span>
+          <span>{t("dark")}</span>
         </div>
 
         {/* The grid */}
