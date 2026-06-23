@@ -20,6 +20,8 @@ import { ColorChannelBar } from "@/components/ColorChannelBar"
 import { ColdwarmGrid } from "@/components/ColdwarmGrid"
 import { HarmonyWheel } from "@/components/HarmonyWheel"
 import { ImageUploader } from "@/components/ImageUploader"
+import { ImagePicker } from "@/components/ImagePicker"
+import { HistogramSection } from "@/components/HistogramSection"
 import {
   colorFromHex,
   normalizeHex,
@@ -42,7 +44,12 @@ import { downloadFile } from "@/lib/exporters"
 import { useSavedColors } from "@/stores/savedColorsStore"
 import { COLOR_FORMATS, ColorFormat, formatColor, getChannels } from "@/lib/colorFormats"
 import { HarmonyType, generateColorHarmonies, simulateColorBlindness } from "@/lib/colorVision"
-import { extractColors } from "@/lib/colorExtractor"
+import {
+  extractColors,
+  analyzeLuminosityHistogram,
+  type ExtractionMethod,
+  type LuminosityHistogram,
+} from "@/lib/colorExtractor"
 import { copyToClipboard, cn } from "@/lib/utils"
 
 const DEFAULT_HEX = "#5DB8E8"
@@ -104,6 +111,8 @@ export function ColorAnalyzer() {
   const [copied, setCopied] = useState<string | null>(null)
   const [sourceColors, setSourceColors] = useState<Color[]>([])
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [extractMethod, setExtractMethod] = useState<ExtractionMethod>("histogram")
+  const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [showImage, setShowImage] = useState(false)
   const [gradientStops, setGradientStops] = useState(7)
   const [gradientEasing, setGradientEasing] = useState<EasingName>("sinusoidal")
@@ -159,19 +168,32 @@ export function ColorAnalyzer() {
     downloadFile(colorToJson(color), `${exportBaseName()}.json`, "application/json")
   const handleExportCss = () => downloadFile(colorToCss(color), `${exportBaseName()}.css`, "text/css")
 
-  const handleImageLoad = async (url: string) => {
-    setImageUrl(url)
+  const runExtraction = async (url: string, method: ExtractionMethod) => {
     try {
-      const colors = await extractColors(url, 8, "histogram")
+      const colors = await extractColors(url, 8, method)
       setSourceColors(colors)
     } catch (error) {
       console.error("Failed to extract colors:", error)
     }
   }
 
+  const handleImageLoad = async (url: string) => {
+    setImageUrl(url)
+    runExtraction(url, extractMethod)
+    analyzeLuminosityHistogram(url)
+      .then(setHistogram)
+      .catch(() => setHistogram(null))
+  }
+
+  const handleMethodChange = (method: ExtractionMethod) => {
+    setExtractMethod(method)
+    if (imageUrl) runExtraction(imageUrl, method)
+  }
+
   const handleClearImage = () => {
     setImageUrl(null)
     setSourceColors([])
+    setHistogram(null)
   }
 
   const handleEyedropper = async () => {
@@ -331,21 +353,50 @@ export function ColorAnalyzer() {
         <Section title={t("fromImage")} subtitle={t("fromImageSub")}>
           {imageUrl ? (
             <div className="space-y-3">
-              <ImageUploader currentImage={imageUrl} onImageLoad={handleImageLoad} onClear={handleClearImage} />
-              {sourceColors.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {sourceColors.map((c, i) => (
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex gap-1">
+                  {(["histogram", "kmeans"] as ExtractionMethod[]).map((m) => (
                     <button
-                      key={`src-${i}-${c.hex}`}
+                      key={m}
                       type="button"
-                      title={c.hex}
-                      onClick={() => applyColor(c.hex)}
-                      className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
-                      style={{ backgroundColor: c.hex }}
-                    />
+                      onClick={() => handleMethodChange(m)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
+                        extractMethod === m ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                      )}
+                    >
+                      {t(`method.${m}`)}
+                    </button>
                   ))}
                 </div>
+                <Button variant="outline" size="sm" className="h-7" onClick={handleClearImage}>
+                  <IoCloseOutline className="h-3.5 w-3.5 mr-1" />
+                  {t("clearImage")}
+                </Button>
+              </div>
+
+              <ImagePicker src={imageUrl} onPick={applyColor} />
+              <p className="text-[11px] text-muted-foreground">{t("pickHint")}</p>
+
+              {sourceColors.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-muted-foreground">{t("extractedColors")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {sourceColors.map((c, i) => (
+                      <button
+                        key={`src-${i}-${c.hex}`}
+                        type="button"
+                        title={c.hex}
+                        onClick={() => applyColor(c.hex)}
+                        className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
+
+              {histogram && <HistogramSection histogram={histogram} />}
             </div>
           ) : (
             <ImageUploader onImageLoad={handleImageLoad} />
@@ -491,7 +542,7 @@ export function ColorAnalyzer() {
                 {allFormats.map(({ fmt, value, display }) => (
                   <tr
                     key={fmt}
-                    title={value}
+                    title={`${fmt} — ${t(`fmtDesc.${fmt}`)}\n${value}`}
                     onClick={() => handleCopy(value, `fmt:${fmt}`)}
                     className="group cursor-pointer border-b border-border last:border-b-0 hover:bg-muted/50"
                   >

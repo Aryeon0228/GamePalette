@@ -5,7 +5,25 @@
     "random": "Random",
     "eyedropper": "Pick from screen",
     "fromImage": "From image",
-    "fromImageSub": "Upload an image, then click an extracted swatch to analyze it.",
+    "fromImageSub": "Click anywhere on the image to pick a pixel, or pick an extracted swatch.",
+    "clearImage": "Remove image",
+    "pickHint": "Hover to preview, click to pick the pixel under the crosshair.",
+    "extractedColors": "Extracted colors",
+    "method": {
+      "histogram": "Hue histogram",
+      "kmeans": "K-means"
+    },
+    "fmtDesc": {
+      "HEX": "Hexadecimal RGB — the web & code standard",
+      "RGB": "Red · Green · Blue (0–255) — screen color",
+      "HSL": "Hue · Saturation · Lightness",
+      "HSV": "Hue · Saturation · Value (brightness)",
+      "HWB": "Hue · Whiteness · Blackness",
+      "CMYK": "Cyan · Magenta · Yellow · Black — print color",
+      "LAB": "CIELAB — perceptual, device-independent",
+      "OKLAB": "Perceptual lightness + opponent color axes",
+      "OKLCH": "Perceptual Lightness · Chroma · Hue"
+    },
     "save": "Save",
     "saved": "Saved",
     "savedTitle": "Saved colors",
