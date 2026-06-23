@@ -48,6 +48,18 @@ const HARMONY_KEY: Record<HarmonyType, string> = {
   tetradic: "tetradic",
 }
 
+const HARMONY_ROLE_KEY: Record<string, string> = {
+  Base: "roleBase",
+  Complement: "roleComplement",
+  Left: "roleLeft",
+  Right: "roleRight",
+  Second: "roleSecond",
+  Third: "roleThird",
+  Fourth: "roleFourth",
+  "Split 1": "roleSplit1",
+  "Split 2": "roleSplit2",
+}
+
 const CVD_TYPES = ["protanopia", "deuteranopia", "tritanopia"] as const
 const GRADIENT_PARTNERS: GradientPartner[] = ["complement", "analogous", "triad"]
 const GRADIENT_STOPS = [5, 7, 9, 12]
@@ -492,47 +504,64 @@ export function ColorAnalyzer() {
 
         {/* Harmonies */}
         <Section title={t("harmonyTitle")} subtitle={t("harmonySub")}>
-          <div className="flex flex-wrap gap-1.5">
-            {harmonies.map((item) => (
-              <button
-                key={item.type}
-                type="button"
-                onClick={() => setHarmony(item.type)}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
-                  harmony === item.type ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
-                )}
-              >
-                {th(`${HARMONY_KEY[item.type]}Name`)}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <HarmonyWheel
-              baseHue={color.hsl.h}
-              colors={activeHarmony.colors.map((c) => ({ hex: c.hex, angle: c.angle }))}
-              size={84}
-            />
-            <p className="text-[11px] text-muted-foreground flex-1">
-              {th(`${HARMONY_KEY[activeHarmony.type]}Desc`)}
-            </p>
-          </div>
-          <div className="flex gap-1.5">
-            {activeHarmony.colors.map((c, i) => (
-              <button
-                key={`${activeHarmony.type}-${i}-${c.hex}`}
-                type="button"
-                onClick={() => handleCopy(c.hex, `harm:${c.hex}:${i}`)}
-                className="flex-1 rounded-lg overflow-hidden border border-border text-left"
-              >
-                <div className="h-10" style={{ backgroundColor: c.hex }} />
-                <div className="px-1.5 py-1 bg-background text-center">
-                  <p className="text-[11px] font-mono truncate">
-                    {copied === `harm:${c.hex}:${i}` ? t("copied") : c.hex.toUpperCase()}
-                  </p>
-                </div>
-              </button>
-            ))}
+          <div className="flex gap-4">
+            {/* Left: type chips + color list */}
+            <div className="flex-1 min-w-0 space-y-2.5">
+              <div className="flex flex-wrap gap-1.5">
+                {harmonies.map((item) => (
+                  <button
+                    key={item.type}
+                    type="button"
+                    onClick={() => setHarmony(item.type)}
+                    className={cn(
+                      "px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
+                      harmony === item.type ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                    )}
+                  >
+                    {th(`${HARMONY_KEY[item.type]}Name`)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-1">
+                {activeHarmony.colors.map((c, i) => (
+                  <button
+                    key={`${activeHarmony.type}-${i}-${c.hex}`}
+                    type="button"
+                    onClick={() => handleCopy(c.hex, `harm:${c.hex}:${i}`)}
+                    className="group flex items-center gap-2 w-full rounded-lg border border-border bg-background px-2 py-1.5 text-left hover:border-primary transition-colors"
+                  >
+                    <span
+                      className="h-7 w-7 shrink-0 rounded-md border border-border"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[10px] text-muted-foreground leading-tight">
+                        {th(HARMONY_ROLE_KEY[c.name] ?? "roleBase")}
+                      </span>
+                      <span className="block font-mono text-xs leading-tight">{c.hex.toUpperCase()}</span>
+                    </span>
+                    {copied === `harm:${c.hex}:${i}` ? (
+                      <IoCheckmarkOutline className="ml-auto h-3.5 w-3.5 text-primary shrink-0" />
+                    ) : (
+                      <IoCopyOutline className="ml-auto h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: large wheel + description */}
+            <div className="shrink-0 flex flex-col items-center gap-2 w-[136px]">
+              <HarmonyWheel
+                baseHue={color.hsl.h}
+                colors={activeHarmony.colors.map((c) => ({ hex: c.hex, angle: c.angle }))}
+                size={136}
+              />
+              <p className="text-[11px] text-muted-foreground text-center leading-snug">
+                {th(`${HARMONY_KEY[activeHarmony.type]}Desc`)}
+              </p>
+            </div>
           </div>
         </Section>
 
