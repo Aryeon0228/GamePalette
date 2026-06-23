@@ -9,6 +9,10 @@ import {
   IoColorWandOutline,
   IoImageOutline,
   IoEyedropOutline,
+  IoBookmark,
+  IoBookmarkOutline,
+  IoDownloadOutline,
+  IoCloseOutline,
 } from "react-icons/io5"
 import { Color } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -33,6 +37,9 @@ import {
   EasingName,
   GradientPartner,
 } from "@/lib/colorAnalysis"
+import { colorToAllFormatsText, colorToJson, colorToCss } from "@/lib/colorExport"
+import { downloadFile } from "@/lib/exporters"
+import { useSavedColors } from "@/stores/savedColorsStore"
 import { COLOR_FORMATS, ColorFormat, formatColor, getChannels } from "@/lib/colorFormats"
 import { HarmonyType, generateColorHarmonies, simulateColorBlindness } from "@/lib/colorVision"
 import { extractColors } from "@/lib/colorExtractor"
@@ -101,7 +108,13 @@ export function ColorAnalyzer() {
   const [gradientEasing, setGradientEasing] = useState<EasingName>("sinusoidal")
   const [gradientPartner, setGradientPartner] = useState<GradientPartner>("complement")
   const [supportsEyedropper, setSupportsEyedropper] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const initializedHash = useRef(false)
+
+  const savedColors = useSavedColors((s) => s.colors)
+  const toggleSaved = useSavedColors((s) => s.toggle)
+  const removeSaved = useSavedColors((s) => s.remove)
+  const isSaved = mounted && savedColors.includes(color.hex.toUpperCase())
 
   // Initialize from URL hash (#5db8e8) once, then keep it in sync — shareable.
   useEffect(() => {
@@ -112,6 +125,7 @@ export function ColorAnalyzer() {
     }
     initializedHash.current = true
     setSupportsEyedropper("EyeDropper" in window)
+    setMounted(true)
   }, [])
 
   const applyColor = useCallback((hex: string) => {
@@ -134,6 +148,15 @@ export function ColorAnalyzer() {
     setCopied(token)
     setTimeout(() => setCopied(null), 1400)
   }
+
+  const exportBaseName = () =>
+    (color.name || "color").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") +
+    "-" +
+    color.hex.replace(/^#/, "").toLowerCase()
+
+  const handleExportJson = () =>
+    downloadFile(colorToJson(color), `${exportBaseName()}.json`, "application/json")
+  const handleExportCss = () => downloadFile(colorToCss(color), `${exportBaseName()}.css`, "text/css")
 
   const handleImageLoad = async (imageUrl: string) => {
     try {
@@ -279,6 +302,16 @@ export function ColorAnalyzer() {
             {t("fromImage")}
           </Button>
 
+          <Button
+            variant={isSaved ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleSaved(color.hex)}
+            className="h-11"
+          >
+            {isSaved ? <IoBookmark className="h-4 w-4 mr-1.5" /> : <IoBookmarkOutline className="h-4 w-4 mr-1.5" />}
+            {isSaved ? t("saved") : t("save")}
+          </Button>
+
           <div className="ml-auto flex items-center gap-1.5">
             <IoColorWandOutline className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{color.name}</span>
@@ -336,6 +369,33 @@ export function ColorAnalyzer() {
           {t(`family.${family}`)}
         </span>
       </div>
+
+      {/* ── Saved colors ── */}
+      {mounted && savedColors.length > 0 && (
+        <Section title={t("savedTitle")} subtitle={t("savedSub")}>
+          <div className="flex flex-wrap gap-2">
+            {savedColors.map((hex) => (
+              <div key={hex} className="group relative">
+                <button
+                  type="button"
+                  title={hex}
+                  onClick={() => applyColor(hex)}
+                  className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
+                  style={{ backgroundColor: hex }}
+                />
+                <button
+                  type="button"
+                  aria-label={t("removeColor")}
+                  onClick={() => removeSaved(hex)}
+                  className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-foreground group-hover:opacity-100"
+                >
+                  <IoCloseOutline className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* ── Shading scheme (full-width ramp) ── */}
       <Section title={t("shadingTitle")} subtitle={t("shadingSub")}>
@@ -411,26 +471,58 @@ export function ColorAnalyzer() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-3 mt-1 border-t border-border">
-            {allFormats.map(({ fmt, value, display }) => (
-              <button
-                key={fmt}
-                type="button"
-                title={value}
-                onClick={() => handleCopy(value, `fmt:${fmt}`)}
-                className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
-              >
-                <span className="shrink-0 w-14 rounded-md bg-primary/15 text-primary border border-primary/30 px-1.5 py-1 text-center text-xs font-bold tracking-wider uppercase">
-                  {fmt}
-                </span>
-                <span className="flex-1 min-w-0 font-mono text-xs truncate">{display}</span>
-                {copied === `fmt:${fmt}` ? (
-                  <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
-                ) : (
-                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-            ))}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full border-collapse text-left">
+              <tbody>
+                {allFormats.map(({ fmt, value, display }) => (
+                  <tr
+                    key={fmt}
+                    title={value}
+                    onClick={() => handleCopy(value, `fmt:${fmt}`)}
+                    className="group cursor-pointer border-b border-border last:border-b-0 hover:bg-muted/50"
+                  >
+                    <td className="w-16 py-1.5 pl-2.5 align-middle">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-primary">{fmt}</span>
+                    </td>
+                    <td className="py-1.5 px-2 align-middle font-mono text-xs">
+                      <span className="block max-w-[14rem] truncate">{display}</span>
+                    </td>
+                    <td className="w-7 py-1.5 pr-2.5 text-right align-middle">
+                      {copied === `fmt:${fmt}` ? (
+                        <IoCheckmarkOutline className="inline h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <IoCopyOutline className="inline h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Export */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 flex-1"
+              onClick={() => handleCopy(colorToAllFormatsText(color), "copyAll")}
+            >
+              {copied === "copyAll" ? (
+                <IoCheckmarkOutline className="h-3.5 w-3.5 mr-1.5" />
+              ) : (
+                <IoCopyOutline className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {t("copyAll")}
+            </Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={handleExportJson}>
+              <IoDownloadOutline className="h-3.5 w-3.5 mr-1.5" />
+              JSON
+            </Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={handleExportCss}>
+              <IoDownloadOutline className="h-3.5 w-3.5 mr-1.5" />
+              CSS
+            </Button>
           </div>
         </Section>
 
