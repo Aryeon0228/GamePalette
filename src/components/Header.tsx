@@ -33,6 +33,9 @@ const navItems: NavItem[] = [
   { href: "/library", labelKey: "library", icon: IoLibraryOutline },
 ]
 
+// Hidden until the login flow is fully implemented. Flip to true to restore.
+const LOGIN_ENABLED = false
+
 export function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -75,25 +78,28 @@ export function Header() {
 
         <div className="hidden md:flex items-center gap-2">
           <LocaleSwitcher />
-          {user ? (
-            <Link
-              href="/login"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
-            >
-              <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">
-                {user.email?.split("@")[0] || t("account")}
-              </span>
-              {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
-            </Link>
-          ) : !loading && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">
-                <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                {t("login")}
+          {LOGIN_ENABLED &&
+            (user ? (
+              <Link
+                href="/login"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
+              >
+                <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
+                  {user.email?.split("@")[0] || t("account")}
+                </span>
+                {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
               </Link>
-            </Button>
-          )}
+            ) : (
+              !loading && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">
+                    <IoLogInOutline className="h-4 w-4 mr-1.5" />
+                    {t("login")}
+                  </Link>
+                </Button>
+              )
+            ))}
 
           <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
             <Link href="/create">
@@ -133,26 +139,27 @@ export function Header() {
 
             <div className="pt-3 border-t border-border flex flex-col gap-2">
               <LocaleSwitcher className="self-start" />
-              {user ? (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">
-                    {user.user_metadata?.full_name || user.email?.split("@")[0] || t("account")}
-                  </span>
-                  {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
-                </Link>
-              ) : (
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                    {t("login")}
+              {LOGIN_ENABLED &&
+                (user ? (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      {user.user_metadata?.full_name || user.email?.split("@")[0] || t("account")}
+                    </span>
+                    {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
                   </Link>
-                </Button>
-              )}
+                ) : (
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <IoLogInOutline className="h-4 w-4 mr-1.5" />
+                      {t("login")}
+                    </Link>
+                  </Button>
+                ))}
 
               <Button className="bg-primary hover:bg-primary/90" asChild>
                 <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
