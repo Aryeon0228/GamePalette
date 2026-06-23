@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    /* Pixel Paw dark theme — aligned with the mobile app palette. */
-    --background: 230 23% 15%; /* #1e2130 */
-    --foreground: 228 27% 92%; /* #E8EAF0 */
+    /* Pixel Paw light theme — soft light-gray canvas, white cards. */
+    --background: 220 16% 96%; /* #F0F2F6 light gray */
+    --foreground: 228 24% 16%; /* #1F2430 */
 
-    --card: 233 26% 20%; /* #262940 */
-    --card-foreground: 228 27% 92%;
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 228 24% 16%;
 
-    --popover: 233 26% 20%;
-    --popover-foreground: 228 27% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 24% 16%;
 
-    --primary: 201 70% 52%; /* sky accent */
+    --primary: 201 72% 46%; /* sky accent (darkened for light bg) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 232 18% 31%; /* raised surface for secondary actions */
-    --secondary-foreground: 228 27% 92%;
+    --secondary: 220 15% 91%; /* raised surface */
+    --secondary-foreground: 228 24% 16%;
 
-    --muted: 233 24% 17%; /* depressed surface #222538 */
-    --muted-foreground: 225 11% 72%; /* #B0B4C0 */
+    --muted: 220 16% 93%; /* depressed surface */
+    --muted-foreground: 220 9% 42%; /* #636B7A */
 
-    --accent: 232 20% 24%; /* hover surface #303348 */
-    --accent-foreground: 228 27% 92%;
+    --accent: 220 15% 88%; /* hover surface */
+    --accent-foreground: 228 24% 16%;
 
-    --destructive: 4 100% 60%; /* iOS red */
+    --destructive: 4 84% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 230 16% 27%; /* #3A3D50 */
-    --input: 231 20% 23%; /* #2E3145 */
-    --ring: 201 75% 60%; /* #5db8e8 */
+    --border: 220 13% 85%; /* #D3D8E0 */
+    --input: 220 14% 89%;
+    --ring: 201 75% 50%;
 
     --radius: 0.875rem;
   }
@@ -45,12 +45,12 @@
     @apply bg-background text-foreground;
     font-family: var(--font-pretendard), var(--font-space-grotesk), ui-sans-serif, system-ui,
       -apple-system, "Segoe UI", sans-serif;
-    /* Subtle, clean canvas tint matching the mobile dark gradient. */
+    /* Subtle sky tint on the light canvas. */
     background-image:
-      radial-gradient(circle at 12% -5%, rgba(93, 184, 232, 0.08), transparent 40%),
-      radial-gradient(circle at 92% 8%, rgba(93, 184, 232, 0.05), transparent 42%);
+      radial-gradient(circle at 12% -5%, rgba(93, 184, 232, 0.10), transparent 40%),
+      radial-gradient(circle at 92% 8%, rgba(93, 184, 232, 0.07), transparent 42%);
     background-attachment: fixed;
-    background-color: #1a1d2e;
+    background-color: #F0F2F6;
   }
 }
 
@@ -103,5 +103,5 @@ html {
 
 /* Gradient text helper */
 .gradient-text {
-  @apply bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent;
 }
