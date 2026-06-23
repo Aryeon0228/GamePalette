@@ -5,6 +5,7 @@
     "random": "랜덤",
     "eyedropper": "화면에서 추출",
     "fromImage": "이미지에서",
+    "fromImageSub": "이미지를 올린 뒤 추출된 색을 클릭해 분석하세요.",
     "save": "저장",
     "saved": "저장됨",
     "savedTitle": "저장한 색",

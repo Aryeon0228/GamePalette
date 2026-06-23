@@ -7,7 +7,8 @@ import { IoCloseOutline, IoLogoAppleAppstore, IoPhonePortraitOutline } from "rea
 
 const DISMISS_KEY = "pixelpaw_mobile_banner_dismissed"
 const SESSION_HIDE_KEY = "pixelpaw_mobile_banner_session_hidden"
-const MOBILE_APP_URL = process.env.NEXT_PUBLIC_MOBILE_APP_URL || "https://apps.apple.com/app/pixel-paw"
+const MOBILE_APP_URL =
+  process.env.NEXT_PUBLIC_MOBILE_APP_URL || "https://apps.apple.com/kr/app/pixel-pow/id6758751368"
 const AUTO_HIDE_MS = 12000
 
 export function MobileAppBanner() {

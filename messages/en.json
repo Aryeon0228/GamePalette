@@ -5,6 +5,7 @@
     "random": "Random",
     "eyedropper": "Pick from screen",
     "fromImage": "From image",
+    "fromImageSub": "Upload an image, then click an extracted swatch to analyze it.",
     "save": "Save",
     "saved": "Saved",
     "savedTitle": "Saved colors",

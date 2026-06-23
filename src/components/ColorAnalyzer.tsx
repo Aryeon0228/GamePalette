@@ -103,6 +103,7 @@ export function ColorAnalyzer() {
   const [harmony, setHarmony] = useState<HarmonyType>("complementary")
   const [copied, setCopied] = useState<string | null>(null)
   const [sourceColors, setSourceColors] = useState<Color[]>([])
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [showImage, setShowImage] = useState(false)
   const [gradientStops, setGradientStops] = useState(7)
   const [gradientEasing, setGradientEasing] = useState<EasingName>("sinusoidal")
@@ -158,13 +159,19 @@ export function ColorAnalyzer() {
     downloadFile(colorToJson(color), `${exportBaseName()}.json`, "application/json")
   const handleExportCss = () => downloadFile(colorToCss(color), `${exportBaseName()}.css`, "text/css")
 
-  const handleImageLoad = async (imageUrl: string) => {
+  const handleImageLoad = async (url: string) => {
+    setImageUrl(url)
     try {
-      const colors = await extractColors(imageUrl, 8, "histogram")
+      const colors = await extractColors(url, 8, "histogram")
       setSourceColors(colors)
     } catch (error) {
       console.error("Failed to extract colors:", error)
     }
+  }
+
+  const handleClearImage = () => {
+    setImageUrl(null)
+    setSourceColors([])
   }
 
   const handleEyedropper = async () => {
@@ -317,27 +324,34 @@ export function ColorAnalyzer() {
             <span className="text-sm font-medium">{color.name}</span>
           </div>
         </div>
-
-        {showImage && (
-          <div className="mt-3 space-y-3">
-            <ImageUploader onImageLoad={handleImageLoad} />
-            {sourceColors.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {sourceColors.map((c, i) => (
-                  <button
-                    key={`src-${i}-${c.hex}`}
-                    type="button"
-                    title={c.hex}
-                    onClick={() => applyColor(c.hex)}
-                    className="h-8 w-8 rounded-lg border border-border transition-transform hover:scale-110"
-                    style={{ backgroundColor: c.hex }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* ── Image source panel (in flow, not sticky) ── */}
+      {showImage && (
+        <Section title={t("fromImage")} subtitle={t("fromImageSub")}>
+          {imageUrl ? (
+            <div className="space-y-3">
+              <ImageUploader currentImage={imageUrl} onImageLoad={handleImageLoad} onClear={handleClearImage} />
+              {sourceColors.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {sourceColors.map((c, i) => (
+                    <button
+                      key={`src-${i}-${c.hex}`}
+                      type="button"
+                      title={c.hex}
+                      onClick={() => applyColor(c.hex)}
+                      className="h-9 w-9 rounded-lg border border-border transition-transform hover:scale-110"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <ImageUploader onImageLoad={handleImageLoad} />
+          )}
+        </Section>
+      )}
 
       {/* ── Hero ── */}
       <div
