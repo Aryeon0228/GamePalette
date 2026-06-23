@@ -51,6 +51,9 @@ const HARMONY_KEY: Record<HarmonyType, string> = {
 const CVD_TYPES = ["protanopia", "deuteranopia", "tritanopia"] as const
 const GRADIENT_PARTNERS: GradientPartner[] = ["complement", "analogous", "triad"]
 const GRADIENT_STOPS = [5, 7, 9, 12]
+// HEX has no channels of its own (it falls back to RGB), so it's not a
+// selectable option for the channel breakdown.
+const CHANNEL_FORMATS: ColorFormat[] = COLOR_FORMATS.filter((f) => f !== "HEX")
 
 interface SectionProps {
   title: string
@@ -77,7 +80,7 @@ export function ColorAnalyzer() {
 
   const [color, setColor] = useState<Color>(() => colorFromHex(DEFAULT_HEX))
   const [hexInput, setHexInput] = useState<string>(DEFAULT_HEX)
-  const [format, setFormat] = useState<ColorFormat>("HEX")
+  const [format, setFormat] = useState<ColorFormat>("RGB")
   const [harmony, setHarmony] = useState<HarmonyType>("complementary")
   const [copied, setCopied] = useState<string | null>(null)
   const [sourceColors, setSourceColors] = useState<Color[]>([])
@@ -318,36 +321,41 @@ export function ColorAnalyzer() {
                 key={fmt}
                 type="button"
                 onClick={() => handleCopy(value, `fmt:${fmt}`)}
-                className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-left hover:border-primary transition-colors"
+                className="group flex items-center gap-2.5 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-primary transition-colors"
               >
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-semibold text-muted-foreground">{fmt}</span>
-                  <span className="block font-mono text-xs truncate">{value}</span>
+                <span className="shrink-0 w-16 rounded-md bg-muted px-1.5 py-1 text-center text-[11px] font-bold tracking-wide">
+                  {fmt}
                 </span>
+                <span className="flex-1 min-w-0 font-mono text-xs truncate">{value}</span>
                 {copied === `fmt:${fmt}` ? (
                   <IoCheckmarkOutline className="h-3.5 w-3.5 text-primary shrink-0" />
                 ) : (
-                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <IoCopyOutline className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 )}
               </button>
             ))}
           </div>
 
-          <div className="pt-2 space-y-3">
-            <div className="flex flex-wrap gap-1.5">
-              {COLOR_FORMATS.map((fmt) => (
-                <button
-                  key={fmt}
-                  type="button"
-                  onClick={() => setFormat(fmt)}
-                  className={cn(
-                    "px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
-                    format === fmt ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
-                  )}
-                >
-                  {fmt}
-                </button>
-              ))}
+          <div className="pt-3 mt-1 border-t border-border space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("channels")}
+              </h3>
+              <div className="flex flex-wrap gap-1">
+                {CHANNEL_FORMATS.map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setFormat(fmt)}
+                    className={cn(
+                      "px-2 py-1 rounded-md text-[11px] font-medium transition-colors",
+                      format === fmt ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+                    )}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               {channels.map((ch) => (
