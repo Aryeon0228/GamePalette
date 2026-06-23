@@ -64,10 +64,10 @@ interface SectionProps {
 
 function Section({ title, subtitle, children, className }: SectionProps) {
   return (
-    <section className={cn("rounded-2xl border border-border bg-card p-5 space-y-4", className)}>
-      <div>
+    <section className={cn("rounded-xl border border-border bg-card p-3.5 space-y-2.5", className)}>
+      <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">{title}</h2>
-        {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-[11px] text-muted-foreground text-right truncate">{subtitle}</p>}
       </div>
       {children}
     </section>
@@ -200,7 +200,7 @@ export function ColorAnalyzer() {
   )
 
   return (
-    <div className="container py-8 space-y-6">
+    <div className="container py-5 space-y-3">
       {/* ── Input bar ── */}
       <div className="sticky top-2 z-30 rounded-2xl border border-border bg-card/95 backdrop-blur p-3 shadow-[0_8px_28px_rgba(0,0,0,0.28)]">
         <div className="flex items-center gap-2 flex-wrap">
@@ -282,37 +282,65 @@ export function ColorAnalyzer() {
 
       {/* ── Hero ── */}
       <div
-        className="rounded-2xl border border-border overflow-hidden flex flex-col justify-between p-6 min-h-[180px]"
+        className="rounded-xl border border-border overflow-hidden flex items-center justify-between gap-4 px-5 py-4"
         style={{ backgroundColor: color.hex, color: textColor }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest opacity-70">{t(`temp.${temperature}`)}</p>
-            <h1 className="text-3xl font-bold mt-1">{color.name}</h1>
-          </div>
-          <span
-            className="rounded-full px-3 py-1 text-xs font-medium border"
-            style={{ borderColor: textColor, opacity: 0.85 }}
+        <div className="flex items-center gap-4 min-w-0">
+          <button
+            type="button"
+            onClick={() => handleCopy(color.hex, "hero")}
+            className="font-mono text-3xl font-bold tracking-tight flex items-center gap-2 shrink-0"
           >
-            {t(`family.${family}`)}
-          </span>
+            {color.hex}
+            {copied === "hero" ? (
+              <IoCheckmarkOutline className="h-5 w-5" />
+            ) : (
+              <IoCopyOutline className="h-4 w-4 opacity-60" />
+            )}
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold truncate">{color.name}</h1>
+            <p className="text-[11px] uppercase tracking-widest opacity-70">{t(`temp.${temperature}`)}</p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => handleCopy(color.hex, "hero")}
-          className="self-start font-mono text-4xl font-bold tracking-tight flex items-center gap-3 mt-4"
+        <span
+          className="rounded-full px-3 py-1 text-xs font-medium border shrink-0"
+          style={{ borderColor: textColor, opacity: 0.85 }}
         >
-          {color.hex}
-          {copied === "hero" ? (
-            <IoCheckmarkOutline className="h-6 w-6" />
-          ) : (
-            <IoCopyOutline className="h-5 w-5 opacity-60" />
-          )}
-        </button>
+          {t(`family.${family}`)}
+        </span>
       </div>
 
-      {/* ── Modules grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Shading scheme (full-width ramp) ── */}
+      <Section title={t("shadingTitle")} subtitle={t("shadingSub")}>
+        <div className="grid grid-cols-7 gap-1.5">
+          {shading.map(({ role, color: c }) => (
+            <button
+              key={role}
+              type="button"
+              onClick={() => handleCopy(c.hex, `shade:${role}`)}
+              className="rounded-lg overflow-hidden border border-border text-left group"
+            >
+              <div className="h-14 relative" style={{ backgroundColor: c.hex }}>
+                <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                  {copied === `shade:${role}` ? (
+                    <IoCheckmarkOutline className="h-4 w-4 text-white" />
+                  ) : (
+                    <IoCopyOutline className="h-3.5 w-3.5 text-white" />
+                  )}
+                </span>
+              </div>
+              <div className="px-1.5 py-1 bg-background">
+                <p className="text-[11px] font-medium leading-tight truncate">{t(`shade.${role}`)}</p>
+                <p className="text-[10px] font-mono text-muted-foreground truncate">{c.hex}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── Modules (masonry — packs cards by height, no wasted space) ── */}
+      <div className="gap-3 columns-1 md:columns-2 xl:columns-3 [&>section]:mb-3 [&>section]:break-inside-avoid">
         {/* Formats + channels */}
         <Section title={t("formatsTitle")} subtitle={t("formatsSub")}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -479,27 +507,27 @@ export function ColorAnalyzer() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <HarmonyWheel
               baseHue={color.hsl.h}
               colors={activeHarmony.colors.map((c) => ({ hex: c.hex, angle: c.angle }))}
-              size={104}
+              size={84}
             />
-            <p className="text-xs text-muted-foreground flex-1">
+            <p className="text-[11px] text-muted-foreground flex-1">
               {th(`${HARMONY_KEY[activeHarmony.type]}Desc`)}
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="flex gap-1.5">
             {activeHarmony.colors.map((c, i) => (
               <button
                 key={`${activeHarmony.type}-${i}-${c.hex}`}
                 type="button"
                 onClick={() => handleCopy(c.hex, `harm:${c.hex}:${i}`)}
-                className="rounded-lg overflow-hidden border border-border text-left"
+                className="flex-1 rounded-lg overflow-hidden border border-border text-left"
               >
-                <div className="h-12" style={{ backgroundColor: c.hex }} />
-                <div className="px-2 py-1 bg-background">
-                  <p className="text-[10px] font-mono">
+                <div className="h-10" style={{ backgroundColor: c.hex }} />
+                <div className="px-1.5 py-1 bg-background text-center">
+                  <p className="text-[11px] font-mono truncate">
                     {copied === `harm:${c.hex}:${i}` ? t("copied") : c.hex.toUpperCase()}
                   </p>
                 </div>
@@ -511,34 +539,6 @@ export function ColorAnalyzer() {
         {/* Coldwarm */}
         <Section title={t("coldwarmTitle")} subtitle={t("coldwarmSub")}>
           <ColdwarmGrid color={color} />
-        </Section>
-
-        {/* Shading scheme */}
-        <Section title={t("shadingTitle")} subtitle={t("shadingSub")} className="lg:col-span-2">
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-            {shading.map(({ role, color: c }) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => handleCopy(c.hex, `shade:${role}`)}
-                className="rounded-lg overflow-hidden border border-border text-left group"
-              >
-                <div className="h-16 relative" style={{ backgroundColor: c.hex }}>
-                  <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                    {copied === `shade:${role}` ? (
-                      <IoCheckmarkOutline className="h-4 w-4 text-white" />
-                    ) : (
-                      <IoCopyOutline className="h-3.5 w-3.5 text-white" />
-                    )}
-                  </span>
-                </div>
-                <div className="px-2 py-1.5 bg-background">
-                  <p className="text-[10px] font-medium leading-tight">{t(`shade.${role}`)}</p>
-                  <p className="text-[10px] font-mono text-muted-foreground">{c.hex}</p>
-                </div>
-              </button>
-            ))}
-          </div>
         </Section>
 
         {/* Contrast + accessibility (kept compact) */}
@@ -594,14 +594,13 @@ export function ColorAnalyzer() {
         </Section>
 
         {/* Psychology + naming */}
-        <Section title={t("psyTitle")} subtitle={t("psySub")} className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border bg-background p-4">
-              <p className="text-[11px] text-muted-foreground">{t("closestName")}</p>
-              <p className="text-lg font-semibold mt-1">{color.name}</p>
-              <p className="font-mono text-xs text-muted-foreground mt-0.5">{color.hex}</p>
+        <Section title={t("psyTitle")} subtitle={t("psySub")}>
+          <div className="space-y-2.5">
+            <div className="flex items-baseline justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
+              <span className="text-[11px] text-muted-foreground">{t("closestName")}</span>
+              <span className="text-sm font-semibold truncate">{color.name}</span>
             </div>
-            <div className="md:col-span-2 rounded-lg border border-border bg-background p-4 space-y-2">
+            <div className="rounded-lg border border-border bg-background p-3 space-y-1.5">
               <p className="text-sm font-semibold">{t(`psy.${family}.title`)}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{t(`psy.${family}.desc`)}</p>
               <p className="text-[11px] text-muted-foreground">
