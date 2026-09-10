@@ -16,18 +16,22 @@ const MID_R = (OUTER_R + INNER_R) / 2
 const DOT_R = 6
 const SEGMENTS = 36 // 10° per segment
 
+// JS engines can differ in the last bits of sin/cos. Serialize geometry at
+// visual precision so server (V8) and browser (e.g. JavaScriptCore) match.
+const svgCoordinate = (value: number): number => Number(value.toFixed(3))
+
 // Static donut ring segments, one per hue band.
 const RING_SEGMENTS = Array.from({ length: SEGMENTS }, (_, index) => {
   const startAngle = ((index * 360) / SEGMENTS - 90) * (Math.PI / 180)
   const endAngle = (((index + 1) * 360) / SEGMENTS - 90) * (Math.PI / 180)
-  const x1o = CENTER + OUTER_R * Math.cos(startAngle)
-  const y1o = CENTER + OUTER_R * Math.sin(startAngle)
-  const x2o = CENTER + OUTER_R * Math.cos(endAngle)
-  const y2o = CENTER + OUTER_R * Math.sin(endAngle)
-  const x2i = CENTER + INNER_R * Math.cos(endAngle)
-  const y2i = CENTER + INNER_R * Math.sin(endAngle)
-  const x1i = CENTER + INNER_R * Math.cos(startAngle)
-  const y1i = CENTER + INNER_R * Math.sin(startAngle)
+  const x1o = svgCoordinate(CENTER + OUTER_R * Math.cos(startAngle))
+  const y1o = svgCoordinate(CENTER + OUTER_R * Math.sin(startAngle))
+  const x2o = svgCoordinate(CENTER + OUTER_R * Math.cos(endAngle))
+  const y2o = svgCoordinate(CENTER + OUTER_R * Math.sin(endAngle))
+  const x2i = svgCoordinate(CENTER + INNER_R * Math.cos(endAngle))
+  const y2i = svgCoordinate(CENTER + INNER_R * Math.sin(endAngle))
+  const x1i = svgCoordinate(CENTER + INNER_R * Math.cos(startAngle))
+  const y1i = svgCoordinate(CENTER + INNER_R * Math.sin(startAngle))
   return {
     key: index,
     fill: `hsl(${(index * 360) / SEGMENTS}, 75%, 55%)`,
@@ -50,8 +54,8 @@ export function HarmonyWheel({ baseHue, colors, size = WHEEL_SIZE }: HarmonyWhee
       colors.map((color, index) => {
         const angle = ((baseHue + color.angle - 90) * Math.PI) / 180
         return {
-          cx: CENTER + MID_R * Math.cos(angle),
-          cy: CENTER + MID_R * Math.sin(angle),
+          cx: svgCoordinate(CENTER + MID_R * Math.cos(angle)),
+          cy: svgCoordinate(CENTER + MID_R * Math.sin(angle)),
           hex: color.hex,
           idx: index,
         }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import type { IconType } from "react-icons"
 import {
   IoPawOutline,
@@ -8,7 +9,7 @@ import {
   IoEyeOutline,
   IoOptionsOutline,
 } from "react-icons/io5"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { StyleType, CustomStyleSettings } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -21,6 +22,7 @@ interface StyleFilterProps {
   onCustomSettingsChange?: (settings: CustomStyleSettings) => void
   valueCheckEnabled?: boolean
   onValueCheckToggle?: () => void
+  dense?: boolean
 }
 
 interface StyleOption {
@@ -45,18 +47,26 @@ export function StyleFilter({
   onCustomSettingsChange,
   valueCheckEnabled,
   onValueCheckToggle,
+  dense = false,
 }: StyleFilterProps) {
   const t = useTranslations("styleFilter")
   const ts = useTranslations("styles")
+  const ko = useLocale() === "ko"
+  const denseNames: Record<StyleType, string> = ko
+    ? { original: "원본", hypercasual: "하이퍼", stylized: "스타일화", realistic: "리얼", custom: "커스텀" }
+    : { original: "Original", hypercasual: "Hyper", stylized: "Stylized", realistic: "Realistic", custom: "Custom" }
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium tracking-wide">{t("title")}</h3>
+    <div className={cn("min-w-0", dense ? "space-y-2" : "space-y-4")}>
+      <div className={dense ? "flex flex-wrap items-center gap-x-2 gap-y-1" : "space-y-4"}>
+      <div className={dense ? "contents" : "flex items-center justify-between"}>
+        <h3 className={dense ? "text-[11px] font-medium text-muted-foreground" : "text-sm font-medium tracking-wide"}>{dense ? (ko ? "스타일" : "Style") : t("title")}</h3>
         {onValueCheckToggle && (
           <Button
             variant={valueCheckEnabled ? "secondary" : "outline"}
             size="sm"
             onClick={onValueCheckToggle}
+            aria-pressed={valueCheckEnabled}
+            className={dense ? "h-10 rounded-sm px-2 text-xs" : undefined}
           >
             <IoEyeOutline className="h-4 w-4 mr-2" />
             {t("valueCheck")}
@@ -64,7 +74,7 @@ export function StyleFilter({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div className={dense ? "contents" : "grid grid-cols-2 sm:grid-cols-5 gap-2"}>
         {styleOptions.map((style) => {
           const isActive = currentStyle === style.id
 
@@ -74,24 +84,29 @@ export function StyleFilter({
               type="button"
               onClick={() => onStyleChange(style.id)}
               className={cn(
-                "rounded-xl border p-3 text-left transition-all",
+                dense ? "min-h-10 rounded-sm border px-2.5 py-2 text-center transition-colors" : "rounded-xl border p-3 text-left transition-all",
                 "bg-muted border-border hover:border-primary/50",
-                isActive && "ring-2 ring-offset-2 ring-offset-background"
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isActive && !dense && "ring-2 ring-offset-2 ring-offset-background"
               )}
               aria-pressed={isActive}
+              aria-label={ts(style.id)}
+              title={dense ? ts(style.descKey) : undefined}
               style={isActive ? { borderColor: "#bbb", backgroundColor: "#1a1a1a" } : undefined}
             >
-              <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? "#eee" : "#888" }} />
-              <p className="text-xs font-semibold leading-tight">{ts(style.id)}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{ts(style.descKey)}</p>
+              {!dense && <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? "#eee" : "#888" }} />}
+              <span className={dense ? "block whitespace-nowrap text-[11px] font-medium leading-tight" : "block text-xs font-semibold leading-tight"}>{dense ? denseNames[style.id] : ts(style.id)}</span>
+              {!dense && <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{ts(style.descKey)}</p>}
             </button>
           )
         })}
       </div>
+      </div>
 
       {currentStyle === "custom" && customSettings && onCustomSettingsChange && (
-        <div className="space-y-4 p-4 rounded-xl border border-border bg-card">
+        <div className={dense ? "grid min-w-0 grid-cols-3 gap-3 border-t border-border pt-2" : "space-y-4 p-4 rounded-xl border border-border bg-card"}>
           <SliderControl
+            dense={dense}
             label={t("saturation")}
             value={customSettings.saturationMultiplier}
             min={0}
@@ -104,6 +119,7 @@ export function StyleFilter({
           />
 
           <SliderControl
+            dense={dense}
             label={t("lightness")}
             value={customSettings.lightnessMultiplier}
             min={0}
@@ -116,6 +132,7 @@ export function StyleFilter({
           />
 
           <SliderControl
+            dense={dense}
             label={t("hueShift")}
             value={customSettings.hueShift}
             min={-180}
@@ -140,6 +157,7 @@ function SliderControl({
   step,
   onChange,
   formatValue,
+  dense = false,
 }: {
   label: string
   value: number
@@ -148,14 +166,18 @@ function SliderControl({
   step: number
   onChange: (value: number) => void
   formatValue: (value: number) => string
+  dense?: boolean
 }) {
+  const inputId = useId()
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-sm text-muted-foreground">{label}</label>
-        <span className="text-sm font-mono">{formatValue(value)}</span>
+    <div className={dense ? "min-w-0" : "space-y-2"}>
+      <div className={cn("flex items-center justify-between", dense && "flex-wrap gap-x-1 gap-y-0.5")}>
+        <label htmlFor={inputId} className={dense ? "text-[10px] text-muted-foreground" : "text-sm text-muted-foreground"}>{label}</label>
+        <output htmlFor={inputId} className={dense ? "font-mono text-[10px]" : "text-sm font-mono"}>{formatValue(value)}</output>
       </div>
       <Slider
+        id={inputId}
+        className={dense ? "h-10 min-w-0 appearance-auto bg-transparent" : undefined}
         value={value}
         min={min}
         max={max}

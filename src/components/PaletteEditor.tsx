@@ -16,6 +16,7 @@ interface PaletteEditorProps {
   onChange: (colors: Color[], selectedIndex: number) => void
   fallbackHex?: string
   compact?: boolean
+  dense?: boolean
 }
 
 function colorFromHex(value: string): Color | null {
@@ -26,11 +27,12 @@ function colorFromHex(value: string): Color | null {
   return { hex, rgb, hsl: rgbToHsl(rgb.r, rgb.g, rgb.b), name: getColorName(hex) }
 }
 
-export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallbackHex = "#756CF0", compact = false }: PaletteEditorProps) {
+export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallbackHex = "#756CF0", compact = false, dense = false }: PaletteEditorProps) {
   const ko = useLocale() === "ko"
   const inputId = useId()
   const activeIndex = Math.max(0, Math.min(selectedIndex, colors.length - 1))
   const selectedColor = colors[activeIndex]
+  const minimal = compact || dense
   const [hexInput, setHexInput] = useState(selectedColor?.hex ?? "")
   const [invalid, setInvalid] = useState(false)
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle")
@@ -94,8 +96,8 @@ export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallb
   }
 
   return (
-    <section className="space-y-4" aria-label={ko ? "팔레트 편집" : "Palette editor"}>
-      {!compact && <>
+    <section className={cn("min-w-0", dense ? "space-y-2" : "space-y-4")} aria-label={ko ? "팔레트 편집" : "Palette editor"}>
+      {!minimal && <>
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">{ko ? "팔레트 편집" : "Edit palette"}</h2>
         <span className="font-mono text-xs text-muted-foreground">{colors.length} {ko ? "색" : "colors"}</span>
@@ -137,10 +139,11 @@ export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallb
 
       {selectedColor ? (
         <>
-          <div className={cn("space-y-2", !compact && "border-t border-border pt-4")}>
-            <p className="text-xs text-muted-foreground">{ko ? `선택한 색상 · ${activeIndex + 1} / ${colors.length}` : `Selected color · ${activeIndex + 1} / ${colors.length}`}</p>
-            <label htmlFor={inputId} className="block text-xs font-medium">HEX</label>
+          <div className={cn(!dense && "space-y-2", !minimal && "border-t border-border pt-4")}>
+            <p id={`${inputId}-selection`} className={dense ? "sr-only" : "text-xs text-muted-foreground"}>{ko ? `선택한 색상 · ${activeIndex + 1} / ${colors.length}` : `Selected color · ${activeIndex + 1} / ${colors.length}`}</p>
+            <label htmlFor={inputId} className={dense ? "sr-only" : "block text-xs font-medium"}>HEX</label>
             <div className="flex items-center gap-2">
+              {dense && <span className="shrink-0 font-mono text-[10px] text-muted-foreground" aria-hidden="true">{activeIndex + 1}/{colors.length}</span>}
               <input
                 type="color"
                 value={selectedColor.hex}
@@ -158,8 +161,8 @@ export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallb
                 autoComplete="off"
                 maxLength={7}
                 aria-invalid={invalid}
-                aria-describedby={`${inputId}-hint`}
-                className={cn("min-w-0 rounded-sm font-mono uppercase", invalid && "border-destructive")}
+                aria-describedby={`${inputId}-selection ${inputId}-hint`}
+                className={cn("min-w-0 rounded-sm font-mono uppercase", dense && "h-10 flex-1 text-xs", invalid && "border-destructive")}
                 onChange={(event) => {
                   const value = event.target.value
                   setHexInput(value)
@@ -184,31 +187,34 @@ export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallb
                 {copyStatus === "copied" ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
               </Button>
             </div>
-            <p id={`${inputId}-hint`} className={cn("text-xs", invalid ? "text-destructive" : "text-muted-foreground")}>
+            <p id={`${inputId}-hint`} className={cn(dense && !invalid ? "sr-only" : "text-xs", dense && invalid && "mt-1", invalid ? "text-destructive" : "text-muted-foreground")}>
               {invalid
                 ? (ko ? "3자리 또는 6자리 HEX 색상을 입력하세요." : "Enter a 3- or 6-digit HEX color.")
                 : (ko ? "HEX 입력 또는 색상 선택기로 변경하세요." : "Edit the HEX value or use the color picker.")}
             </p>
-            <span role="status" className={copyStatus === "idle" ? "sr-only" : "block text-xs text-muted-foreground"}>{copyStatus === "copied" ? (ko ? "HEX를 복사했습니다." : "HEX copied.") : copyStatus === "error" ? (ko ? "복사할 수 없습니다. HEX 값을 선택해 복사하세요." : "Copy failed. Select the HEX value to copy it.") : ""}</span>
+            <span role="status" className={copyStatus === "idle" || (dense && copyStatus === "copied") ? "sr-only" : "block text-xs text-muted-foreground"}>{copyStatus === "copied" ? (ko ? "HEX를 복사했습니다." : "HEX copied.") : copyStatus === "error" ? (ko ? "복사할 수 없습니다. HEX 값을 선택해 복사하세요." : "Copy failed. Select the HEX value to copy it.") : ""}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" size="sm" className="rounded-sm text-xs" disabled={activeIndex === 0} onClick={() => moveSelected(-1)}>
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{ko ? "앞으로 이동" : "Move earlier"}
+          <div className={dense ? "flex flex-wrap items-center gap-2" : "grid grid-cols-2 gap-2"}>
+            <Button type="button" variant="outline" size="sm" className={cn("rounded-sm text-xs", dense && "h-10 w-10 shrink-0 p-0")} disabled={activeIndex === 0} onClick={() => moveSelected(-1)} title={ko ? "앞으로 이동" : "Move earlier"}>
+              <ArrowLeft className={cn("h-3.5 w-3.5", !dense && "mr-1.5")} aria-hidden="true" /><span className={dense ? "sr-only" : undefined}>{ko ? "앞으로 이동" : "Move earlier"}</span>
             </Button>
-            <Button type="button" variant="outline" size="sm" className="rounded-sm text-xs" disabled={activeIndex === colors.length - 1} onClick={() => moveSelected(1)}>
-              {ko ? "뒤로 이동" : "Move later"}<ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            <Button type="button" variant="outline" size="sm" className={cn("rounded-sm text-xs", dense && "h-10 w-10 shrink-0 p-0")} disabled={activeIndex === colors.length - 1} onClick={() => moveSelected(1)} title={ko ? "뒤로 이동" : "Move later"}>
+              <span className={dense ? "sr-only" : undefined}>{ko ? "뒤로 이동" : "Move later"}</span><ArrowRight className={cn("h-3.5 w-3.5", !dense && "ml-1.5")} aria-hidden="true" />
             </Button>
-            <Button type="button" variant="outline" size="sm" className="rounded-sm text-xs" onClick={addColor} disabled={colors.length >= 32} title={colors.length >= 32 ? (ko ? "최대 32개의 색상을 사용할 수 있습니다." : "A palette can contain up to 32 colors.") : undefined}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{ko ? "색상 추가" : "Add color"}
+            <Button type="button" variant="outline" size="sm" className={cn("rounded-sm text-xs", dense && "h-10 px-3")} onClick={addColor} disabled={colors.length >= 32} aria-label={ko ? "색상 추가" : "Add color"} title={colors.length >= 32 ? (ko ? "최대 32개의 색상을 사용할 수 있습니다." : "A palette can contain up to 32 colors.") : undefined}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{dense ? (ko ? "추가" : "Add") : (ko ? "색상 추가" : "Add color")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="rounded-sm text-xs text-muted-foreground hover:text-destructive" disabled={colors.length <= 1} onClick={deleteSelected} title={colors.length <= 1 ? (ko ? "최소 1개의 색상이 필요합니다." : "Keep at least one color.") : undefined}>
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{ko ? "색상 삭제" : "Delete color"}
+            <Button type="button" variant="ghost" size="sm" className={cn("rounded-sm text-xs text-muted-foreground hover:text-destructive", dense && "h-10 px-3")} disabled={colors.length <= 1} onClick={deleteSelected} aria-label={ko ? "색상 삭제" : "Delete color"} title={colors.length <= 1 ? (ko ? "최소 1개의 색상이 필요합니다." : "Keep at least one color.") : undefined}>
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{dense ? (ko ? "삭제" : "Delete") : (ko ? "색상 삭제" : "Delete color")}
             </Button>
           </div>
         </>
       ) : (
-        <p className="text-xs text-muted-foreground">{ko ? "색상을 추가해 편집을 시작하세요." : "Add a color to start editing."}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-muted-foreground">{ko ? "색상을 추가해 편집을 시작하세요." : "Add a color to start editing."}</p>
+          {minimal && <Button type="button" variant="outline" size="sm" className="h-10 rounded-sm text-xs" onClick={addColor}><Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />{ko ? "색상 추가" : "Add color"}</Button>}
+        </div>
       )}
     </section>
   )

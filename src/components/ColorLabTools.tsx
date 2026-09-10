@@ -26,12 +26,15 @@ import { COLOR_FORMATS, formatColor, getChannels, type ColorFormat } from "@/lib
 import { generateColorHarmonies, simulateColorBlindness, type HarmonyType } from "@/lib/colorVision"
 import { downloadFile } from "@/lib/exporters"
 import { cn, copyToClipboard } from "@/lib/utils"
+import "./ColorLabToolsOverview.css"
 
 export interface ColorLabToolsProps {
   hex: string
   mode: "compose" | "analyze"
   onSelectColor: (hex: string) => void
   onAddColors?: (hexes: string[]) => void
+  overview?: boolean
+  extraCard?: ReactNode
 }
 
 type ComposeTool = "shading" | "ramps" | "gradient" | "harmony" | "coldwarm"
@@ -79,7 +82,7 @@ function Choice<T extends string | number>({ value, options, onChange, label }: 
 }
 
 /** Controlled tools for the shared workspace. Generated swatches always select; copying is explicit. */
-export function ColorLabTools({ hex, mode, onSelectColor, onAddColors }: ColorLabToolsProps) {
+export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview = false, extraCard }: ColorLabToolsProps) {
   const t = useTranslations("analyzer")
   const th = useTranslations("harmony")
   const tc = useTranslations("coldwarm")
@@ -94,6 +97,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors }: ColorLa
   const [gradientPartner, setGradientPartner] = useState<GradientPartner>("complement")
   const [intensity, setIntensity] = useState<ColdwarmIntensity>("normal")
   const [copied, setCopied] = useState<string | null>(null)
+  const [inspectedColors, setInspectedColors] = useState<Record<string, string>>({})
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current) }, [])
 
@@ -183,6 +187,94 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors }: ColorLa
     { value: "vision", label: label("색각 시뮬레이션", "Color vision") },
     { value: "meaning", label: label("이름 · 심리", "Name & meaning") },
   ]
+
+  const renderCompactCopy = (value: string, token: string, text?: string) => (
+    <button type="button" className="overview-action" aria-label={`${label("복사", "Copy")} ${text ?? value}`} title={`${label("복사", "Copy")} ${value}`} onClick={() => handleCopy(value, token)}>
+      {copied === token ? <IoCheckmarkOutline /> : <IoCopyOutline />}{text}
+    </button>
+  )
+  const renderCompactAdd = (colors: Array<{ hex: string }>, text?: string) => onAddColors ? (
+    <button type="button" className="overview-action overview-add" title={text ?? label("색상 세트를 팔레트에 추가", "Add this color set to your palette")} onClick={() => onAddColors(Array.from(new Set(colors.map((item) => item.hex.toUpperCase()))))}>
+      <IoAddOutline />{text ?? label("세트 추가", "Add set")}
+    </button>
+  ) : null
+  const renderCompactCard = (title: string, children: ReactNode, action?: ReactNode, className?: string) => (
+    <section className={cn("overview-tool", className)}>
+      <div className="overview-tool-heading"><h3>{title}</h3>{action}</div>
+      {children}
+    </section>
+  )
+  const renderCompactStrip = (colors: Array<{ hex: string }>, token: string, options: { roles?: string[]; shortRoles?: string[]; height?: number; extraAction?: ReactNode } = {}) => {
+    const inspected = colors.find((item) => item.hex === inspectedColors[token])?.hex ?? colors[0]?.hex ?? color.hex
+    return <div className="overview-strip-block">
+      <div className="overview-strip" style={{ gridTemplateColumns: `repeat(${colors.length}, minmax(0, 1fr))` }}>
+        {colors.map((item, index) => <div key={`${token}-${index}`}>
+          <button type="button" className="overview-swatch" style={{ background: item.hex, height: options.height ?? 40 }}
+            title={`${options.roles?.[index] ? `${options.roles[index]} · ` : ""}${item.hex}`}
+            aria-label={`${label("색상 선택", "Select color")} ${item.hex}${options.roles?.[index] ? ` · ${options.roles[index]}` : ""}`}
+            onFocus={() => setInspectedColors((previous) => ({ ...previous, [token]: item.hex }))}
+            onMouseEnter={() => setInspectedColors((previous) => ({ ...previous, [token]: item.hex }))}
+            onClick={() => onSelectColor(item.hex)} />
+          {options.shortRoles && <span className="overview-role" title={options.roles?.[index]}>{options.shortRoles[index]}</span>}
+        </div>)}
+      </div>
+      <div className="overview-strip-meta"><span className="overview-inspected">{renderCompactCopy(inspected, `${token}-color`, inspected)}</span>{renderCompactCopy(colors.map((item) => item.hex).join(", "), `${token}-set`, label("세트 복사", "Copy set"))}{options.extraAction}</div>
+    </div>
+  }
+  const renderCompactSelect = <T extends string | number,>(value: T, values: T[], onChange: (value: T) => void, title: string, optionLabel: (value: T) => string | number = (item) => item) => (
+    <label className="overview-select"><span>{title}</span><select value={value} onChange={(event) => onChange((typeof value === "number" ? Number(event.target.value) : event.target.value) as T)}>{values.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
+  )
+
+  if (overview) {
+    return <div className={cn("color-tools-overview", mode === "compose" ? "overview-compose" : "overview-analysis")}>
+      <p className="sr-only" role="status" aria-live="polite">{copied === "error" ? label("복사하지 못했습니다.", "Copy failed.") : copied ? label("클립보드에 복사했습니다.", "Copied to clipboard.") : ""}</p>
+      {mode === "compose" ? <>
+        {renderCompactCard(t("shadingTitle"), <>
+          {renderCompactStrip(shading.map((step) => step.color), "overview-shading", { roles: shading.map((step) => t(`shade.${step.role}`)), shortRoles: isKo ? ["빛점", "밝음", "중간", "음영", "그림자", "역광", "배경"] : ["HIGH", "LIGHT", "MID", "SHADE", "DARK", "RIM", "BG"], height: 44 })}
+          <div className="overview-shading-key">{shading.map((step) => <div key={step.role}><span className="overview-dot" style={{ background: step.color.hex }} /><span>{t(`shade.${step.role}`)}</span>{renderCompactCopy(step.color.hex, `overview-role-${step.role}`, step.color.hex)}</div>)}</div>
+        </>, renderCompactAdd(shading.map((step) => step.color)))}
+        {renderCompactCard(t("rampsTitle"), <div className="overview-ramps">
+          {(["tints", "shades", "tones"] as const).map((ramp) => <div key={ramp}><div className="overview-row-heading"><h4>{t(ramp)}</h4></div>{renderCompactStrip(ramps[ramp], `overview-${ramp}`, { height: 30, extraAction: renderCompactAdd(ramps[ramp]) })}</div>)}
+        </div>)}
+        {renderCompactCard(t("gradientTitle"), <>
+          <div className="overview-gradient-controls">
+            {renderCompactSelect(gradientPartner, ["complement", "analogous", "triad"], setGradientPartner, t("partner"), (value) => t(`gradPartner.${value}`))}
+            {renderCompactSelect(gradientEasing, EASING_NAMES, setGradientEasing, t("easing"), (value) => t(`gradEasing.${value}`))}
+            {renderCompactSelect(gradientStops, [5, 7, 9, 12], setGradientStops, t("stops"))}
+          </div>
+          <div className="overview-gradient" aria-hidden style={{ background: `linear-gradient(to right, ${gradient.map((item) => item.hex).join(", ")})` }} />
+          {renderCompactStrip(gradient, "overview-gradient", { height: 40 })}
+          <p className="overview-note">{label("짝 색상과 곡선을 바꾸며 색의 흐름을 조절하세요.", "Change the partner and curve to shape the color flow.")}</p>
+        </>, renderCompactAdd(gradient))}
+        {renderCompactCard(t("harmonyTitle"), <>
+          {renderCompactSelect(harmony, harmonies.map((item) => item.type), setHarmony, label("조화 방식", "Harmony"), (value) => th(`${HARMONY_KEY[value]}Name`))}
+          <div className="overview-harmony"><HarmonyWheel baseHue={color.hsl.h} colors={activeHarmony.colors.map((item) => ({ hex: item.hex, angle: item.angle }))} size={96} /><div className="overview-harmony-colors">{activeHarmony.colors.map((item, index) => <div key={index}><button type="button" className="overview-harmony-pick" onClick={() => onSelectColor(item.hex)} aria-label={`${label("색상 선택", "Select color")} ${item.hex}`}><span style={{ background: item.hex }} /><span>{th(HARMONY_ROLE_KEY[item.name] ?? "roleBase")}</span></button>{renderCompactCopy(item.hex, `overview-harmony-${index}`, item.hex.toUpperCase())}</div>)}</div></div>
+          <p className="overview-note">{th(`${HARMONY_KEY[activeHarmony.type]}Desc`)}</p>
+        </>, renderCompactAdd(activeHarmony.colors))}
+        {renderCompactCard(t("coldwarmTitle"), <div className="overview-coldwarm">
+          <div className="overview-coldwarm-map"><div className="overview-axis"><span>← {tc("cold")}</span><span>{tc("warm")} →</span></div><div className="overview-coldwarm-grid" style={{ gridTemplateColumns: `repeat(${grid.size}, minmax(0, 1fr))` }}>{grid.rows.flat().map((cell) => <button type="button" key={`${cell.tempStep}:${cell.valueStep}`} title={`${cell.color.hex} · H${cell.color.hsl.h} S${cell.color.hsl.s} L${cell.color.hsl.l}`} aria-label={`${label("색상 선택", "Select color")} ${cell.color.hex}`} className={cn("overview-swatch", cell.isBase && "is-base")} style={{ background: cell.color.hex }} onMouseEnter={() => setInspectedColors((previous) => ({ ...previous, coldwarm: cell.color.hex }))} onFocus={() => setInspectedColors((previous) => ({ ...previous, coldwarm: cell.color.hex }))} onClick={() => onSelectColor(cell.color.hex)} />)}</div></div>
+          <div className="overview-coldwarm-controls">{renderCompactSelect(intensity, ["subtle", "normal", "strong"], setIntensity, label("강도", "Strength"), (value) => tc(value))}<p className="overview-note">↑ {tc("light")}<br />↓ {tc("dark")}</p>{renderCompactCopy(grid.rows.flat().find((cell) => cell.color.hex === inspectedColors.coldwarm)?.color.hex ?? color.hex, "overview-coldwarm-copy", grid.rows.flat().find((cell) => cell.color.hex === inspectedColors.coldwarm)?.color.hex ?? color.hex)}<span className="overview-note">{label("가운데 행을 추가합니다.", "Adds the middle row.")}</span></div>
+        </div>, renderCompactAdd(grid.rows[Math.floor(grid.size / 2)].map((cell) => cell.color)))}
+        {extraCard}
+      </> : <>
+        {renderCompactCard(t("formatsTitle"), <>
+          <div className="overview-formats">{COLOR_FORMATS.map((fmt) => { const value = formatColor(color, fmt); const display = fmt === "HEX" ? value : value.replace(/^[a-z]+\(/i, "").replace(/\)$/, "").replace(/,\s*/g, " "); return <div key={fmt} title={`${t(`fmtDesc.${fmt}`)} · ${value}`}><span>{fmt}</span><code>{display}</code>{renderCompactCopy(value, `overview-format-${fmt}`)}</div> })}</div>
+          <div className="overview-format-actions">{renderCompactCopy(colorToAllFormatsText(color), "overview-formats-all", label("모두 복사", "Copy all"))}{(["JSON", "CSS"] as const).map((kind) => <button key={kind} type="button" className="overview-action" aria-label={`${kind} ${label("다운로드", "download")}`} onClick={() => downloadFile(kind === "JSON" ? colorToJson(color) : colorToCss(color), `color-${color.hex.slice(1).toLowerCase()}.${kind.toLowerCase()}`, kind === "JSON" ? "application/json" : "text/css")}><IoDownloadOutline />{kind}</button>)}</div>
+          <div className="overview-channels"><div className="overview-channel-heading"><span>{t("channels")}</span><select value={format} aria-label={label("채널 색상 모델", "Channel color model")} onChange={(event) => setFormat(event.target.value as ColorFormat)}>{CHANNEL_FORMATS.map((value) => <option key={value} value={value}>{value}</option>)}</select></div><div className="overview-channel-bars" style={{ gridTemplateColumns: `repeat(${channels.length}, minmax(0, 1fr))` }}>{channels.map((channel) => <ColorChannelBar key={`${format}-${channel.label}`} {...channel} />)}</div></div>
+        </>, undefined, "overview-formats-card")}
+        {renderCompactCard(t("contrastTitle"), <>
+          <div className="overview-contrast">{[{ bg: "#FFFFFF", title: t("onWhite") }, { bg: "#000000", title: t("onBlack") }].map(({ bg, title }) => { const report = contrastReport(color.hex, bg); return <div key={bg}><div className="overview-aa" style={{ background: bg, color: color.hex }}>Aa<span>{report.ratio.toFixed(2)} : 1</span></div><p>{title}</p><div className="overview-passes">{[{ ok: report.aaLarge, label: label("큰 AA", "AA L") }, { ok: report.aaNormal, label: "AA" }, { ok: report.aaaNormal, label: "AAA" }].map((item) => <span key={item.label} className={item.ok ? "pass" : "fail"}>{item.ok ? "✓" : "×"} {item.label}</span>)}</div></div> })}</div>
+          <p className="overview-note">{t("bestText")} <strong>{textColor === "#FFFFFF" ? t("white") : t("black")}</strong></p>
+        </>, undefined, "overview-contrast-card")}
+        {renderCompactCard(t("cvdTitle"), <div className="overview-vision">{[{ hex: color.hex, name: t("cvdNormal") }, ...CVD_TYPES.map((type) => ({ hex: simulateColorBlindness(color.hex, type), name: t(`cvd.${type}`) }))].map((item, index) => <div key={index}><button type="button" className="overview-swatch" style={{ background: item.hex, height: 40 }} aria-label={`${label("색상 선택", "Select color")} ${item.name} ${item.hex}`} onClick={() => onSelectColor(item.hex)} /><p>{item.name}</p>{renderCompactCopy(item.hex, `overview-vision-${index}`, item.hex.toUpperCase())}</div>)}</div>, undefined, "overview-vision-card")}
+        {renderCompactCard(label("이름 · 의미", "Name & meaning"), <>
+          <div className="overview-name"><span className="overview-dot" style={{ background: color.hex }} /><strong>{color.name}</strong><span>{t(`family.${family}`)} · {t(`temp.${colorTemperature(color)}`)}</span></div>
+          <h4 className="overview-meaning-title">{t(`psy.${family}.title`)}</h4><p className="overview-note">{t(`psy.${family}.desc`)}</p><p className="overview-note"><strong>{t("usage")}: </strong>{t(`psy.${family}.usage`)}</p>
+        </>, undefined, "overview-meaning-card")}
+        {extraCard}
+      </>}
+    </div>
+  }
 
   return (
     <div className="color-lab-tools space-y-6">

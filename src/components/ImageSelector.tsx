@@ -31,6 +31,7 @@ interface ImageSelectorProps {
   onSelectionComplete: (croppedImageUrl: string | null) => void
   onClear?: () => void
   className?: string
+  maxHeight?: number
 }
 
 const MIN_RECT_SIZE = 10
@@ -53,6 +54,7 @@ export function ImageSelector({
   onSelectionComplete,
   onClear,
   className,
+  maxHeight = 400,
 }: ImageSelectorProps) {
   const t = useTranslations("imageSelector")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -83,7 +85,6 @@ export function ImageSelector({
       setImageLoaded(true)
 
       const maxWidth = containerRef.current.clientWidth
-      const maxHeight = 400
 
       let width = img.naturalWidth
       let height = img.naturalHeight
@@ -109,7 +110,7 @@ export function ImageSelector({
     return () => {
       window.removeEventListener("resize", updateDimensions)
     }
-  }, [imageUrl])
+  }, [imageUrl, maxHeight])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -414,7 +415,7 @@ export function ImageSelector({
         <img
           src={imageUrl}
           alt="Source"
-          className="w-full h-auto max-h-[400px] object-contain"
+          className="mx-auto w-full h-auto max-h-[400px] object-contain"
           style={{
             width: imageDimensions.width || "auto",
             height: imageDimensions.height || "auto",
@@ -426,7 +427,7 @@ export function ImageSelector({
             ref={canvasRef}
             width={imageDimensions.width}
             height={imageDimensions.height}
-            className="absolute top-0 left-0 cursor-crosshair touch-none"
+            className="absolute top-0 left-1/2 -translate-x-1/2 cursor-crosshair touch-none"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
