@@ -28,7 +28,7 @@ export function LocaleSwitcher({ className }: LocaleSwitcherProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded-full border border-border bg-card/70 p-0.5",
+        "locale-switcher flex items-center gap-1 border border-border bg-card p-0.5",
         isPending && "opacity-60",
         className
       )}
@@ -41,7 +41,7 @@ export function LocaleSwitcher({ className }: LocaleSwitcherProps) {
           onClick={() => handleChange(option)}
           disabled={isPending}
           className={cn(
-            "px-2 py-1 rounded-full text-xs font-medium transition-colors",
+            "px-2 py-1 text-xs font-medium transition-colors",
             locale === option
               ? "bg-primary/20 text-foreground"
               : "text-muted-foreground hover:text-foreground"

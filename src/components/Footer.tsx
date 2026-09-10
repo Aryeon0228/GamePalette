@@ -1,31 +1,23 @@
-import { getTranslations } from "next-intl/server"
+import { getLocale } from "next-intl/server"
+import { LocaleSwitcher } from "@/components/LocaleSwitcher"
+
+const MOBILE_APP_URL =
+  process.env.NEXT_PUBLIC_MOBILE_APP_URL || "https://apps.apple.com/kr/app/pixel-pow/id6758751368"
 
 export async function Footer() {
-  const t = await getTranslations("footer")
+  const isKorean = (await getLocale()) === "ko"
 
   return (
-    <footer className="border-t border-border py-6 mt-auto">
-      <div className="container text-center text-sm text-muted-foreground space-y-2">
-        <p>{t("tagline")}</p>
-        <p>
-          {t("contact")}:{" "}
-          <a href="mailto:cloudysnowyday@gmail.com" className="hover:text-foreground transition-colors">
-            cloudysnowyday@gmail.com
-          </a>
-          {" | "}
-          Discord: <span className="hover:text-foreground">@cloudysnowyday</span>
-        </p>
-        <p className="mt-1">
-          Twitter:{" "}
-          <a
-            href="https://twitter.com/TomatoO_O"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            @TomatoO_O
-          </a>
-        </p>
+    <footer className="portfolio-footer">
+      <div className="footer-identity">
+        <p>© {new Date().getFullYear()} Studio Penumbra · 김소연</p>
+        <p>Color Lab <span aria-hidden="true">·</span> Pixel Paw</p>
+      </div>
+      <div className="footer-links">
+        <LocaleSwitcher />
+        <a href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">Pixel Paw for iOS ↗</a>
+        <a href="mailto:cloudysnowyday@gmail.com">{isKorean ? "문의" : "Contact"}</a>
+        <a href="https://studio-penumbra.com/#work">Back to Work ↗</a>
       </div>
     </footer>
   )

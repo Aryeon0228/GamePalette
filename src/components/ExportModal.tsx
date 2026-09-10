@@ -1,31 +1,16 @@
 "use client"
 /* eslint-disable @next/next/no-img-element */
 
-import { useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react"
+import { useLocale, useTranslations } from "next-intl"
+import { IoCheckmarkOutline, IoCopyOutline, IoDownloadOutline, IoLockClosedOutline } from "react-icons/io5"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { ExportFormat, Palette } from "@/types"
 import {
-  IoDownloadOutline,
-  IoCopyOutline,
-  IoCheckmarkOutline,
-  IoLockClosedOutline,
-} from "react-icons/io5"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Palette, ExportFormat } from "@/types"
-import {
-  exportPalette,
-  exportToJson,
-  exportToCss,
-  exportToScss,
-  exportToUnity,
-  exportToUnreal,
-  buildShadingScheme,
-  downloadFile,
-  SnsCardType,
+  downloadFile, exportPalette, exportToCss, exportToJson, exportToPng, exportToScss,
+  exportToShading, exportToSnsPng, exportToUnity, exportToUnreal, type SnsCardType,
 } from "@/lib/exporters"
-import { SphereShadingPreview } from "@/components/SphereShadingPreview"
-import { imageToAscii, type AsciiArtResult } from "@/lib/asciiArt"
-import { copyToClipboard } from "@/lib/utils"
+import { cn, copyToClipboard } from "@/lib/utils"
 
 interface ExportModalProps {
   open: boolean
@@ -33,406 +18,171 @@ interface ExportModalProps {
   palette: Palette
   isPro?: boolean
 }
-
-interface ExportOption {
-  format: ExportFormat
-  /** Maps to exportModal.opt.<optKey>Label / <optKey>Desc in the message catalog. */
-  optKey: string
-  action: "download" | "copy"
-  proOnly?: boolean
-}
-
+interface ExportOption { format: Exclude<ExportFormat, "png">; optKey: string; proOnly?: boolean }
 const exportOptions: ExportOption[] = [
-  { format: "png", optKey: "png", action: "download" },
-  { format: "json", optKey: "json", action: "download" },
-  { format: "lighting", optKey: "lighting", action: "download" },
-  { format: "css", optKey: "css", action: "copy" },
-  { format: "scss", optKey: "scss", action: "copy" },
-  { format: "unity", optKey: "unity", action: "download", proOnly: true },
-  { format: "unreal", optKey: "unreal", action: "download", proOnly: true },
+  { format: "json", optKey: "json" },
+  { format: "css", optKey: "css" },
+  { format: "scss", optKey: "scss" },
+  { format: "lighting", optKey: "lighting" },
+  { format: "unity", optKey: "unity", proOnly: true },
+  { format: "unreal", optKey: "unreal", proOnly: true },
 ]
+const CONTROL = "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 border border-border px-3 py-2 text-xs font-medium transition-colors hover:border-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40"
 
 export function ExportModal({ open, onOpenChange, palette, isPro = false }: ExportModalProps) {
   const t = useTranslations("exportModal")
-  const tShading = useTranslations("shading")
-  const [copiedFormat, setCopiedFormat] = useState<string | null>(null)
-  const [isExporting, setIsExporting] = useState<string | null>(null)
+  const isKo = useLocale().startsWith("ko")
+  const label = (ko: string, en: string) => isKo ? ko : en
+  const titleId = useId()
+  const descriptionId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [copiedFormat, setCopiedFormat] = useState<ExportFormat | null>(null)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
+  const [feedback, setFeedback] = useState<"copied" | "downloaded" | "error" | null>(null)
   const [pngMode, setPngMode] = useState<"moodboard" | "sns">("sns")
   const [snsCardType, setSnsCardType] = useState<SnsCardType>("instagram")
-  const [cardShowHex, setCardShowHex] = useState(true)
-  const [cardShowStats, setCardShowStats] = useState(true)
-  const [cardShowHistogram, setCardShowHistogram] = useState(true)
-  const [asciiWidth, setAsciiWidth] = useState(80)
-  const [asciiArt, setAsciiArt] = useState<AsciiArtResult | null>(null)
-  const [asciiGenerating, setAsciiGenerating] = useState(false)
-  const [asciiCopied, setAsciiCopied] = useState(false)
+  const [showHex, setShowHex] = useState(true)
+  const [showStats, setShowStats] = useState(true)
+  const [showHistogram, setShowHistogram] = useState(true)
+  const [preview, setPreview] = useState<{ url: string; blob: Blob } | null>(null)
+  const [previewStatus, setPreviewStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [previewRevision, setPreviewRevision] = useState(0)
 
-  const previewRatio = snsCardType === "twitter" ? "16 / 9" : "1 / 1"
-  const previewColors = palette.colors
-  const shading = useMemo(
-    () => (palette.colors.length > 0 ? buildShadingScheme(palette) : null),
-    [palette]
-  )
-
-  const handleExport = async (option: ExportOption) => {
-    if (option.proOnly && !isPro) {
-      return
+  useEffect(() => {
+    if (!open) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    dialogRef.current?.focus()
+    setFeedback(null)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      previousFocus?.focus()
     }
+  }, [open])
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current) }, [])
 
-    setIsExporting(option.format)
-
-    try {
-      if (option.action === "download") {
-        if (option.format === "png") {
-          await exportPalette(palette, "png", {
-            mode: pngMode,
-            snsCardType,
-            showHex: cardShowHex,
-            showStats: cardShowStats,
-            showHistogram: cardShowHistogram,
-          })
-        } else {
-          await exportPalette(palette, option.format)
-        }
-      } else {
-        let content = ""
-        switch (option.format) {
-          case "css":
-            content = exportToCss(palette)
-            break
-          case "scss":
-            content = exportToScss(palette)
-            break
-          case "json":
-            content = exportToJson(palette)
-            break
-          case "unity":
-            content = exportToUnity(palette)
-            break
-          case "unreal":
-            content = exportToUnreal(palette)
-            break
-        }
-        await copyToClipboard(content)
-        setCopiedFormat(option.format)
-        setTimeout(() => setCopiedFormat(null), 2000)
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    let objectUrl: string | null = null
+    setPreview(null)
+    setPreviewStatus("loading")
+    const timer = setTimeout(async () => {
+      try {
+        const blob = pngMode === "sns"
+          ? await exportToSnsPng(palette, { snsCardType, showHex, showStats, showHistogram })
+          : await exportToPng(palette)
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setPreview({ url: objectUrl, blob })
+        setPreviewStatus("ready")
+      } catch {
+        if (!cancelled) setPreviewStatus("error")
       }
-    } catch (error) {
-      console.error("Export failed:", error)
-    } finally {
-      setIsExporting(null)
+    }, 120)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }
+  }, [open, palette, pngMode, snsCardType, showHex, showStats, showHistogram, previewRevision])
 
-  const safeName = palette.name.replace(/[^a-zA-Z0-9-_]/g, "_")
-
-  const handleGenerateAscii = async () => {
-    if (!palette.sourceImageUrl) return
-    setAsciiGenerating(true)
+  const handleExport = async (format: ExportFormat, action: "copy" | "download", proOnly = false) => {
+    if (proOnly && !isPro) return
+    setExporting(format)
+    setFeedback(null)
     try {
-      const result = await imageToAscii(palette.sourceImageUrl, {
-        width: asciiWidth,
-        colors: palette.colors,
-      })
-      setAsciiArt(result)
-    } catch (error) {
-      console.error("ASCII generation failed:", error)
-    } finally {
-      setAsciiGenerating(false)
-    }
+      if (action === "download") {
+        if (format === "png" && preview) {
+          downloadFile(preview.blob, `${palette.name.replace(/[^a-zA-Z0-9-_]/g, "_") || "palette"}.png`)
+        } else {
+          await exportPalette(palette, format, { mode: pngMode, snsCardType, showHex, showStats, showHistogram })
+        }
+        setFeedback("downloaded")
+      } else {
+        const content = format === "json" ? exportToJson(palette)
+          : format === "css" ? exportToCss(palette)
+            : format === "scss" ? exportToScss(palette)
+              : format === "lighting" ? exportToShading(palette)
+                : format === "unity" ? exportToUnity(palette) : exportToUnreal(palette)
+        await copyToClipboard(content)
+        setCopiedFormat(format)
+        setFeedback("copied")
+        if (copyTimer.current) clearTimeout(copyTimer.current)
+        copyTimer.current = setTimeout(() => setCopiedFormat(null), 1800)
+      }
+    } catch { setFeedback("error") }
+    finally { setExporting(null) }
   }
 
-  const handleCopyAscii = async () => {
-    if (!asciiArt) return
-    await copyToClipboard(asciiArt.text)
-    setAsciiCopied(true)
-    setTimeout(() => setAsciiCopied(false), 2000)
+  const handleDialogKeys = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") { event.preventDefault(); onOpenChange(false); return }
+    if (event.key !== "Tab") return
+    const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    if (!first || !last) { event.preventDefault(); return }
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onClose={() => onOpenChange(false)} className="sm:max-w-2xl p-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b border-border">
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>
-            {t("description", { name: palette.name })}
-          </DialogDescription>
+      <DialogContent ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId}
+        onKeyDown={handleDialogKeys} onClose={() => onOpenChange(false)}
+        className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-4xl flex-col gap-0 overflow-hidden rounded-none border-border bg-card p-0 shadow-none backdrop-blur-none supports-[backdrop-filter]:bg-card sm:rounded-none"
+      >
+        <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-12 text-left">
+          <DialogTitle id={titleId}>{t("title")}</DialogTitle>
+          <DialogDescription id={descriptionId} className="break-words text-xs">{t("description", { name: palette.name })}</DialogDescription>
         </DialogHeader>
-
-        <div className="max-h-[76vh] overflow-y-auto px-6 py-5 space-y-5">
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold">{t("pngLayout")}</h3>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant={pngMode === "sns" ? "default" : "outline"}
-                onClick={() => setPngMode("sns")}
-              >
-                {t("snsCard")}
-              </Button>
-              <Button
-                size="sm"
-                variant={pngMode === "moodboard" ? "default" : "outline"}
-                onClick={() => setPngMode("moodboard")}
-              >
-                {t("moodboard")}
-              </Button>
-            </div>
-
-            {pngMode === "sns" && (
-              <div className="space-y-3 rounded-lg border border-border p-3">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant={snsCardType === "instagram" ? "default" : "outline"}
-                    onClick={() => setSnsCardType("instagram")}
-                  >
-                    {t("instagram")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={snsCardType === "twitter" ? "default" : "outline"}
-                    onClick={() => setSnsCardType("twitter")}
-                  >
-                    {t("twitter")}
-                  </Button>
+        <div className="min-h-0 overflow-y-auto overscroll-contain p-5">
+          <div className="grid gap-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <section className="min-w-0 space-y-4">
+              <div><h3 className="text-sm font-semibold">{t("pngLayout")}</h3><p className="mt-1 text-[11px] text-muted-foreground">{label("내보낼 이미지의 실제 미리보기입니다.", "A preview of the image you will export.")}</p></div>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("pngLayout")}>
+                {(["sns", "moodboard"] as const).map((mode) => <button type="button" key={mode} className={cn(CONTROL, pngMode === mode && "border-primary bg-primary/10 text-primary")} aria-pressed={pngMode === mode} onClick={() => setPngMode(mode)}>{mode === "sns" ? t("snsCard") : t("moodboard")}</button>)}
+              </div>
+              {pngMode === "sns" && <div className="space-y-3">
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label={label("이미지 비율", "Image aspect ratio")}>
+                  {(["instagram", "twitter"] as const).map((type) => <button type="button" key={type} className={cn(CONTROL, snsCardType === type && "border-primary text-primary")} aria-pressed={snsCardType === type} onClick={() => setSnsCardType(type)}>{t(type)}</button>)}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant={cardShowHex ? "secondary" : "outline"}
-                    onClick={() => setCardShowHex((value) => !value)}
-                  >
-                    {t("hex")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={cardShowStats ? "secondary" : "outline"}
-                    onClick={() => setCardShowStats((value) => !value)}
-                  >
-                    {t("stats")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={cardShowHistogram ? "secondary" : "outline"}
-                    onClick={() => setCardShowHistogram((value) => !value)}
-                  >
-                    {t("histogram")}
-                  </Button>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label={label("카드에 포함할 정보", "Information to include")}>
+                  {([{ key: "hex", selected: showHex, change: setShowHex }, { key: "stats", selected: showStats, change: setShowStats }, { key: "histogram", selected: showHistogram, change: setShowHistogram }]).map((option) => <button type="button" key={option.key} aria-pressed={option.selected} onClick={() => option.change(!option.selected)} className={cn(CONTROL, option.selected && "border-primary text-primary")}><span className="inline-block w-3">{option.selected ? "✓" : ""}</span>{t(option.key)}</button>)}
                 </div>
-
-                <div className="rounded-lg overflow-hidden border border-border bg-zinc-900 text-white p-3">
-                  <div
-                    className="w-full rounded-md bg-gradient-to-br from-zinc-800 to-zinc-700 p-3 relative overflow-hidden"
-                    style={{ aspectRatio: previewRatio }}
-                  >
-                    {palette.sourceImageUrl && (
-                      <img
-                        src={palette.sourceImageUrl}
-                        alt="source"
-                        className="absolute right-3 top-3 w-24 h-24 rounded-md object-cover opacity-90"
-                      />
-                    )}
-                    <p className="text-sm font-semibold truncate pr-28">{palette.name}</p>
-                    <p className="text-[11px] text-zinc-300">{t("colorsCount", { count: palette.colors.length })}</p>
-
-                    <div className="absolute left-3 right-3 bottom-3 space-y-2">
-                      <div className="flex gap-1.5">
-                        {previewColors.map((color) => (
-                          <div
-                            key={color.hex}
-                            className="flex-1 rounded-sm min-h-10 flex items-center justify-center"
-                            style={{ backgroundColor: color.hex }}
-                          >
-                            {cardShowHex && previewColors.length <= 8 && (
-                              <span className="text-[9px] font-mono text-black/80">{color.hex.toUpperCase()}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      {cardShowStats && (
-                        <div className="text-[10px] text-zinc-300">{t("styleExportReady", { style: palette.style })}</div>
-                      )}
-                      {cardShowHistogram && (
-                        <div className="h-6 flex items-end gap-1">
-                          {previewColors.map((color, index) => (
-                            <div
-                              key={`${color.hex}-${index}`}
-                              className="flex-1 bg-slate-400/80 rounded-sm"
-                              style={{ height: `${18 + (index % 4) * 12}%` }}
-                            />
-                          ))}
-                        </div>
-                      )}
+              </div>}
+              <div className="flex min-h-48 max-h-80 items-start justify-center overflow-auto border border-border bg-background" aria-busy={previewStatus === "loading"}>
+                {preview && previewStatus === "ready" ? <img src={preview.url} alt={label("PNG 내보내기 미리보기", "PNG export preview")} className="block h-auto w-full" /> : <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-5 text-center text-xs text-muted-foreground"><p>{previewStatus === "error" ? label("미리보기를 만들지 못했습니다.", "Could not create the preview.") : label("미리보기를 만드는 중…", "Rendering preview…")}</p>{previewStatus === "error" && <button type="button" className={CONTROL} onClick={() => setPreviewRevision((value) => value + 1)}>{label("다시 시도", "Try again")}</button>}</div>}
+              </div>
+              <button type="button" className={cn(CONTROL, "w-full border-primary text-primary")} onClick={() => handleExport("png", "download")} disabled={!!exporting || previewStatus !== "ready"}><IoDownloadOutline className="h-4 w-4" />{exporting === "png" ? label("내보내는 중…", "Exporting…") : label("PNG 다운로드", "Download PNG")}</button>
+            </section>
+            <section className="min-w-0 space-y-4">
+              <div><h3 className="text-sm font-semibold">{label("데이터 · 코드", "Data & code")}</h3><p className="mt-1 text-[11px] text-muted-foreground">{label("파일로 저장하거나 프로젝트에 복사하세요.", "Download a file or copy directly into your project.")}</p></div>
+              <div className="divide-y divide-border border-y border-border">
+                {exportOptions.map((option) => {
+                  const locked = !!option.proOnly && !isPro
+                  const title = option.format === "lighting" ? label("라이팅 JSON", "Lighting JSON") : t(`opt.${option.optKey}Label`)
+                  return <div key={option.format} className="space-y-2.5 py-4">
+                    <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="text-xs font-semibold">{title}</h4>{locked && <span className="border border-border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">PRO</span>}</div><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{t(`opt.${option.optKey}Desc`)}</p></div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {locked ? <button type="button" className={CONTROL} disabled><IoLockClosedOutline className="h-3.5 w-3.5" />{label("Pro 전용", "Pro only")}</button> : <>
+                        <button type="button" className={CONTROL} onClick={() => handleExport(option.format, "download", option.proOnly)} disabled={!!exporting} aria-label={`${title} ${t("download")}`}><IoDownloadOutline className="h-3.5 w-3.5" />{exporting === option.format ? label("처리 중…", "Working…") : t("download")}</button>
+                        <button type="button" className={CONTROL} onClick={() => handleExport(option.format, "copy", option.proOnly)} disabled={!!exporting} aria-label={`${title} ${t("copy")}`}>{copiedFormat === option.format ? <IoCheckmarkOutline className="h-3.5 w-3.5" /> : <IoCopyOutline className="h-3.5 w-3.5" />}{copiedFormat === option.format ? t("copied") : t("copy")}</button>
+                      </>}
                     </div>
                   </div>
-                </div>
+                })}
               </div>
-            )}
-          </section>
-
-          {shading && (
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold">{t("sphereShading")}</h3>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <SphereShadingPreview scheme={shading} className="w-44 h-40 shrink-0" />
-                <div className="grid grid-cols-1 gap-1.5 w-full">
-                  {[shading.specular, shading.midtone, shading.shadow, shading.rim, shading.background].map(
-                    (swatch) => (
-                      <div key={swatch.role} className="flex items-center gap-2">
-                        <span
-                          className="h-6 w-6 rounded shrink-0 border border-border"
-                          style={{ backgroundColor: swatch.hex }}
-                        />
-                        <span className="text-xs font-medium w-24">{tShading(swatch.role)}</span>
-                        <span className="text-[10px] font-mono text-muted-foreground">{swatch.hex}</span>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("shadingNote")}
-              </p>
+              {!isPro && <p className="text-[11px] leading-relaxed text-muted-foreground">{label("Unity와 Unreal 내보내기는 Pro 전용 기능입니다.", "Unity and Unreal exports are available with Pro.")}</p>}
             </section>
-          )}
-
-          {palette.sourceImageUrl && (
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold">{t("asciiArt")}</h3>
-              <div className="flex flex-wrap items-center gap-2">
-                {[
-                  { w: 60, key: "small" },
-                  { w: 80, key: "medium" },
-                  { w: 120, key: "large" },
-                ].map((opt) => (
-                  <Button
-                    key={opt.w}
-                    size="sm"
-                    variant={asciiWidth === opt.w ? "default" : "outline"}
-                    onClick={() => setAsciiWidth(opt.w)}
-                  >
-                    {t(opt.key)}
-                  </Button>
-                ))}
-                <Button size="sm" variant="secondary" onClick={handleGenerateAscii} disabled={asciiGenerating}>
-                  {asciiGenerating ? t("generating") : asciiArt ? t("regenerate") : t("generate")}
-                </Button>
-              </div>
-
-              {asciiArt && (
-                <div className="space-y-2">
-                  <div className="rounded-lg border border-border bg-background overflow-auto max-h-64">
-                    <pre
-                      className="font-mono leading-none p-3 whitespace-pre"
-                      style={{ fontSize: "5px" }}
-                      // Generated locally from a fixed glyph ramp + palette hex; no user-supplied markup.
-                      dangerouslySetInnerHTML={{ __html: asciiArt.htmlBody }}
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={handleCopyAscii}>
-                      {asciiCopied ? (
-                        <>
-                          <IoCheckmarkOutline className="h-4 w-4 mr-1" />
-                          {t("copied")}
-                        </>
-                      ) : (
-                        <>
-                          <IoCopyOutline className="h-4 w-4 mr-1" />
-                          {t("copyText")}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => downloadFile(asciiArt.text, `${safeName}-ascii.txt`, "text/plain")}
-                    >
-                      <IoDownloadOutline className="h-4 w-4 mr-1" />
-                      {t("txt")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => downloadFile(asciiArt.html, `${safeName}-ascii.html`, "text/html")}
-                    >
-                      <IoDownloadOutline className="h-4 w-4 mr-1" />
-                      {t("htmlColor")}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </section>
-          )}
-
-          <div className="space-y-2">
-            {exportOptions.map((option) => {
-              const isLocked = option.proOnly && !isPro
-              const isCopied = copiedFormat === option.format
-              const isLoading = isExporting === option.format
-
-              return (
-                <div
-                  key={option.format}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${
-                    isLocked
-                      ? "border-border bg-muted/50 opacity-75"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  } transition-colors`}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{t(`opt.${option.optKey}Label`)}</span>
-                      {isLocked && (
-                        <span className="text-xs bg-gradient-to-r from-slate-600 to-slate-500 text-white px-2 py-0.5 rounded-full">
-                          {t("pro")}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{t(`opt.${option.optKey}Desc`)}</p>
-                  </div>
-
-                  <Button
-                    variant={isLocked ? "outline" : "secondary"}
-                    size="sm"
-                    onClick={() => handleExport(option)}
-                    disabled={isLoading}
-                  >
-                    {isLocked ? (
-                      <IoLockClosedOutline className="h-4 w-4" />
-                    ) : isCopied ? (
-                      <>
-                        <IoCheckmarkOutline className="h-4 w-4 mr-1" />
-                        {t("copied")}
-                      </>
-                    ) : option.action === "download" ? (
-                      <>
-                        <IoDownloadOutline className="h-4 w-4 mr-1" />
-                        {t("download")}
-                      </>
-                    ) : (
-                      <>
-                        <IoCopyOutline className="h-4 w-4 mr-1" />
-                        {t("copy")}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )
-            })}
           </div>
-
-          {!isPro && (
-            <div className="border-t border-border pt-4">
-              <Button className="w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600">
-                {t("upgradeButton")}
-              </Button>
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                {t("upgradeHint")}
-              </p>
-            </div>
-          )}
+        </div>
+        <div className="shrink-0 border-t border-border px-5 py-3">
+          <p role={feedback === "error" ? "alert" : "status"} className={cn("min-h-4 text-xs", feedback === "error" ? "text-red-400" : "text-muted-foreground")}>
+            {feedback === "error" ? label("내보내지 못했습니다. 다시 시도하거나 다른 형식을 선택해주세요.", "Export failed. Try again or choose another format.") : feedback === "copied" ? label("클립보드에 복사했습니다.", "Copied to clipboard.") : feedback === "downloaded" ? label("다운로드를 시작했습니다.", "Download started.") : label("작업 팔레트의 현재 색상을 내보냅니다.", "Exports the current colors in your working palette.")}
+          </p>
         </div>
       </DialogContent>
     </Dialog>

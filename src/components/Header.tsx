@@ -1,176 +1,138 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
-import type { IconType } from "react-icons"
-import {
-  IoAddCircleOutline,
-  IoColorPaletteOutline,
-  IoLibraryOutline,
-  IoLogInOutline,
-  IoMenuOutline,
-  IoCloseOutline,
-  IoPersonCircleOutline,
-  IoSparklesOutline,
-  IoPawOutline,
-} from "react-icons/io5"
-import { useTranslations } from "next-intl"
-import { Button } from "@/components/ui/button"
-import { LocaleSwitcher } from "@/components/LocaleSwitcher"
-import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/AuthContext"
+import { useEffect, useRef, useState } from "react"
+import { useLocale } from "next-intl"
 
-interface NavItem {
-  href: string
-  labelKey: "home" | "library"
-  icon: IconType
-}
-
-const navItems: NavItem[] = [
-  { href: "/", labelKey: "home", icon: IoColorPaletteOutline },
-  { href: "/library", labelKey: "library", icon: IoLibraryOutline },
+const STUDIO_URL = "https://studio-penumbra.com"
+const siteLinks = [
+  { section: "work", label: "Work", korean: "작품 · 도구" },
+  { section: "research", label: "Research", korean: "논문 · 연구" },
+  { section: "teaching", label: "Teaching", korean: "강의 · 멘토링" },
+  { section: "education", label: "Education", korean: "학력 · 학위" },
+  { section: "career", label: "Career", korean: "실무 경력" },
+  { section: "awards", label: "Awards", korean: "수상 내역" },
+  { section: "about", label: "About / Contact", korean: "소개 · 연락처" },
+]
+const labs = [
+  { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html` },
+  { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html` },
+  { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html` },
 ]
 
-// Hidden until the login flow is fully implemented. Flip to true to restore.
-const LOGIN_ENABLED = false
-
 export function Header() {
-  const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, isPremium, loading } = useAuth()
-  const t = useTranslations("header")
+  const isKorean = useLocale() === "ko"
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  const header = useRef<HTMLElement>(null)
+  const labNavigation = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const revealCurrentLab = () => {
+      if (cancelled) return
+      const nav = labNavigation.current
+      const current = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+      if (!nav || !current) return
+      const bounds = nav.getBoundingClientRect()
+      const link = current.getBoundingClientRect()
+      const style = window.getComputedStyle(nav)
+      const left = bounds.left + parseFloat(style.paddingLeft)
+      const right = bounds.right - parseFloat(style.paddingRight)
+      if (link.right > right) nav.scrollLeft += link.right - right
+      else if (link.left < left) nav.scrollLeft -= left - link.left
+    }
+    revealCurrentLab()
+    void document.fonts.ready.then(revealCurrentLab)
+    window.addEventListener("resize", revealCurrentLab)
+    return () => {
+      cancelled = true
+      window.removeEventListener("resize", revealCurrentLab)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false)
+        menuButton.current?.focus()
+      }
+    }
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!header.current?.contains(event.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener("keydown", closeOnEscape)
+    document.addEventListener("pointerdown", closeOnOutsideClick)
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape)
+      document.removeEventListener("pointerdown", closeOnOutsideClick)
+    }
+  }, [menuOpen])
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
-      <div className="container flex h-20 items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_18px_rgba(79,123,184,0.35)]">
-            <Image src="/pow-header.png" alt="Pixel Paw logo" width={22} height={22} priority />
-          </div>
-          <div className="leading-none">
-            <p className="font-display text-xl font-bold tracking-[-0.02em] text-foreground">Pixel Paw</p>
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-              <span>{t("subtitle")}</span>
-              <IoPawOutline className="h-3.5 w-3.5" />
-            </p>
-          </div>
-        </Link>
-
-        <nav className="hidden md:flex items-center space-x-2 rounded-full border border-border bg-card/70 px-2 py-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors",
-                pathname === item.href
-                  ? "bg-primary/20 text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{t(item.labelKey)}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden md:flex items-center gap-2">
-          <LocaleSwitcher />
-          {LOGIN_ENABLED &&
-            (user ? (
-              <Link
-                href="/login"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors"
-              >
-                <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  {user.email?.split("@")[0] || t("account")}
-                </span>
-                {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
-              </Link>
-            ) : (
-              !loading && (
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">
-                    <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                    {t("login")}
-                  </Link>
-                </Button>
-              )
-            ))}
-
-          <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
-            <Link href="/create">
-              <IoAddCircleOutline className="h-4 w-4 mr-1.5" />
-              {t("createPalette")}
-            </Link>
-          </Button>
-        </div>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen((open) => !open)}
+    <header ref={header} className={`site-header${menuOpen ? " menu-open" : ""}`}>
+      <a className="skip-link" href="#main-content">{isKorean ? "본문으로 이동" : "Skip to content"}</a>
+      <nav className="site-nav nav-wrap" aria-label={isKorean ? "주 메뉴" : "Main navigation"}>
+        <a className="wordmark" href={`${STUDIO_URL}/#home`} aria-label="Studio Penumbra">
+          <span className="brand-orbit" aria-hidden="true">
+            <svg viewBox="0 0 36 28" focusable="false">
+              <defs>
+                <linearGradient id="color-brand-limb" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0" stopColor="#ddd" /><stop offset=".52" stopColor="#999" stopOpacity=".3" /><stop offset="1" stopColor="#777" stopOpacity=".12" />
+                </linearGradient>
+                <linearGradient id="color-brand-crescent" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0" stopColor="#eee" stopOpacity=".3" /><stop offset=".3" stopColor="#fff" /><stop offset=".65" stopColor="#ddd" stopOpacity=".8" /><stop offset="1" stopColor="#999" stopOpacity=".08" />
+                </linearGradient>
+                <linearGradient id="color-brand-ring" gradientUnits="userSpaceOnUse" x1="1" y1="14" x2="35" y2="14">
+                  <stop offset="0" stopColor="#999" /><stop offset=".38" stopColor="#bbb" /><stop offset=".53" stopColor="#999" stopOpacity=".65" /><stop offset=".63" stopColor="#777" stopOpacity="0" /><stop offset=".74" stopColor="#777" stopOpacity="0" /><stop offset=".88" stopColor="#999" stopOpacity=".8" /><stop offset="1" stopColor="#aaa" />
+                </linearGradient>
+              </defs>
+              <ellipse cx="18" cy="14" rx="17" ry="4" fill="none" stroke="#777" />
+              <circle cx="18" cy="14" r="10.5" fill="#000" stroke="url(#color-brand-limb)" />
+              <path d="M18 3.5A10.5 10.5 0 0 0 18 24.5" fill="none" stroke="url(#color-brand-crescent)" strokeWidth="1.6" />
+              <path d="M1 14A17 4 0 0 0 35 14" fill="none" stroke="url(#color-brand-ring)" />
+            </svg>
+          </span>
+          <span><small>STUDIO</small>PENUMBRA</span>
+        </a>
+        <button
+          ref={menuButton}
+          type="button"
+          className="menu-toggle"
+          aria-expanded={menuOpen}
+          aria-controls="site-menu"
+          aria-label={isKorean ? (menuOpen ? "메뉴 닫기" : "메뉴 열기") : (menuOpen ? "Close menu" : "Open menu")}
+          onClick={() => setMenuOpen((open) => !open)}
         >
-          {mobileMenuOpen ? <IoCloseOutline className="h-5 w-5" /> : <IoMenuOutline className="h-5 w-5" />}
-        </Button>
-      </div>
-
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-card/85 backdrop-blur-sm">
-          <nav className="container py-4 flex flex-col space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium",
-                  pathname === item.href ? "bg-primary/20 text-foreground" : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{t(item.labelKey)}</span>
-              </Link>
-            ))}
-
-            <div className="pt-3 border-t border-border flex flex-col gap-2">
-              <LocaleSwitcher className="self-start" />
-              {LOGIN_ENABLED &&
-                (user ? (
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <IoPersonCircleOutline className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
-                      {user.user_metadata?.full_name || user.email?.split("@")[0] || t("account")}
-                    </span>
-                    {isPremium && <IoSparklesOutline className="w-4 h-4 text-[#fbbf24]" />}
-                  </Link>
-                ) : (
-                  <Button variant="ghost" asChild className="justify-start">
-                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                      <IoLogInOutline className="h-4 w-4 mr-1.5" />
-                      {t("login")}
-                    </Link>
-                  </Button>
-                ))}
-
-              <Button className="bg-primary hover:bg-primary/90" asChild>
-                <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-                  <IoAddCircleOutline className="h-4 w-4 mr-1.5" />
-                  {t("createPalette")}
-                </Link>
-              </Button>
-            </div>
-          </nav>
+          <span>{isKorean ? (menuOpen ? "닫기" : "메뉴") : (menuOpen ? "Close" : "Menu")}</span>
+          <span className="menu-toggle-icon" aria-hidden="true" />
+        </button>
+        <div className="site-links" id="site-menu">
+          {siteLinks.map((item, index) => (
+            <a
+              key={item.section}
+              href={`${STUDIO_URL}/#${item.section}`}
+              data-section={item.section}
+              aria-current={item.section === "work" ? "location" : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className="nav-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span>{item.label}</span>
+              {isKorean && <span className="nav-korean">{item.korean}</span>}
+            </a>
+          ))}
+          <a className="nav-cv" href={`${STUDIO_URL}/CV_2026_0823.pdf`} download aria-label={isKorean ? "이력서 PDF 다운로드" : "Download CV PDF"}>
+            CV <span aria-hidden="true">↓</span>
+          </a>
         </div>
-      )}
+      </nav>
+      <div className="lab-navigation-bar">
+        <nav ref={labNavigation} className="lab-navigation" aria-label={isKorean ? "시뮬레이터 랩" : "Simulator labs"}>
+          {labs.map((lab) => <a key={lab.href} href={lab.href}>{lab.label}</a>)}
+          <Link href="/" aria-current="page" onClick={() => setMenuOpen(false)}>Color Lab</Link>
+        </nav>
+      </div>
     </header>
   )
 }

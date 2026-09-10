@@ -10,9 +10,9 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "var(--pad)",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1640px",
       },
     },
     extend: {
@@ -53,8 +53,20 @@ const config: Config = {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius)",
+        sm: "var(--radius)",
+        DEFAULT: "var(--radius)",
+        xl: "var(--radius)",
+        "2xl": "var(--radius)",
+        "3xl": "var(--radius)",
+      },
+      boxShadow: {
+        sm: "none",
+        DEFAULT: "none",
+        md: "none",
+        lg: "none",
+        xl: "none",
+        "2xl": "none",
       },
       keyframes: {
         "accordion-down": {
@@ -72,15 +84,16 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
+          "var(--font-ibm-plex-sans)",
           "var(--font-pretendard)",
-          "var(--font-space-grotesk)",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
           "sans-serif",
         ],
-        // Display/headings & numerals: geometric Space Grotesk, Pretendard for Korean fallback.
-        display: ["var(--font-space-grotesk)", "var(--font-pretendard)", "ui-sans-serif", "sans-serif"],
+        // The same Latin typefaces as Studio Penumbra, with local Korean coverage.
+        display: ["var(--font-ibm-plex-sans)", "var(--font-pretendard)", "ui-sans-serif", "sans-serif"],
+        mono: ["var(--font-ibm-plex-mono)", "var(--font-pretendard)", "ui-monospace", "monospace"],
       },
     },
   },

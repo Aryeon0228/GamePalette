@@ -78,9 +78,10 @@ export function StyleFilter({
                 "bg-muted border-border hover:border-primary/50",
                 isActive && "ring-2 ring-offset-2 ring-offset-background"
               )}
-              style={isActive ? { borderColor: style.accent, backgroundColor: `${style.accent}20` } : undefined}
+              aria-pressed={isActive}
+              style={isActive ? { borderColor: "#bbb", backgroundColor: "#1a1a1a" } : undefined}
             >
-              <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? style.accent : "#a0a0b0" }} />
+              <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? "#eee" : "#888" }} />
               <p className="text-xs font-semibold leading-tight">{ts(style.id)}</p>
               <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{ts(style.descKey)}</p>
             </button>

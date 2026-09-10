@@ -34,6 +34,8 @@ interface PaletteState {
   setExtractionMethod: (method: ExtractionMethod) => void;
 
   // Color manipulation
+  // Manual edits are final colors: replace the base and reset the style to original.
+  // Use setOriginalColors for extracted source colors that should retain the active style.
   updateColors: (colors: Color[]) => void;
   getDisplayColors: () => Color[];
 
@@ -54,11 +56,27 @@ interface PaletteState {
 
 type PersistedPaletteState = Pick<
   PaletteState,
-  'savedPalettes' | 'folders' | 'colorCount' | 'extractionMethod' | 'colorBlindMode'
+  | 'savedPalettes'
+  | 'folders'
+  | 'colorCount'
+  | 'extractionMethod'
+  | 'colorBlindMode'
+  | 'currentPalette'
+  | 'originalColors'
+  | 'currentStyle'
+  | 'customSettings'
+  | 'valueCheckEnabled'
+  | 'sourceImageUrl'
 >;
 
 const PALETTE_STORAGE_KEY = 'pixelpow-storage';
 const LEGACY_PALETTE_STORAGE_KEY = 'gamepalette-storage';
+
+// Keep draft colors/settings on refresh without writing an uploaded image on every
+// color edit. Explicitly saved library images retain their existing behavior.
+function persistentDraftImage(url: string | null | undefined): string | undefined {
+  return url && !/^(?:data|blob):/i.test(url) ? url : undefined;
+}
 
 const paletteStorage = createJSONStorage<PersistedPaletteState>(() => ({
   getItem: (name) => {
@@ -99,12 +117,16 @@ export const usePaletteStore = create<PaletteState>()(
       // Setters
       setCurrentPalette: (palette) => set({ currentPalette: palette }),
 
-      setOriginalColors: (colors) => set({
+      setOriginalColors: (colors) => set((state) => ({
         originalColors: colors,
-        currentPalette: get().currentPalette
-          ? { ...get().currentPalette!, colors: applyStyleFilter(colors, get().currentStyle, get().customSettings) }
+        currentPalette: state.currentPalette
+          ? {
+              ...state.currentPalette,
+              colors: applyStyleFilter(colors, state.currentStyle, state.customSettings),
+              style: state.currentStyle,
+            }
           : null,
-      }),
+      })),
 
       setCurrentStyle: (style) => {
         const state = get();
@@ -119,15 +141,15 @@ export const usePaletteStore = create<PaletteState>()(
 
       setCustomSettings: (settings) => {
         const state = get();
-        set({ customSettings: settings });
-        if (state.currentStyle === 'custom') {
-          const newColors = applyStyleFilter(state.originalColors, 'custom', settings);
-          set({
-            currentPalette: state.currentPalette
-              ? { ...state.currentPalette, colors: newColors }
-              : null,
-          });
-        }
+        set({
+          customSettings: settings,
+          currentPalette: state.currentStyle === 'custom' && state.currentPalette
+            ? {
+                ...state.currentPalette,
+                colors: applyStyleFilter(state.originalColors, 'custom', settings),
+              }
+            : state.currentPalette,
+        });
       },
 
       toggleValueCheck: () => set((state) => ({ valueCheckEnabled: !state.valueCheckEnabled })),
@@ -145,8 +167,9 @@ export const usePaletteStore = create<PaletteState>()(
         const state = get();
         set({
           originalColors: colors,
+          currentStyle: 'original',
           currentPalette: state.currentPalette
-            ? { ...state.currentPalette, colors: applyStyleFilter(colors, state.currentStyle, state.customSettings) }
+            ? { ...state.currentPalette, colors, style: 'original', updatedAt: new Date().toISOString() }
             : null,
         });
       },
@@ -170,6 +193,14 @@ export const usePaletteStore = create<PaletteState>()(
           ...state.currentPalette,
           id,
           name,
+          // currentPalette.colors already contains the style once. Value/CVD
+          // previews from getDisplayColors are deliberately never saved here.
+          colors: state.currentPalette.colors.map((color) => ({
+            ...color,
+            rgb: { ...color.rgb },
+            hsl: { ...color.hsl },
+          })),
+          tags: [...state.currentPalette.tags],
           sourceImageUrl: state.sourceImageUrl || undefined,
           createdAt: now,
           updatedAt: now,
@@ -219,6 +250,9 @@ export const usePaletteStore = create<PaletteState>()(
       deleteFolder: (id) => {
         set((state) => ({
           folders: state.folders.filter((f) => f.id !== id),
+          currentPalette: state.currentPalette?.folderId === id
+            ? { ...state.currentPalette, folderId: undefined }
+            : state.currentPalette,
           savedPalettes: state.savedPalettes.map((p) =>
             p.folderId === id ? { ...p, folderId: undefined } : p
           ),
@@ -227,6 +261,9 @@ export const usePaletteStore = create<PaletteState>()(
 
       movePaletteToFolder: (paletteId, folderId) => {
         set((state) => ({
+          currentPalette: state.currentPalette?.id === paletteId
+            ? { ...state.currentPalette, folderId }
+            : state.currentPalette,
           savedPalettes: state.savedPalettes.map((p) =>
             p.id === paletteId ? { ...p, folderId } : p
           ),
@@ -254,6 +291,14 @@ export const usePaletteStore = create<PaletteState>()(
         colorCount: state.colorCount,
         extractionMethod: state.extractionMethod,
         colorBlindMode: state.colorBlindMode,
+        currentPalette: state.currentPalette
+          ? { ...state.currentPalette, sourceImageUrl: persistentDraftImage(state.currentPalette.sourceImageUrl) }
+          : null,
+        originalColors: state.originalColors,
+        currentStyle: state.currentStyle,
+        customSettings: state.customSettings,
+        valueCheckEnabled: state.valueCheckEnabled,
+        sourceImageUrl: persistentDraftImage(state.sourceImageUrl) ?? null,
       }),
     }
   )

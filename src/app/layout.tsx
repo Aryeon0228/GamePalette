@@ -6,16 +6,21 @@ import { getLocale, getTranslations } from "next-intl/server"
 import "./globals.css"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
-import { MobileAppBanner } from "@/components/MobileAppBanner"
 import { ToastProvider } from "@/components/ui/toast"
 import { AuthProvider } from "@/contexts/AuthContext"
 
-const spaceGrotesk = localFont({
+const ibmPlexSans = localFont({
+  src: [{ path: "../../public/fonts/IBMPlexSansLatin.woff2", weight: "300 700", style: "normal" }],
+  variable: "--font-ibm-plex-sans",
+  display: "swap",
+})
+
+const ibmPlexMono = localFont({
   src: [
-    { path: "../../public/fonts/SpaceGrotesk_500Medium.ttf", weight: "500", style: "normal" },
-    { path: "../../public/fonts/SpaceGrotesk_700Bold.ttf", weight: "700", style: "normal" },
+    { path: "../../public/fonts/IBMPlexMono400Latin.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/IBMPlexMono500Latin.woff2", weight: "500", style: "normal" },
   ],
-  variable: "--font-space-grotesk",
+  variable: "--font-ibm-plex-mono",
   display: "swap",
 })
 
@@ -35,12 +40,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(siteUrl),
-    title: t("title"),
+    title: "Color Lab | Studio Penumbra",
     description: t("description"),
     keywords: ["game art", "color palette", "game development", "color tool", "unity", "unreal", "game artist"],
-    authors: [{ name: "Pixel Paw" }],
+    authors: [{ name: "Studio Penumbra" }],
     openGraph: {
-      title: t("title"),
+      title: "Color Lab | Studio Penumbra",
       description: t("ogDescription"),
       type: "website",
     },
@@ -64,17 +69,16 @@ export default async function RootLayout({
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2165224388421574"
           crossOrigin="anonymous"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
       </head>
-      <body className={`${pretendard.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
+      <body data-lab="color" className={`${pretendard.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
         <NextIntlClientProvider>
           <AuthProvider>
             <ToastProvider>
               <div className="relative min-h-screen flex flex-col">
                 <Header />
-                <MobileAppBanner />
-                <main className="flex-1">{children}</main>
+                <main id="main-content" className="flex-1 min-w-0" tabIndex={-1}>{children}</main>
                 <Footer />
               </div>
             </ToastProvider>

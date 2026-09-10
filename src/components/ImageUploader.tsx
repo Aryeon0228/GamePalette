@@ -165,6 +165,10 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
             : "border-muted-foreground/25 hover:border-muted-foreground/50",
           isLoading && "opacity-50 pointer-events-none"
         )}
+        role="button"
+        tabIndex={0}
+        aria-label={t("dropText")}
+        onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInputRef.current?.click() } }}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -209,6 +213,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
         <div className="flex space-x-2">
           <Input
             type="url"
+            aria-label={t("urlPlaceholder")}
             placeholder={t("urlPlaceholder")}
             value={urlValue}
             onChange={(e) => setUrlValue(e.target.value)}
@@ -233,7 +238,7 @@ export function ImageUploader({ onImageLoad, currentImage, onClear }: ImageUploa
       )}
 
       {error && (
-        <p className="text-sm text-destructive text-center">{error}</p>
+        <p role="alert" className="text-sm text-destructive text-center">{error}</p>
       )}
     </div>
   )

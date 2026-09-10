@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -12,6 +12,7 @@ import {
   IoTrashOutline,
   IoEyeOutline,
   IoEyeOffOutline,
+  IoCreateOutline,
 } from "react-icons/io5"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,9 +21,9 @@ import { ColorVariations } from "@/components/ColorVariations"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { usePaletteStore } from "@/stores/paletteStore"
-import { applyStyleFilter, toGrayscale } from "@/lib/styleFilters"
+import { applyStyleFilter, defaultCustomSettings, toGrayscale } from "@/lib/styleFilters"
 import { useToast } from "@/components/ui/toast"
-import { Palette, Color, StyleType } from "@/types"
+import { Palette, StyleType, CustomStyleSettings } from "@/types"
 
 export default function PaletteDetailPage() {
   const params = useParams()
@@ -30,6 +31,7 @@ export default function PaletteDetailPage() {
   const { addToast } = useToast()
   const t = useTranslations("palette")
   const ts = useTranslations("styles")
+  const ko = useLocale() === "ko"
   const paletteId = params.id as string
 
   const { getPaletteById, updatePalette, deletePalette } = usePaletteStore()
@@ -40,8 +42,19 @@ export default function PaletteDetailPage() {
   const [currentStyle, setCurrentStyle] = useState<StyleType>("original")
   const [valueCheckEnabled, setValueCheckEnabled] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [displayColors, setDisplayColors] = useState<Color[]>([])
+  const [customSettings, setCustomSettings] = useState<CustomStyleSettings>(defaultCustomSettings)
   const [hasChanges, setHasChanges] = useState(false)
+
+  // Library colors already include their saved style. Each adjustment in this
+  // editing session starts from those exact colors, never from its own preview.
+  const editedColors = useMemo(
+    () => palette ? applyStyleFilter(palette.colors, currentStyle, customSettings) : [],
+    [palette, currentStyle, customSettings]
+  )
+  const displayColors = useMemo(
+    () => valueCheckEnabled ? toGrayscale(editedColors) : editedColors,
+    [editedColors, valueCheckEnabled]
+  )
 
   useEffect(() => {
     const found = getPaletteById(paletteId)
@@ -52,29 +65,23 @@ export default function PaletteDetailPage() {
 
     setPalette(found)
     setPaletteName(found.name)
-    setCurrentStyle(found.style)
-    setDisplayColors(found.colors)
+    setCurrentStyle("original")
+    setCustomSettings(defaultCustomSettings)
+    setHasChanges(false)
+    setSelectedColorIndex(null)
   }, [paletteId, getPaletteById, router])
-
-  useEffect(() => {
-    if (!palette) return
-    let colors = applyStyleFilter(palette.colors, currentStyle)
-    if (valueCheckEnabled) {
-      colors = toGrayscale(colors)
-    }
-    setDisplayColors(colors)
-  }, [palette, currentStyle, valueCheckEnabled])
 
   const handleSave = () => {
     if (!palette) return
 
-    const updatedColors = applyStyleFilter(palette.colors, currentStyle)
     updatePalette(paletteId, {
       name: paletteName,
-      colors: updatedColors,
-      style: currentStyle,
+      colors: editedColors,
+      style: currentStyle === "original" ? palette.style : currentStyle,
     })
 
+    setPalette(getPaletteById(paletteId) ?? palette)
+    setCurrentStyle("original")
     setHasChanges(false)
     addToast(t("saved"), "success")
   }
@@ -97,6 +104,22 @@ export default function PaletteDetailPage() {
     setHasChanges(true)
   }
 
+  const handleOpenWorkspace = () => {
+    if (!palette) return
+    const state = usePaletteStore.getState()
+    state.resetCurrentPalette()
+    state.setOriginalColors(editedColors)
+    state.setCurrentPalette({
+      ...palette,
+      name: paletteName,
+      colors: editedColors,
+      style: currentStyle === "original" ? palette.style : currentStyle,
+    })
+    state.setSourceImageUrl(palette.sourceImageUrl ?? null)
+    state.setColorBlindMode("none")
+    router.push("/create")
+  }
+
   if (!palette) {
     return (
       <div className="container py-16 text-center">
@@ -115,7 +138,7 @@ export default function PaletteDetailPage() {
       <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
         <div className="flex items-center space-x-4 min-w-0">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/library">
+            <Link href="/library" aria-label={ko ? "라이브러리로 돌아가기" : "Back to library"}>
               <IoArrowBackOutline className="h-5 w-5" />
             </Link>
           </Button>
@@ -124,15 +147,20 @@ export default function PaletteDetailPage() {
             onChange={(event) => handleNameChange(event.target.value)}
             className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 w-auto max-w-full"
             placeholder={t("paletteNamePlaceholder")}
+            aria-label={t("paletteNamePlaceholder")}
           />
           {hasChanges && (
             <span className="text-xs text-muted-foreground">{t("unsaved")}</span>
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={handleDelete}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleDelete} aria-label={ko ? "팔레트 삭제" : "Delete palette"}>
             <IoTrashOutline className="h-5 w-5" />
+          </Button>
+          <Button variant="outline" onClick={handleOpenWorkspace}>
+            <IoCreateOutline className="h-4 w-4 mr-2" />
+            {ko ? "Color Lab에서 편집" : "Edit in Color Lab"}
           </Button>
           <Button variant="outline" onClick={() => setShowExportModal(true)}>
             <IoDownloadOutline className="h-4 w-4 mr-2" />
@@ -219,7 +247,13 @@ export default function PaletteDetailPage() {
 
         <div className="space-y-6">
           <div className="rounded-xl border border-border bg-card p-6">
-            <StyleFilter currentStyle={currentStyle} onStyleChange={handleStyleChange} />
+            <p className="mb-4 text-xs text-muted-foreground">{ko ? "저장된 색상을 기준으로 스타일을 조정합니다." : "Adjust the style from the saved colors."}</p>
+            <StyleFilter
+              currentStyle={currentStyle}
+              onStyleChange={handleStyleChange}
+              customSettings={customSettings}
+              onCustomSettingsChange={(settings) => { setCustomSettings(settings); setHasChanges(true) }}
+            />
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6 space-y-3">
@@ -231,7 +265,7 @@ export default function PaletteDetailPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("style")}</span>
-                <span>{ts(currentStyle)}</span>
+                <span>{ts(currentStyle === "original" ? palette.style : currentStyle)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("created")}</span>
@@ -249,7 +283,7 @@ export default function PaletteDetailPage() {
       <ExportModal
         open={showExportModal}
         onOpenChange={setShowExportModal}
-        palette={{ ...palette, name: paletteName, colors: displayColors, style: currentStyle }}
+        palette={{ ...palette, name: paletteName, colors: editedColors, style: currentStyle === "original" ? palette.style : currentStyle }}
       />
     </div>
   )

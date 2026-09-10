@@ -25,7 +25,7 @@ export function ImagePicker({ src, onPick, className }: ImagePickerProps) {
     if (!img || !img.naturalWidth) return null
     if (!canvasRef.current) canvasRef.current = document.createElement("canvas")
     const c = canvasRef.current
-    if (c.width !== img.naturalWidth) {
+    if (c.width !== img.naturalWidth || c.height !== img.naturalHeight) {
       c.width = img.naturalWidth
       c.height = img.naturalHeight
       const ctx = c.getContext("2d", { willReadFrequently: true })
@@ -45,8 +45,16 @@ export function ImagePicker({ src, onPick, className }: ImagePickerProps) {
     const c = ensureCanvas()
     if (!img || !c) return null
     const rect = img.getBoundingClientRect()
-    const px = Math.floor(((clientX - rect.left) / rect.width) * img.naturalWidth)
-    const py = Math.floor(((clientY - rect.top) / rect.height) * img.naturalHeight)
+    // object-contain can letterbox a tall or wide source inside this element.
+    // Sample the rendered image bounds, not the surrounding empty pixels.
+    const scale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight)
+    const renderedWidth = img.naturalWidth * scale
+    const renderedHeight = img.naturalHeight * scale
+    const x = clientX - rect.left - (rect.width - renderedWidth) / 2
+    const y = clientY - rect.top - (rect.height - renderedHeight) / 2
+    if (x < 0 || y < 0 || x >= renderedWidth || y >= renderedHeight) return null
+    const px = Math.floor(x / scale)
+    const py = Math.floor(y / scale)
     const ctx = c.getContext("2d", { willReadFrequently: true })
     if (!ctx) return null
     try {

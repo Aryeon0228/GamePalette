@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
 import {
   IoSearchOutline,
@@ -19,7 +19,8 @@ import { formatDate, cn } from "@/lib/utils"
 
 export default function LibraryPage() {
   const t = useTranslations("library")
-  const { savedPalettes, folders, deletePalette, createFolder, deleteFolder } = usePaletteStore()
+  const ko = useLocale() === "ko"
+  const { savedPalettes, folders, deletePalette, createFolder, deleteFolder, movePaletteToFolder } = usePaletteStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const [showNewFolder, setShowNewFolder] = useState(false)
@@ -41,7 +42,7 @@ export default function LibraryPage() {
       )
     }
 
-    return filtered.sort(
+    return [...filtered].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     )
   }, [savedPalettes, selectedFolder, searchQuery])
@@ -53,9 +54,7 @@ export default function LibraryPage() {
     setShowNewFolder(false)
   }
 
-  const handleDeletePalette = (id: string, event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
+  const handleDeletePalette = (id: string) => {
     if (confirm(t("deleteConfirm"))) {
       deletePalette(id)
     }
@@ -72,7 +71,7 @@ export default function LibraryPage() {
           <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" asChild>
-          <Link href="/create">
+          <Link href="/create?new=1">
             <IoAddCircleOutline className="h-4 w-4 mr-2" />
             {t("newPalette")}
           </Link>
@@ -85,6 +84,7 @@ export default function LibraryPage() {
             <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="pl-10 rounded-xl"
@@ -97,7 +97,7 @@ export default function LibraryPage() {
                 <IoFolderOpenOutline className="h-4 w-4 text-muted-foreground" />
                 {t("folders")}
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowNewFolder(true)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowNewFolder(true)} aria-label={ko ? "폴더 만들기" : "Create folder"}>
                 <IoAddOutline className="h-4 w-4" />
               </Button>
             </div>
@@ -111,6 +111,7 @@ export default function LibraryPage() {
                     : "hover:bg-accent text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => setSelectedFolder(null)}
+                aria-pressed={selectedFolder === null}
               >
                 {t("allPalettes", { count: savedPalettes.length })}
               </button>
@@ -128,13 +129,15 @@ export default function LibraryPage() {
                   <button
                     className="flex-1 text-left"
                     onClick={() => setSelectedFolder(folder.id)}
+                    aria-pressed={selectedFolder === folder.id}
                   >
                     {t("folderItem", { name: folder.name, count: savedPalettes.filter((p) => p.folderId === folder.id).length })}
                   </button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                    className="h-6 w-6 text-muted-foreground"
+                    aria-label={ko ? `${folder.name} 폴더 삭제` : `Delete folder ${folder.name}`}
                     onClick={() => {
                       if (confirm(t("deleteFolderConfirm"))) {
                         deleteFolder(folder.id)
@@ -153,6 +156,7 @@ export default function LibraryPage() {
                 <div className="flex items-center space-x-2 px-3 py-2">
                   <Input
                     placeholder={t("folderNamePlaceholder")}
+                    aria-label={t("folderNamePlaceholder")}
                     value={newFolderName}
                     onChange={(event) => setNewFolderName(event.target.value)}
                     onKeyDown={(event) => event.key === "Enter" && handleCreateFolder()}
@@ -183,20 +187,20 @@ export default function LibraryPage() {
                 {searchQuery ? t("noMatch") : t("noPalettes")}
               </p>
               <Button asChild>
-                <Link href="/create">{t("createFirst")}</Link>
+                <Link href="/create?new=1">{t("createFirst")}</Link>
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredPalettes.map((palette) => (
-                <Link
+                <article
                   key={palette.id}
-                  href={`/palette/${palette.id}`}
                   className="group block rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
                 >
-                  <PalettePreview colors={palette.colors} className="h-24" />
+                  <Link href={`/palette/${palette.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                    <PalettePreview colors={palette.colors} className="h-24" />
 
-                  <div className="p-4 space-y-2">
+                  <div className="p-4 pb-2 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{palette.name}</h3>
@@ -204,14 +208,6 @@ export default function LibraryPage() {
                           {t("colorsAndDate", { count: palette.colors.length, date: formatDate(palette.updatedAt) })}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                        onClick={(event) => handleDeletePalette(palette.id, event)}
-                      >
-                        <IoTrashOutline className="h-4 w-4" />
-                      </Button>
                     </div>
 
                     {palette.tags.length > 0 && (
@@ -227,7 +223,32 @@ export default function LibraryPage() {
                       </div>
                     )}
                   </div>
-                </Link>
+                  </Link>
+                  <div className="flex items-end gap-2 px-4 pb-4 pt-2">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <label htmlFor={`folder-${palette.id}`} className="block text-xs text-muted-foreground">{ko ? "폴더" : "Folder"}</label>
+                      <select
+                        id={`folder-${palette.id}`}
+                        aria-label={ko ? `${palette.name}의 폴더` : `Folder for ${palette.name}`}
+                        value={palette.folderId ?? ""}
+                        onChange={(event) => movePaletteToFolder(palette.id, event.target.value || undefined)}
+                        className="h-9 w-full rounded-sm border border-border bg-background px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">{ko ? "폴더 없음" : "No folder"}</option>
+                        {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+                      </select>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                      aria-label={ko ? `${palette.name} 팔레트 삭제` : `Delete palette ${palette.name}`}
+                      onClick={() => handleDeletePalette(palette.id)}
+                    >
+                      <IoTrashOutline className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </article>
               ))}
             </div>
           )}
