@@ -98,6 +98,24 @@ const paletteStorage = createJSONStorage<PersistedPaletteState>(() => ({
   },
 }));
 
+// Only retire the untouched auto-filled draft from the old first screen.
+// Edited drafts and saved library palettes must survive the new empty start.
+function migrateEmptyStart(persisted: unknown): PersistedPaletteState {
+  const state = persisted as PersistedPaletteState;
+  const draft = state.currentPalette;
+  const starter = ['#A8B5A2', '#DAD1BA', '#B5785D', '#536A7B', '#303843'];
+  const matchesStarter = (colors: Color[] | undefined) => colors?.length === starter.length
+    && colors.every((color, index) => color.hex.toUpperCase() === starter[index]);
+  const elapsed = draft ? Date.parse(draft.updatedAt) - Date.parse(draft.createdAt) : NaN;
+  const untouched = draft?.name === 'Untitled Palette'
+    && draft.style === 'original' && state.currentStyle === 'original'
+    && !state.sourceImageUrl && !draft.sourceImageUrl && !draft.folderId
+    && !draft.tags?.length && elapsed >= 0 && elapsed < 1000
+    && !state.savedPalettes?.some((saved) => saved.id === draft.id)
+    && matchesStarter(draft.colors) && matchesStarter(state.originalColors);
+  return untouched ? { ...state, currentPalette: { ...draft, colors: [] }, originalColors: [] } : state;
+}
+
 export const usePaletteStore = create<PaletteState>()(
   persist(
     (set, get) => ({
@@ -284,6 +302,8 @@ export const usePaletteStore = create<PaletteState>()(
     }),
     {
       name: PALETTE_STORAGE_KEY,
+      version: 1,
+      migrate: migrateEmptyStart,
       storage: paletteStorage,
       partialize: (state) => ({
         savedPalettes: state.savedPalettes,

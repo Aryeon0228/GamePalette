@@ -16,7 +16,7 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
   const study = useMemo(() => buildSphereShading(hex, mode), [hex, mode])
   const roles = [
     { key: "light", label: ko ? "밝은 면" : "Light", color: study.light },
-    { key: "base", label: ko ? "피킹한 색" : "Picked color", color: study.base },
+    { key: "base", label: ko ? "선택한 색" : "Selected color", color: study.base },
     { key: "shadow", label: ko ? "그림자" : "Shadow", color: study.shadow },
   ]
 
@@ -46,8 +46,8 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
         </div>
       </div>
       <p className="lab-help">{mode === "normal"
-        ? (ko ? "피킹한 색을 그대로 기준으로, 빛과 그림자를 입힙니다." : "Light and shadow built around your exact picked color.")
-        : (ko ? "피킹한 색을 기준으로 따뜻한 빛, 차가운 그림자를 더합니다." : "Warm light and cool shadows around your picked color.")}</p>
+        ? (ko ? "선택한 색을 그대로 기준으로, 빛과 그림자를 입힙니다." : "Light and shadow built around your exact selected color.")
+        : (ko ? "선택한 색을 기준으로 따뜻한 빛, 차가운 그림자를 더합니다." : "Warm light and cool shadows around your selected color.")}</p>
     </section>
   )
 }

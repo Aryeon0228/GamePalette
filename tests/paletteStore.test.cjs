@@ -176,3 +176,40 @@ test('legacy library and folders migrate without transforming their stored color
   assert.equal(values.has('gamepalette-storage'), false);
   assert.deepEqual(JSON.parse(values.get(storageKey)).state.savedPalettes, saved);
 });
+
+
+test('old untouched starter migrates to empty while the saved library is preserved', async () => {
+  const starter = ['#A8B5A2', '#DAD1BA', '#B5785D', '#536A7B', '#303843'].map(color);
+  startDraft(starter);
+  store.getState().setCurrentPalette({ ...store.getState().currentPalette, name: 'Untitled Palette' });
+  const old = JSON.parse(values.get(storageKey)).state;
+  old.savedPalettes = [{ ...old.currentPalette, id: 'saved-copy', name: 'Keep this' }];
+  values.set(storageKey, JSON.stringify({ state: old, version: 0 }));
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().currentPalette.colors, []);
+  assert.deepEqual(store.getState().originalColors, []);
+  assert.deepEqual(store.getState().savedPalettes, old.savedPalettes);
+  assert.equal(JSON.parse(values.get(storageKey)).version, 1);
+  store.getState().setOriginalColors([color('#123456'), color('#ABCDEF')]);
+  assert.deepEqual(store.getState().currentPalette.colors.map(c => c.hex), ['#123456', '#ABCDEF']);
+});
+
+test('starter migration preserves renamed, edited, imported, older and saved drafts', () => {
+  startDraft(['#A8B5A2', '#DAD1BA', '#B5785D', '#536A7B', '#303843'].map(color));
+  store.getState().setCurrentPalette({ ...store.getState().currentPalette, name: 'Untitled Palette' });
+  const base = JSON.parse(values.get(storageKey)).state;
+  const migrate = store.persist.getOptions().migrate;
+  for (const change of [
+    s => { s.currentPalette.name = 'My palette'; },
+    s => { s.currentPalette.colors[0] = color('#123456'); },
+    s => { s.originalColors[0] = color('#123456'); },
+    s => { s.currentPalette.updatedAt = '2026-01-02T00:00:00.000Z'; },
+    s => { s.sourceImageUrl = 'https://example.com/photo.png'; },
+    s => { s.currentStyle = 'stylized'; },
+    s => { s.savedPalettes = [structuredClone(s.currentPalette)]; },
+  ]) {
+    const state = structuredClone(base);
+    change(state);
+    assert.strictEqual(migrate(state, 0), state);
+  }
+});
