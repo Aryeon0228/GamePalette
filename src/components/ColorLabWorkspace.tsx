@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/toast"
 import { extractColors, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
 import { applyColorBlindnessToColors, type ColorBlindnessType } from "@/lib/colorVision"
 import { toGrayscale } from "@/lib/styleFilters"
+import { resizePaletteColors } from "@/lib/resizePalette"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
 import type { Color } from "@/types"
 import "@/app/color-lab.css"
@@ -56,10 +57,14 @@ export function ColorLabWorkspace() {
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [canEyedrop, setCanEyedrop] = useState(false)
   const extractionSource = useRef<string | null>(null)
+  const paletteResize = useRef<{ paletteId: string; source: Color[]; lastOutput: Color[]; fallbackHex: string } | null>(null)
   const requestId = useRef(0)
   const initialized = useRef(false)
   const colors = store.currentPalette?.colors ?? []
   const palette = store.currentPalette
+  const hasImage = Boolean(store.sourceImageUrl)
+  const displayedCount = hasImage ? Math.max(3, Math.min(32, store.colorCount)) : colors.length || starter.length
+  const countLabel = hasImage ? label("추출할 색 수", "Colors to extract") : label("팔레트 색 수", "Palette colors")
 
   useEffect(() => {
     setCanEyedrop("EyeDropper" in window)
@@ -115,6 +120,7 @@ export function ColorLabWorkspace() {
   }
 
   const changeColors = (next: Color[], index: number) => {
+    paletteResize.current = null
     requestId.current++
     setBusy(false)
     store.updateColors(next)
@@ -161,7 +167,9 @@ export function ColorLabWorkspace() {
     setBusy(true)
     try {
       const state = usePaletteStore.getState()
-      const extracted = await extractColors(src, count ?? state.colorCount, method ?? state.extractionMethod)
+      const extractionCount = Math.max(3, Math.min(32, count ?? state.colorCount))
+      state.setColorCount(extractionCount)
+      const extracted = await extractColors(src, extractionCount, method ?? state.extractionMethod)
       if (id !== requestId.current) return
       state.setOriginalColors(extracted)
       const first = usePaletteStore.getState().currentPalette?.colors[0]
@@ -172,14 +180,41 @@ export function ColorLabWorkspace() {
   }, [addToast, ko])
 
   const loadImage = (url: string) => {
+    paletteResize.current = null
     store.setSourceImageUrl(url)
     extractionSource.current = url
     void runExtraction(url)
   }
 
+  const clearImage = () => {
+    requestId.current++
+    setBusy(false)
+    paletteResize.current = null
+    extractionSource.current = null
+    store.setSourceImageUrl(null)
+  }
+
   const changeCount = (count: number) => {
-    store.setColorCount(count)
-    if (extractionSource.current) void runExtraction(extractionSource.current, count)
+    const state = usePaletteStore.getState()
+    if (state.sourceImageUrl) {
+      void runExtraction(extractionSource.current ?? state.sourceImageUrl, count)
+      return
+    }
+    const current = state.currentPalette
+    if (!current) return
+    const previous = paletteResize.current
+    // Keep a source snapshot across slider changes so shrinking then expanding
+    // restores colors. Any independent palette edit starts a fresh snapshot.
+    const snapshot = previous?.paletteId === current.id && previous.lastOutput === current.colors
+      ? previous
+      : { paletteId: current.id, source: current.colors, fallbackHex: activeHex }
+    const next = resizePaletteColors(snapshot.source, count, snapshot.fallbackHex)
+    paletteResize.current = { ...snapshot, lastOutput: next }
+    requestId.current++
+    setBusy(false)
+    state.updateColors(next)
+    state.setColorCount(Math.max(3, next.length))
+    setSelectedIndex(index => Math.max(0, Math.min(index, next.length - 1)))
   }
 
   const savePalette = () => {
@@ -226,13 +261,13 @@ export function ColorLabWorkspace() {
           <div className="overview-section-heading"><h2><span>01</span>{label("색 가져오기", "Import colors")}</h2><div className="inline-actions">{canEyedrop && <button className="lab-text-button" onClick={eyedrop}><Pipette size={13} />{label("화면 피킹", "Screen picker")}</button>}<button className="lab-text-button" onClick={() => selectColor(`#${Math.floor(Math.random()*16777216).toString(16).padStart(6,"0")}`)}>{label("랜덤", "Random")}</button></div></div>
           <div className="source-body">
             <div className="image-workbench">
-              {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={selectColor} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={190} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={() => {requestId.current++;setBusy(false);store.setSourceImageUrl(null);extractionSource.current=null}} />}
+              {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={selectColor} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={190} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
             </div>
             <div className="extraction-controls">
               {store.sourceImageUrl && <div className="lab-segment"><button aria-pressed={imageMode === "extract"} onClick={() => setImageMode("extract")}>{label("영역 추출", "Extract region")}</button><button aria-pressed={imageMode === "pick"} onClick={() => setImageMode("pick")}>{label("픽셀 피킹", "Pick a pixel")}</button></div>}
-              <label className="extraction-count" htmlFor="extract-count">{label("색 수", "Colors")}<input id="extract-count" type="range" min={3} max={32} value={store.colorCount} onChange={event => changeCount(Number(event.target.value))}/><output>{store.colorCount}</output></label>
-              <select aria-label={label("추출 방식", "Extraction method")} value={store.extractionMethod} onChange={event => {const method=event.target.value as "histogram"|"kmeans";store.setExtractionMethod(method);if(extractionSource.current)void runExtraction(extractionSource.current,undefined,method)}}><option value="histogram">{label("색상 분포", "Hue histogram")}</option><option value="kmeans">K-Means</option></select>
-              <span className="lab-help extraction-status" role="status">{busy ? label("추출 중…", "Extracting…") : label("설정 변경 시 자동 추출", "Automatically re-extracts")}</span>
+              <label className="extraction-count" htmlFor="extract-count"><span>{countLabel}</span><input id="extract-count" type="range" aria-label={countLabel} min={hasImage ? 3 : 1} max={32} value={displayedCount} disabled={!palette} onChange={event => changeCount(Number(event.target.value))}/><output htmlFor="extract-count">{displayedCount}</output></label>
+              {hasImage && <select aria-label={label("추출 방식", "Extraction method")} value={store.extractionMethod} onChange={event => {const method=event.target.value as "histogram"|"kmeans";store.setExtractionMethod(method);if(extractionSource.current)void runExtraction(extractionSource.current,undefined,method)}}><option value="histogram">{label("색상 분포", "Hue histogram")}</option><option value="kmeans">K-Means</option></select>}
+              <span className="lab-help extraction-status" role="status">{busy ? label("추출 중…", "Extracting…") : hasImage ? label("설정 변경 시 자동 추출", "Automatically re-extracts") : label("늘리면 어울리는 색을 추가합니다.", "Adds related colors as the palette grows.")}</span>
             </div>
           </div>
         </section>
