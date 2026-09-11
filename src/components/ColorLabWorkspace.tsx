@@ -12,13 +12,12 @@ import { PaletteEditor } from "@/components/PaletteEditor"
 import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { HistogramSection } from "@/components/HistogramSection"
-import { SphereShadingPreview } from "@/components/SphereShadingPreview"
+import { ColorSphereStudy } from "@/components/ColorSphereStudy"
 import { AsciiStudy } from "@/components/AsciiStudy"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { useSavedColors } from "@/stores/savedColorsStore"
 import { useToast } from "@/components/ui/toast"
 import { extractColors, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
-import { buildShadingScheme } from "@/lib/exporters"
 import { applyColorBlindnessToColors, type ColorBlindnessType } from "@/lib/colorVision"
 import { toGrayscale } from "@/lib/styleFilters"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
@@ -248,7 +247,7 @@ export function ColorLabWorkspace() {
 
       <section id="color-compose" tabIndex={-1} className="overview-section">
         <div className="overview-section-heading"><h2><span>03</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("탐색 색을 기준으로 함께 바뀝니다. 색상칩을 눌러 다음 색을 골라보세요.", "All combinations follow your explored color. Select a swatch to explore it.")}</p></div>
-        <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={addColors} extraCard={palette && <section className="overview-sphere"><div className="sphere-heading"><h3>{label("구체 셰이딩", "Sphere shading")}</h3><span>{label("작업 팔레트", "Working palette")}</span></div><div className="sphere-study"><SphereShadingPreview scheme={buildShadingScheme(palette)} className="sphere-study-preview"/><div>{Object.entries(buildShadingScheme(palette)).filter(([,value])=>typeof value==="object"&&value&&"hex" in value).map(([key,value])=>{const swatch=value as {hex:string};return <button key={key} className="sphere-role" onClick={()=>selectColor(swatch.hex)}><span style={{background:swatch.hex}}/><span>{({specular:label("하이라이트","Specular"),midtone:label("미드톤","Midtone"),shadow:label("그림자","Shadow"),rim:label("역광","Rim light"),background:label("배경","Background")} as Record<string,string>)[key]||key}</span><code>{swatch.hex}</code></button>})}</div></div><p className="lab-help">{label("작업 팔레트의 색을 빛과 그림자에 배정한 미리보기입니다.", "A preview assigning your working palette to light and shade.")}</p></section>} />
+        <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={addColors} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
 
