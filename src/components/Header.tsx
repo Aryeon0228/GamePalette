@@ -16,6 +16,7 @@ const siteLinks = [
 ]
 const labs = [
   { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html` },
+  { label: "Weathering Lab", href: `${STUDIO_URL}/weathering-lab.html` },
   { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html` },
   { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html` },
 ]
