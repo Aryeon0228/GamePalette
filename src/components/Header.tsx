@@ -7,6 +7,7 @@ import { useLocale } from "next-intl"
 const STUDIO_URL = "https://studio-penumbra.com"
 const siteLinks = [
   { section: "work", label: "Work", korean: "작품 · 도구" },
+  { section: "lab", label: "Lab", korean: "그래픽스 실험" },
   { section: "research", label: "Research", korean: "논문 · 연구" },
   { section: "teaching", label: "Teaching", korean: "강의 · 멘토링" },
   { section: "education", label: "Education", korean: "학력 · 학위" },
@@ -115,7 +116,7 @@ export function Header() {
               key={item.section}
               href={`${STUDIO_URL}/#${item.section}`}
               data-section={item.section}
-              aria-current={item.section === "work" ? "location" : undefined}
+              aria-current={item.section === "lab" ? "location" : undefined}
               onClick={() => setMenuOpen(false)}
             >
               <span className="nav-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>

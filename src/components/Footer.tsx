@@ -17,7 +17,7 @@ export async function Footer() {
         <LocaleSwitcher />
         <a href={MOBILE_APP_URL} target="_blank" rel="noopener noreferrer">Pixel Paw for iOS ↗</a>
         <a href="mailto:cloudysnowyday@gmail.com">{isKorean ? "문의" : "Contact"}</a>
-        <a href="https://studio-penumbra.com/#work">Back to Work ↗</a>
+        <a href="https://studio-penumbra.com/#lab">Back to Lab ↗</a>
       </div>
     </footer>
   )

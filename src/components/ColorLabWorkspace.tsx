@@ -271,7 +271,7 @@ export function ColorLabWorkspace() {
   return (
     <section className="color-lab color-overview">
       <div className="color-lab-heading">
-        <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#work">WORK</a><span>/</span>WEB 05</p><h1>Color <b>Lab</b></h1></div>
+        <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>WEB 05</p><h1>Color <b>Lab</b></h1></div>
         <p className="heading-note">{label("하나의 색에서, 전체 팔레트까지.", "From a single color to a complete palette.")}</p>
       </div>
 

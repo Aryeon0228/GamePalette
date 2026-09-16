@@ -241,7 +241,7 @@ button[class*="bg-gradient-"] { background-image: none; background-color: #222; 
 ::-webkit-scrollbar-thumb { background: #444; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
 
-@media (max-width: 999px) {
+@media (max-width: 1199px) {
   :root { --lab-site-header-height: 66px; --lab-header-height: 120px; }
   .menu-toggle {
     display: flex;
@@ -291,6 +291,8 @@ button[class*="bg-gradient-"] { background-image: none; background-color: #222; 
   .nav-korean { display: block; color: #999; font: 400 12px var(--f-ko); }
   .site-links > a[aria-current] .nav-number { color: #fff; }
   .site-links > .nav-cv { display: flex; justify-content: space-between; border: 0; padding: 20px 0 0; margin-left: 40px; font-size: 13px; }
+}
+@media (max-width: 999px) {
   .portfolio-footer { flex-direction: column; }
   .footer-links { justify-content: flex-start; }
 }
