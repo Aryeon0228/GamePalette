@@ -54,6 +54,17 @@
 .working-palette-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
 .working-palette-heading .palette-name-input{text-align:left;width:min(240px,70%);font-size:12px}
 .working-palette-heading .lab-text-button{font-size:12px}
+.palette-canvas>button>span:last-child{flex-wrap:wrap}
+.palette-canvas .palette-area-percent{flex-basis:100%;padding-top:2px;color:#eee;font:500 12px/1.5 monospace;font-variant-numeric:tabular-nums}
+.palette-area{margin-top:12px}
+.palette-area-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.palette-area-heading h3{font-size:11px;font-weight:500;color:#ccc}
+.palette-area-heading>span{font-size:10px;color:#929292}
+.palette-area-bar{display:flex;width:100%;height:18px;overflow:hidden;border:1px solid #ffffff20}
+.palette-area-bar>span{display:block;flex-shrink:0}
+.palette-area .lab-help{margin:5px 0 0;font-size:10px}
+.palette-area-pending{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+.palette-area-pending .lab-text-button{flex-shrink:0;text-decoration:underline;text-underline-offset:3px}
 .empty-palette{min-height:112px;display:flex;flex-direction:column;justify-content:center;gap:7px;border-style:dashed}
 .empty-palette p{font-size:14px;color:#ccc;margin:0}
 .empty-palette>span{font-size:12px;color:#888;line-height:1.6}

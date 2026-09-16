@@ -50,6 +50,21 @@ export async function extractColors(
   colorCount: number = 5,
   method: ExtractionMethod = 'histogram'
 ): Promise<Color[]> {
+  const { colors } = await extractColorsWithArea(imageUrl, colorCount, method);
+  return colors;
+}
+
+/**
+ * K-means area shares count pixels with alpha >= 128 in the resized analysis image.
+ * Shares correspond to the returned color order; histogram extraction and images
+ * without eligible pixels have no area measurement. K-means may return fewer
+ * colors than requested when its final RGB centroids coincide.
+ */
+export async function extractColorsWithArea(
+  imageUrl: string,
+  colorCount: number = 5,
+  method: ExtractionMethod = 'histogram'
+): Promise<{ colors: Color[]; areaPercentages: number[] | null }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -81,6 +96,9 @@ export async function extractColors(
           }
         }
 
+        // Canvas dimensions must remain nonzero for very thin images.
+        width = Math.max(1, Math.round(width));
+        height = Math.max(1, Math.round(height));
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
@@ -88,10 +106,12 @@ export async function extractColors(
         const imageData = ctx.getImageData(0, 0, width, height);
 
         let dominantColors: RgbColor[];
+        let areaPercentages: number[] | null = null;
 
         if (method === 'kmeans') {
           const pixels = getPixelArray(imageData.data);
           dominantColors = kMeansClustering(pixels, colorCount);
+          areaPercentages = measureColorAreas(imageData.data, dominantColors);
         } else {
           const pixels = getPixelDataArray(imageData.data);
           dominantColors = extractColorsFromHueHistogram(pixels, colorCount);
@@ -108,7 +128,7 @@ export async function extractColors(
           };
         });
 
-        resolve(colors);
+        resolve({ colors, areaPercentages });
       } catch (error) {
         reject(error);
       }
@@ -138,49 +158,33 @@ function getPixelArray(data: Uint8ClampedArray): RgbColor[] {
     // Skip transparent pixels
     if (a < 128) continue;
 
-    // Sample every 4th pixel for performance
-    if (i % 16 === 0) {
-      pixels.push({ r, g, b });
-    }
+    pixels.push({ r, g, b });
   }
 
-  return pixels;
+  // Keep tiny or mostly transparent images intact; on larger inputs, sample
+  // eligible pixels rather than canvas positions that may all be transparent.
+  return pixels.length <= 10000 ? pixels : pixels.filter((_, index) => index % 4 === 0);
 }
 
 function kMeansClustering(pixels: RgbColor[], k: number, maxIterations: number = 20): RgbColor[] {
   if (pixels.length === 0) {
-    return Array(k).fill({ r: 128, g: 128, b: 128 });
-  }
-
-  if (pixels.length < k) {
-    return pixels.concat(Array(k - pixels.length).fill(pixels[0] || { r: 128, g: 128, b: 128 }));
+    return [{ r: 128, g: 128, b: 128 }];
   }
 
   // Initialize centroids using k-means++ algorithm
-  const centroids: RgbColor[] = initializeCentroids(pixels, k);
+  const centroids: RgbColor[] = initializeCentroids(pixels, Math.min(k, pixels.length));
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
     // Assign pixels to clusters
-    const clusters: RgbColor[][] = Array.from({ length: k }, () => []);
+    const clusters: RgbColor[][] = Array.from({ length: centroids.length }, () => []);
 
     for (const pixel of pixels) {
-      let minDistance = Infinity;
-      let closestCentroid = 0;
-
-      for (let i = 0; i < centroids.length; i++) {
-        const distance = colorDistance(pixel, centroids[i]);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestCentroid = i;
-        }
-      }
-
-      clusters[closestCentroid].push(pixel);
+      clusters[nearestCentroidIndex(pixel, centroids)].push(pixel);
     }
 
     // Update centroids
     let converged = true;
-    for (let i = 0; i < k; i++) {
+    for (let i = 0; i < centroids.length; i++) {
       if (clusters[i].length === 0) continue;
 
       const newCentroid = averageColorRgb(clusters[i]);
@@ -193,12 +197,45 @@ function kMeansClustering(pixels: RgbColor[], k: number, maxIterations: number =
     if (converged) break;
   }
 
-  // Sort by luminance (brightness)
-  return centroids.sort((a, b) => {
+  // Rounded centroids can coincide. Merge them before measuring shares so each
+  // returned RGB color represents exactly one area, then sort by brightness.
+  const uniqueCentroids = [...new Map(
+    centroids.map(color => [`${color.r},${color.g},${color.b}`, color])
+  ).values()];
+  return uniqueCentroids.sort((a, b) => {
     const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
     const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
     return lumB - lumA;
   });
+}
+
+function nearestCentroidIndex(pixel: RgbColor, centroids: RgbColor[]): number {
+  let minDistance = Infinity;
+  let closestCentroid = 0;
+  for (let i = 0; i < centroids.length; i++) {
+    const distance = colorDistance(pixel, centroids[i]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestCentroid = i;
+    }
+  }
+  return closestCentroid;
+}
+
+function measureColorAreas(data: Uint8ClampedArray, centroids: RgbColor[]): number[] | null {
+  const counts = Array<number>(centroids.length).fill(0);
+  let eligiblePixels = 0;
+  // This is deliberately a full pass, separate from the training sample. Assign
+  // to final, deduplicated, sorted centroids so the shares match displayed colors.
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 128) continue;
+    const pixel = { r: data[i], g: data[i + 1], b: data[i + 2] };
+    counts[nearestCentroidIndex(pixel, centroids)]++;
+    eligiblePixels++;
+  }
+  return eligiblePixels > 0
+    ? counts.map(count => (count / eligiblePixels) * 100)
+    : null;
 }
 
 function initializeCentroids(pixels: RgbColor[], k: number): RgbColor[] {
@@ -220,12 +257,12 @@ function initializeCentroids(pixels: RgbColor[], k: number): RgbColor[] {
 
     const totalDistance = distances.reduce((a, b) => a + b, 0);
     if (totalDistance === 0) {
-      centroids.push(pixels[Math.floor(Math.random() * pixels.length)]);
-      continue;
+      break; // Every distinct training color already has a centroid.
     }
 
     let random = Math.random() * totalDistance;
     for (let i = 0; i < pixels.length; i++) {
+      if (distances[i] === 0) continue;
       random -= distances[i];
       if (random <= 0) {
         centroids.push(pixels[i]);
