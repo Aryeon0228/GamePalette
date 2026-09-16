@@ -74,6 +74,15 @@
 .image-palette-panel .image-workbench{min-height:164px}
 .image-palette-panel .image-workbench .text-sm,.image-palette-panel .image-workbench .text-xs{font-size:12px}
 .image-palette-panel .extraction-count{font-size:12px}
+.source-inspection .palette-inspection{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px;margin-top:10px}
+.source-inspection .inspection-heading{flex-wrap:wrap;gap:6px}
+.source-inspection .inspection-heading h3{white-space:nowrap}
+.source-inspection .inspection-heading .lab-button,.source-inspection .inspection-heading select{min-height:36px}
+.source-inspection .inspection-preview,.source-inspection .compact-histogram{min-width:0}
+.source-inspection .compact-histogram>div{height:100%;grid-template-columns:minmax(0,1fr);gap:7px;padding:10px 12px}
+.source-inspection .compact-histogram>div>div:nth-child(3),.source-inspection .compact-histogram>div>div:nth-child(4){grid-column:1;grid-row:auto}
+.source-inspection .compact-histogram>div>div:nth-child(4){grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.source-inspection .compact-histogram .px-2{padding-left:3px;padding-right:3px}
 .overview-analysis-checks{grid-template-columns:repeat(3,minmax(0,1fr))}
 .overview-analysis-checks .overview-tool{grid-column:auto;grid-row:auto}
 .overview-panel,.overview-section{scroll-margin-top:calc(var(--lab-header-height,130px) + 56px)}

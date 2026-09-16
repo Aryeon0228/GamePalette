@@ -351,11 +351,43 @@ export async function exportToSnsPng(
   if (!ctx) throw new Error('Could not get canvas context');
 
   const padding = cardType === 'twitter' ? 56 : 64;
-  const topAreaHeight = cardType === 'twitter' ? 360 : 420;
-  const stripHeight = cardType === 'twitter' ? 180 : 220;
-  const bottomAreaTop = padding + topAreaHeight + 24 + stripHeight + 24;
   const contentWidth = width - padding * 2;
-  const sourceImageSize = cardType === 'twitter' ? 320 : 360;
+  const colors = palette.colors;
+  const footerY = height - padding - 10;
+  const graphPanelHeight = cardType === 'twitter' ? 120 : 140;
+  const graphPanelY = footerY - 38 - graphPanelHeight;
+  const statsY = (showHistogram ? graphPanelY - 20 : footerY - 38) - 42;
+  const paletteBottom = showStats
+    ? statsY - 24
+    : showHistogram ? graphPanelY - 24 : footerY - 38;
+
+  // Measure the complete label before choosing columns. Each cell keeps the
+  // swatch and its HEX side by side, even at the 32-color limit.
+  const hexFont = `700 ${cardType === 'twitter' ? 22 : 24}px ui-monospace, SFMono-Regular, monospace`;
+  ctx.font = hexFont;
+  const labelWidth = Math.max(0, ...colors.map((color) => ctx.measureText(color.hex.toUpperCase()).width));
+  const cellGap = 10;
+  const cellPadding = 12;
+  const labelGap = 14;
+  const minCellWidth = cellPadding * 2 + 44 + labelGap + labelWidth;
+  const columns = Math.max(1, Math.min(
+    colors.length,
+    cardType === 'twitter' ? 6 : 4,
+    Math.floor((contentWidth + cellGap) / (minCellWidth + cellGap))
+  ));
+  const rows = Math.max(1, Math.ceil(colors.length / columns));
+  const minImageSize = cardType === 'twitter' ? 160 : 192;
+  const maxPaletteHeight = paletteBottom - (padding + 24 + minImageSize + 24);
+  const paletteHeight = showHex
+    ? Math.min(maxPaletteHeight, Math.max(180, rows * 64 + (rows - 1) * cellGap))
+    : cardType === 'twitter' ? 180 : 220;
+  const paletteY = paletteBottom - paletteHeight;
+  const sourceImageSize = Math.min(
+    cardType === 'twitter' ? 320 : 360,
+    paletteY - padding - 48
+  );
+  const imageX = width - padding - sourceImageSize - 28;
+  const imageY = padding + 24;
 
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, '#121417');
@@ -371,7 +403,16 @@ export async function exportToSnsPng(
   ctx.font = `700 ${cardType === 'twitter' ? 52 : 56}px ui-sans-serif, system-ui`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText(palette.name || 'Pixel Paw', padding + 28, padding + 24);
+  const titleWidth = palette.sourceImageUrl ? imageX - padding - 56 : contentWidth - 56;
+  let title = palette.name || 'Pixel Paw';
+  if (ctx.measureText(title).width > titleWidth) {
+    const characters = Array.from(title);
+    while (characters.length > 0 && ctx.measureText(`${characters.join('')}…`).width > titleWidth) {
+      characters.pop();
+    }
+    title = `${characters.join('')}…`;
+  }
+  ctx.fillText(title, padding + 28, padding + 24);
 
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.font = `500 ${cardType === 'twitter' ? 22 : 24}px ui-sans-serif, system-ui`;
@@ -381,8 +422,6 @@ export async function exportToSnsPng(
     padding + (cardType === 'twitter' ? 94 : 100)
   );
 
-  const imageX = width - padding - sourceImageSize - 28;
-  const imageY = padding + 24;
   if (palette.sourceImageUrl) {
     try {
       await renderSourceImage(ctx, palette.sourceImageUrl, imageX, imageY, sourceImageSize, sourceImageSize, 18);
@@ -393,28 +432,42 @@ export async function exportToSnsPng(
     }
   }
 
-  const stripY = padding + topAreaHeight + 24;
-  const colors = palette.colors;
-  const swatchGap = 10;
-  const swatchWidth = (contentWidth - swatchGap * (colors.length - 1)) / Math.max(colors.length, 1);
-  colors.forEach((color, index) => {
-    const x = padding + index * (swatchWidth + swatchGap);
-    roundRect(ctx, x, stripY, swatchWidth, stripHeight, 16);
-    ctx.fillStyle = color.hex;
-    ctx.fill();
+  if (showHex) {
+    const cellWidth = (contentWidth - cellGap * (columns - 1)) / columns;
+    const cellHeight = (paletteHeight - cellGap * (rows - 1)) / rows;
+    const swatchSize = Math.min(72, cellHeight - 20, cellWidth - cellPadding * 2 - labelGap - labelWidth);
+    colors.forEach((color, index) => {
+      const x = padding + (index % columns) * (cellWidth + cellGap);
+      const y = paletteY + Math.floor(index / columns) * (cellHeight + cellGap);
+      roundRect(ctx, x, y, cellWidth, cellHeight, 12);
+      ctx.fillStyle = 'rgba(255,255,255,0.07)';
+      ctx.fill();
 
-    // Skip hex labels once swatches get too narrow to fit them (many colors).
-    if (showHex && swatchWidth > 70) {
-      ctx.fillStyle = getLuminance(color) > 140 ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.94)';
-      ctx.font = `700 ${cardType === 'twitter' ? 22 : 24}px ui-monospace, SFMono-Regular, monospace`;
-      ctx.textAlign = 'center';
+      roundRect(ctx, x + cellPadding, y + (cellHeight - swatchSize) / 2, swatchSize, swatchSize, 6);
+      ctx.fillStyle = color.hex;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#F9FAFB';
+      ctx.font = hexFont;
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(color.hex.toUpperCase(), x + swatchWidth / 2, stripY + stripHeight / 2);
-    }
-  });
+      ctx.fillText(color.hex.toUpperCase(), x + cellPadding + swatchSize + labelGap, y + cellHeight / 2);
+    });
+  } else {
+    const swatchWidth = (contentWidth - cellGap * (colors.length - 1)) / Math.max(colors.length, 1);
+    colors.forEach((color, index) => {
+      const x = padding + index * (swatchWidth + cellGap);
+      roundRect(ctx, x, paletteY, swatchWidth, paletteHeight, Math.min(16, swatchWidth / 2));
+      ctx.fillStyle = color.hex;
+      ctx.fill();
+    });
+  }
 
   if (showStats) {
-    const chipY = bottomAreaTop;
+    const chipY = statsY;
     const averageLuminance =
       colors.length > 0
         ? Math.round(colors.reduce((sum, color) => sum + getLuminance(color), 0) / colors.length)
@@ -444,25 +497,26 @@ export async function exportToSnsPng(
   }
 
   if (showHistogram) {
-    const graphHeight = cardType === 'twitter' ? 120 : 132;
-    const graphY = height - padding - graphHeight - 18;
-    const graphWidth = contentWidth;
+    const graphHeight = graphPanelHeight - 24;
+    const graphY = graphPanelY + 12;
+    const graphWidth = contentWidth - 24;
+    const graphX = padding + 12;
     const bins = buildLuminanceBins(colors, 24);
     const maxBin = Math.max(...bins, 1);
     const barGap = 4;
     const barWidth = (graphWidth - barGap * (bins.length - 1)) / bins.length;
 
-    roundRect(ctx, padding, graphY - 26, graphWidth, graphHeight + 36, 16);
+    roundRect(ctx, padding, graphPanelY, contentWidth, graphPanelHeight, 16);
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     ctx.fill();
 
     bins.forEach((value, index) => {
       const normalized = value / maxBin;
       const barHeight = Math.max(4, normalized * graphHeight);
-      const x = padding + index * (barWidth + barGap);
+      const x = graphX + index * (barWidth + barGap);
       const y = graphY + graphHeight - barHeight;
       ctx.fillStyle = 'rgba(96,165,250,0.9)';
-      roundRect(ctx, x, y, barWidth, barHeight, 4);
+      roundRect(ctx, x, y, barWidth, barHeight, Math.min(4, barHeight / 2));
       ctx.fill();
     });
   }
@@ -471,7 +525,7 @@ export async function exportToSnsPng(
   ctx.font = `500 ${cardType === 'twitter' ? 18 : 20}px ui-sans-serif, system-ui`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
-  ctx.fillText('Made with Pixel Paw', width - padding - 12, height - padding - 10);
+  ctx.fillText('Made with Pixel Paw', width - padding - 12, footerY);
 
   return toBlob(canvas);
 }

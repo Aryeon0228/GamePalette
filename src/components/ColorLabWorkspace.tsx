@@ -321,6 +321,12 @@ export function ColorLabWorkspace() {
                 <span className="lab-help extraction-status" role="status">{busy ? label("추출 중…", "Extracting…") : hasImage ? label("설정 변경 시 자동 추출", "Automatically re-extracts") : label("늘리면 어울리는 색을 추가합니다.", "Adds related colors as the palette grows.")}</span>
               </div>}
             </div>
+            {colors.length > 0 && <section className="source-inspection" aria-label={label("팔레트 검사", "Palette check")}>
+              <div className="palette-inspection">
+                <div className="inspection-preview"><div className="inspection-heading"><h3>{label("팔레트 검사", "Palette check")}</h3><button className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button><select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event=>store.setColorBlindMode(event.target.value as ColorBlindnessType)}>{[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text])=><option key={value} value={value}>{text}</option>)}</select></div><div className="analysis-palette">{previewColors.map((color,index)=><div key={index} style={{background:color.hex}} title={colors[index].hex}/>)}</div><p className="lab-help">{label("검사 결과는 미리보기에만 적용됩니다.", "Checks affect this preview only.")}</p></div>
+                {histogram ? <div className="compact-histogram" aria-label={label("이미지 광도", "Image luminosity")}><HistogramSection histogram={histogram}/></div> : <p className="histogram-empty">{label("이미지를 가져오면 명도 분포도 이곳에 표시됩니다.", "Import an image to see its brightness distribution here.")}</p>}
+              </div>
+            </section>}
           </div>
         </section>
       </div>
@@ -335,13 +341,6 @@ export function ColorLabWorkspace() {
         <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={colors.length ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
-
-      {colors.length > 0 && <section className="overview-section" aria-label={label("팔레트 검사", "Palette check")}>
-        <div className="palette-inspection">
-          <div className="inspection-preview"><div className="inspection-heading"><h3>{label("팔레트 검사", "Palette check")}</h3><button className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button><select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event=>store.setColorBlindMode(event.target.value as ColorBlindnessType)}>{[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text])=><option key={value} value={value}>{text}</option>)}</select></div><div className="analysis-palette">{previewColors.map((color,index)=><div key={index} style={{background:color.hex}} title={colors[index].hex}/>)}</div><p className="lab-help">{label("검사 결과는 미리보기에만 적용됩니다.", "Checks affect this preview only.")}</p></div>
-          {histogram ? <div className="compact-histogram"><HistogramSection histogram={histogram}/></div> : <p className="histogram-empty">{label("이미지를 가져오면 명도 분포도 이곳에 표시됩니다.", "Import an image to see its brightness distribution here.")}</p>}
-        </div>
-      </section>}
 
       <section id="color-save" tabIndex={-1} className="overview-section save-overview">
         <div className="overview-section-heading"><h2><span>05</span>{label("보관 · 내보내기", "Save & export")}</h2><div className="inline-actions"><button className="lab-button primary" disabled={!colors.length} onClick={savePalette}>{label("라이브러리에 저장", "Save to library")}</button><button className="lab-button" disabled={!colors.length} onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("파일 · 코드 내보내기", "Export files & code")}</button><Link className="lab-text-button" href="/library">{label("라이브러리", "Library")}<ArrowUpRight size={13}/></Link></div></div>
