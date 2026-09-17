@@ -12,7 +12,7 @@
 .attribute-controls input::-moz-range-thumb{width:11px;height:15px;border:2px solid white;border-radius:0;background:#202020}
 .attribute-controls output{text-align:right;font:12px ui-monospace,monospace;color:#eee}
 .attribute-result-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:5px 0 12px}.attribute-result-actions .lab-button{min-height:38px}
-.attribute-luminance strong{font:12px ui-monospace,monospace;color:hsl(var(--foreground))}
+.attribute-luminance{margin:2px 0;font-size:11px;line-height:1.6;color:hsl(var(--muted-foreground))}.attribute-luminance strong{font:12px ui-monospace,monospace;color:hsl(var(--foreground))}
 .attribute-context-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid hsl(var(--border));padding-top:5px}.attribute-context-heading h4{font-size:12px;font-weight:400;color:#ddd}
 .attribute-context{display:flex;height:94px}.attribute-context>div{display:flex;width:50%;align-items:center;justify-content:center}.attribute-context>div>span{display:block;width:36%;height:34px}.attribute-context.is-connected>div>span{width:68%}.attribute-context.is-connected>div:first-child{justify-content:flex-end}.attribute-context.is-connected>div:last-child{justify-content:flex-start}
 .attribute-context-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3px 12px}.attribute-bg-inputs{display:flex;gap:12px}.attribute-bg-inputs label{display:flex;align-items:center;gap:6px;color:#aaa;font-size:11px;min-height:40px}.attribute-bg-inputs input{width:26px;height:28px;padding:1px;border:1px solid #444;background:transparent;cursor:pointer}

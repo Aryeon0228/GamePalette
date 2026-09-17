@@ -49,16 +49,20 @@ export function ColorAttributeStudy({ hex, onSelectColor }: { hex: string; onSel
     <div className="attribute-context-controls">
       <div className="attribute-bg-inputs">{backgrounds.map((bg, index) => <label key={index}><span>{index === 0 ? t("왼쪽", "Left") : t("오른쪽", "Right")}</span><input type="color" value={bg} aria-label={index === 0 ? t("왼쪽 비교 배경색", "Left comparison background color") : t("오른쪽 비교 배경색", "Right comparison background color")} onChange={e => setBackgrounds(current => current.map((color, i) => i === index ? e.target.value : color))}/></label>)}</div>
       <button type="button" className="lab-text-button" onClick={() => setBackgrounds(["#3C5969", "#CB9B78"])}>{t("쿨 / 웜 배경", "Cool / warm backgrounds")}</button>
-      <button type="button" className="lab-text-button" aria-pressed={gray} onClick={() => setGray(value => !value)}>{t("중심색 흑백", "Grayscale center")}</button>
+      <button type="button" className="lab-text-button" aria-pressed={gray} aria-controls={`${id}-grayscale-info`} onClick={() => setGray(value => !value)}>{t("중심색 흑백", "Grayscale center")}</button>
+    </div>
+    <div id={`${id}-grayscale-info`} className="attribute-grayscale-info" hidden={!gray}>
+      <p className="attribute-luminance">{t("흑백 변환 기준 · 상대휘도", "Grayscale basis · relative luminance")} <strong>{(relativeLuminance(result) * 100).toFixed(1)}%</strong></p>
+      <p className="attribute-note">{t("눈의 색별 민감도를 반영해 회색으로 바꿉니다.", "Converts to gray using the eye's sensitivity to each color.")}</p>
     </div>
     <p className="attribute-note">{t("중심의 두 색은 같은 값입니다.", "Both center swatches have the same value.")} <code>{display}</code></p>
-    <details className="study-explanation"><summary>{t("밝기와 상대휘도는 어떻게 다를까?", "How do lightness and luminance differ?")}</summary><div>
-      <p>{t("밝기 슬라이더는 HSL의 L을 조절합니다. 같은 값이어도 노랑과 파랑은 다르게 밝아 보일 수 있어요.", "The lightness slider controls HSL L. Yellow and blue can look different in brightness even at the same value.")}</p>
-      <p>{t("상대휘도는 검정 0%, 흰색 100%를 기준으로 계산한 밝기 값입니다. 주로 글자와 배경의 대비를 구할 때 씁니다.", "Relative luminance measures a color's light level from black at 0% to white at 100%. It is used to calculate contrast between text and backgrounds.")}</p>
-      <p className="attribute-luminance">{t("현재 색의 상대휘도", "Current relative luminance")} <strong>{(relativeLuminance(result) * 100).toFixed(1)}%</strong></p>
-      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 60, s: 100, l: 50 }); setChanged(true) }}>{t("밝기 50% · 노랑으로 비교", "Compare yellow · 50% lightness")}</button>
-      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 240, s: 100, l: 50 }); setChanged(true) }}>{t("밝기 50% · 파랑으로 비교", "Compare blue · 50% lightness")}</button>
-      <p>{t("배경을 바꿔도 중심색과 상대휘도 값은 같습니다. 중심색 흑백은 상대휘도를 기준으로 만든 회색입니다.", "Changing the background does not change the center color or its relative luminance. Grayscale center uses a gray calculated from that luminance.")}</p>
+    <details className="study-explanation"><summary>{t("흑백 밝기는 어떻게 정할까?", "How is grayscale brightness determined?")}</summary><div>
+      <p>{t("눈은 색에 따라 빛에 반응하는 정도가 다릅니다. 상대휘도는 이 차이를 반영해 검정 0%, 흰색 100%를 기준으로 계산한 값입니다.", "The eye responds differently to light of different colors. Relative luminance accounts for this, on a scale from black at 0% to white at 100%.")}</p>
+      <p>{t("중심색 흑백은 상대휘도에 맞춰 회색으로 바꿉니다. 같은 밝기(HSL L 50%)의 노랑과 파랑을 비교해보세요.", "Grayscale center converts each color to gray based on its relative luminance. Compare yellow and blue at the same lightness (HSL L 50%).")}</p>
+      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 60, s: 100, l: 50 }); setChanged(true); setGray(true) }}>{t("노랑을 흑백으로", "Yellow in grayscale")}</button>
+      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 240, s: 100, l: 50 }); setChanged(true); setGray(true) }}>{t("파랑을 흑백으로", "Blue in grayscale")}</button>
+      <p>{t("배경 때문에 다르게 보여도 중심색과 상대휘도 값은 같습니다.", "The background can change how bright a color looks, while the center color and its relative luminance remain the same.")}</p>
+      <a href="https://www.w3.org/TR/WCAG22/#dfn-relative-luminance" target="_blank" rel="noreferrer">{t("참고 · W3C의 상대휘도 설명 ↗", "Reference · W3C on relative luminance ↗")}</a>{" · "}
       <a href="https://www.w3.org/TR/css-color-4/#the-hsl-notation" target="_blank" rel="noreferrer">{t("참고 · W3C의 HSL 설명 ↗", "Reference · W3C on HSL ↗")}</a>
     </div></details>
   </section>
