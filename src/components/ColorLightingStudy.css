@@ -1,0 +1,51 @@
+.color-lighting-study{min-width:0;border:1px solid #303030;background:#0b0b0b;color:#ddd;padding:16px;font-size:12px;line-height:1.5}
+.lighting-study-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.lighting-study-heading h3{margin:0;font-size:15px;line-height:1.5;font-weight:500;letter-spacing:-.015em}
+.lighting-study-heading p{margin:3px 0 0;color:#a0a0a0;font-size:12px;line-height:1.6}
+.color-lighting-study button{cursor:pointer}
+.lighting-reset{min-width:48px;min-height:40px;flex-shrink:0;padding:6px 8px;color:#aaa;font-size:12px;border:1px solid #343434;background:transparent}
+.lighting-reset:hover{color:white;border-color:#888}
+.lighting-stage{position:relative;overflow:hidden;border:1px solid #333;background:#151515}
+.lighting-view-tabs{display:flex;gap:3px;align-items:center;padding:8px;border-bottom:1px solid #303030;background:#111}
+.lighting-view-tabs button{min-height:40px;padding:5px 10px;border:1px solid #555;background:transparent;color:#b5b5b5;font-size:12px;line-height:1.3}
+.lighting-view-tabs button[aria-pressed=true]{color:#111;background:#e5e5e5;border-color:#e5e5e5}
+.lighting-study-canvas{display:block;width:100%;height:220px}
+.lighting-stage-caption{position:relative;min-height:37px;margin:0;padding:9px 11px;border-top:1px solid #ffffff10;background:#141414;color:#aaa;font-size:12px;line-height:1.55}
+.lighting-position-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:16px}
+.lighting-position-controls label{display:block;min-width:0;font-size:12px}
+.lighting-position-controls label>span{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lighting-position-controls output{font:12px/1.5 var(--font-ibm-plex-mono,monospace);color:#b0b0b0;font-variant-numeric:tabular-nums}
+.lighting-position-controls input[type=range]{display:block;width:100%;height:40px;cursor:ew-resize;accent-color:#d7d7d7;background:transparent;margin:0}
+.lighting-temperature-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #292929;padding-top:10px}
+.lighting-temperature-row>span{white-space:nowrap;color:#aaa;font-size:12px}
+.lighting-choices{display:flex;gap:4px;min-width:0}
+.lighting-choices button{min-height:40px;padding:5px 9px;border:1px solid #353535;background:transparent;color:#aaa;white-space:nowrap;font-size:12px}
+.lighting-choices button[aria-pressed=true]{border-color:#bcbcbc;background:#272727;color:#f1f1f1}
+.lighting-choices button:hover{border-color:#999;color:white}
+.lighting-environment-row{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;margin-top:8px}
+.lighting-toggles{display:flex;flex:1;flex-wrap:wrap;gap:0 13px;min-width:0}
+.lighting-toggles label{display:flex;align-items:center;gap:6px;min-height:40px;font-size:12px;cursor:pointer;white-space:nowrap}
+.lighting-toggles input{width:14px;height:14px;margin:0;accent-color:#ccc;cursor:pointer;flex-shrink:0}
+.lighting-toggles label:has(input:not(:checked)){color:#999}
+.lighting-ground{display:flex;flex-shrink:0;align-items:center;gap:7px;font-size:12px;color:#aaa;cursor:pointer}
+.lighting-ground input[type=color]{display:block;width:40px;height:40px;padding:5px;border:1px solid #454545;background:#111;cursor:pointer}
+.lighting-ground input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.lighting-ground input[type=color]::-webkit-color-swatch{border:1px solid #ffffff25;border-radius:0}
+.lighting-ground input[type=color]::-moz-color-swatch{border:1px solid #ffffff25;border-radius:0}
+.lighting-samples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:13px;margin-top:10px;border-top:1px solid #303030}
+.lighting-samples>div,.lighting-samples>button{display:flex;position:relative;align-items:center;gap:8px;min-width:0;min-height:48px;padding:5px 0;text-align:left;color:#bbb;font-size:12px;line-height:1.4}
+.lighting-samples>button{padding:5px;border:1px solid #3b3b3b;background:transparent}
+.lighting-samples>button:hover{border-color:#aaa;color:white}
+.lighting-swatch{display:block;flex-shrink:0;width:27px;height:32px;border:1px solid #ffffff25}
+.lighting-samples>div .lighting-swatch{height:36px}
+.lighting-samples>button .lighting-swatch{width:22px}
+.lighting-samples code{display:block;color:#969696;font:12px/1.6 var(--font-ibm-plex-mono,monospace);white-space:nowrap}
+.lighting-sample-arrow{position:absolute;right:5px;top:2px;color:#888;font-size:12px}
+.lighting-model-note{font-size:12px;line-height:1.65;color:#989898;margin:12px 0 0}
+.lighting-model-note strong{font-weight:400;color:#b6b6b6}
+.lighting-explanation{margin-top:4px}
+.lighting-explanation summary{min-height:40px;padding:10px 0;cursor:pointer;font-size:12px;color:#c1c1c1}
+.lighting-explanation p{margin:0;padding-bottom:3px;line-height:1.75;color:#a0a0a0;font-size:12px}
+.color-lighting-study button:focus-visible,.color-lighting-study input:focus-visible,.color-lighting-study summary:focus-visible{outline:2px solid #eee;outline-offset:3px}
+@media(max-width:479px){.color-lighting-study{padding:12px}.lighting-study-heading{gap:8px}.lighting-study-heading p{max-width:225px}.lighting-position-controls{gap:16px}.lighting-environment-row{align-items:flex-start}.lighting-toggles{gap:0 12px}.lighting-ground{margin-top:3px}.lighting-samples{gap:5px}.lighting-samples>div,.lighting-samples>button{flex-direction:column;align-items:flex-start;gap:6px;padding:7px}.lighting-samples>div{padding-left:0}.lighting-samples .lighting-swatch,.lighting-samples>button .lighting-swatch,.lighting-samples>div .lighting-swatch{width:100%;height:27px}.lighting-sample-arrow{top:auto;bottom:8px;right:4px}.lighting-samples code{font-size:12px}.lighting-samples>button>span:nth-child(2){padding-right:6px}.lighting-choices button{padding-left:8px;padding-right:8px}}
+@media(max-width:359px){.lighting-temperature-row{align-items:flex-start;flex-direction:column;gap:6px}.lighting-choices{width:100%}.lighting-choices button{flex:1}.lighting-toggles{gap:0 9px}.lighting-samples>div,.lighting-samples>button{padding-right:4px;padding-left:4px}.lighting-samples code{letter-spacing:-.4px}.lighting-sample-arrow{display:none}}

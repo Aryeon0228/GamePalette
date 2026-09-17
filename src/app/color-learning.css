@@ -1,0 +1,13 @@
+.learning-entry{display:flex;align-items:center;gap:12px;text-decoration:none;line-height:1.7}.learning-entry:hover{color:#ddd}.learning-entry>span{font-size:20px;color:#ddd}
+.color-context.overview-jumps{overflow:visible;justify-content:space-between;gap:12px}
+.learning-jump-links{display:flex;gap:24px;overflow-x:auto;min-width:0;scrollbar-width:thin;align-items:center}
+.learning-jump-links>a{min-height:42px}.learning-pinned-color{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-left:12px;border-left:1px solid #333}.learning-pinned-color input[type=color]{width:24px;height:26px;padding:0;border:0;background:transparent;cursor:pointer}.learning-pinned-color code{font:11px var(--f-mono);color:#ddd}
+.learning-workspace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.learning-connection{font-size:12px;line-height:1.8;color:#999;margin-top:12px}.learning-connection a{color:#ddd;white-space:nowrap;margin-left:8px;text-decoration:underline}
+.image-value-anchor{margin-top:12px;scroll-margin-top:calc(var(--lab-header-height,130px) + 56px)}
+.legacy-brightness{min-width:0;font-size:12px;border:1px solid #292929;padding:0 10px;align-self:start}.legacy-brightness summary{padding:11px 0;min-height:40px;color:#bbb;cursor:pointer}.legacy-brightness .compact-histogram{margin:8px 0}.legacy-brightness .lab-help{margin-top:0}
+.source-inspection .palette-inspection{grid-template-columns:minmax(0,1fr)}
+.color-lab .overview-panel,.color-lab .overview-section,.color-lab .source-panel,.color-lab .image-value-anchor{scroll-margin-top:54px}
+.learning-pinned-color code{font-family:ui-monospace,monospace;font-size:11px}
+@media(max-width:999px){.learning-jump-links{gap:18px}.learning-pinned-color code{display:none}.learning-workspace-grid{gap:12px}}
+@media(max-width:759px){.learning-workspace-grid{grid-template-columns:minmax(0,1fr)}.learning-pinned-color{padding-left:8px}.learning-jump-links{gap:16px}.learning-jump-links>a{min-height:44px}.learning-entry{gap:6px}.learning-connection a{display:inline-block;margin-left:0}}

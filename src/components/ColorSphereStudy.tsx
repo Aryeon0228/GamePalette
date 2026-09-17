@@ -23,7 +23,7 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
   return (
     <section className="overview-sphere">
       <div className="sphere-heading">
-        <h3>{ko ? "구체 셰이딩" : "Sphere shading"}</h3>
+        <h3>{ko ? "회화적 구체 셰이딩" : "Painterly sphere shading"}</h3>
         <div className="sphere-modes" role="group" aria-label={ko ? "구체 셰이딩 방식" : "Sphere shading mode"}>
           {(["normal", "coldwarm"] as const).map(value => (
             <button key={value} type="button" aria-pressed={mode === value} onClick={() => setMode(value)}>
@@ -46,8 +46,8 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
         </div>
       </div>
       <p className="lab-help">{mode === "normal"
-        ? (ko ? "선택한 색을 그대로 기준으로, 빛과 그림자를 입힙니다." : "Light and shadow built around your exact selected color.")
-        : (ko ? "선택한 색을 기준으로 따뜻한 빛, 차가운 그림자를 더합니다." : "Warm light and cool shadows around your selected color.")}</p>
+        ? (ko ? "선택한 색으로 만든 회화용 명암 단계입니다. 위의 조명 실험과 비교해보세요." : "A painterly value ramp from your selected color. Compare it with the lighting experiment above.")
+        : (ko ? "따뜻한 명부와 차가운 암부로 설계한 색 단계입니다. 모든 그림자가 차가워지는 것은 아니에요." : "A designed warm-light, cool-shadow ramp. Shadows are not always cool.")}</p>
     </section>
   )
 }

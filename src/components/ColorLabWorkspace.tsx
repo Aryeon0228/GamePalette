@@ -13,6 +13,9 @@ import { StyleFilter } from "@/components/StyleFilter"
 import { ExportModal } from "@/components/ExportModal"
 import { HistogramSection } from "@/components/HistogramSection"
 import { ColorSphereStudy } from "@/components/ColorSphereStudy"
+import { ColorAttributeStudy } from "@/components/ColorAttributeStudy"
+import { ColorLightingStudy } from "@/components/ColorLightingStudy"
+import { ImageValueStudy } from "@/components/ImageValueStudy"
 import { AsciiStudy } from "@/components/AsciiStudy"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { useSavedColors } from "@/stores/savedColorsStore"
@@ -24,11 +27,13 @@ import { resizePaletteColors } from "@/lib/resizePalette"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
 import type { Color } from "@/types"
 import "@/app/color-lab.css"
+import "@/app/color-learning.css"
 
-type Category = "explore" | "import" | "edit" | "compose" | "analyze" | "save"
+type Category = "explore" | "import" | "edit" | "study" | "compose" | "analyze" | "save"
 const categories = [
   { id: "explore", ko: "선택한 색", en: "Selected color" },
   { id: "edit", ko: "이미지 · 팔레트", en: "Image & palette" },
+  { id: "study", ko: "색 · 빛 실험", en: "Color & light" },
   { id: "analyze", ko: "색 분석", en: "Color analysis" },
   { id: "compose", ko: "배색 · 셰이딩", en: "Compose & shade" },
   { id: "save", ko: "보관 · 내보내기", en: "Save & export" },
@@ -272,11 +277,12 @@ export function ColorLabWorkspace() {
     <section className="color-lab color-overview">
       <div className="color-lab-heading">
         <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>WEB 05</p><h1>Color <b>Lab</b></h1></div>
-        <p className="heading-note">{label("하나의 색에서, 전체 팔레트까지.", "From a single color to a complete palette.")}</p>
+        <a className="heading-note learning-entry" href="#color-study">{label("피킹한 색으로, 빛과 명암까지 실험해보세요.", "Explore light and value with the color you pick.")} <span aria-hidden="true">↘</span></a>
       </div>
 
       <nav className="color-context overview-jumps" aria-label={label("페이지 내 도구 바로가기", "Jump to tools on this page")}>
-        {categories.map((item,index) => <a key={item.id} href={`#color-${item.id}`}><span>0{index+1}</span>{ko ? item.ko : item.en}</a>)}
+        <div className="learning-jump-links">{categories.map((item,index) => <a key={item.id} href={`#color-${item.id}`}><span>0{index+1}</span>{ko ? item.ko : item.en}</a>)}</div>
+        <label className="learning-pinned-color"><input type="color" aria-label={label("실습 기준색 고르기", "Pick experiment reference color")} value={activeHex} onChange={event => selectColor(event.target.value)}/><code>{activeHex}</code></label>
       </nav>
 
       <div className="overview-start selection-workspace">
@@ -324,26 +330,33 @@ export function ColorLabWorkspace() {
             {colors.length > 0 && <section className="source-inspection" aria-label={label("팔레트 검사", "Palette check")}>
               <div className="palette-inspection">
                 <div className="inspection-preview"><div className="inspection-heading"><h3>{label("팔레트 검사", "Palette check")}</h3><button className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button><select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event=>store.setColorBlindMode(event.target.value as ColorBlindnessType)}>{[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text])=><option key={value} value={value}>{text}</option>)}</select></div><div className="analysis-palette">{previewColors.map((color,index)=><div key={index} style={{background:color.hex}} title={colors[index].hex}/>)}</div><p className="lab-help">{label("검사 결과는 미리보기에만 적용됩니다.", "Checks affect this preview only.")}</p></div>
-                {histogram ? <div className="compact-histogram" aria-label={label("이미지 광도", "Image luminosity")}><HistogramSection histogram={histogram}/></div> : <p className="histogram-empty">{label("이미지를 가져오면 명도 분포도 이곳에 표시됩니다.", "Import an image to see its brightness distribution here.")}</p>}
+                {histogram && <details className="legacy-brightness"><summary>{label("기존 밝기 히스토그램", "Legacy brightness histogram")}</summary><p className="lab-help">{label("전체 이미지 · 가중 RGB 밝기(0.299R + 0.587G + 0.114B). 아래 상대 휘도 실험과 계산 기준이 다릅니다.", "Whole image · weighted RGB (0.299R + 0.587G + 0.114B). This differs from the relative-luminance experiment below.")}</p><div className="compact-histogram"><HistogramSection histogram={histogram}/></div></details>}
               </div>
             </section>}
+            <div id="color-value-study" tabIndex={-1} className="image-value-anchor"><ImageValueStudy imageUrl={store.sourceImageUrl}/></div>
           </div>
         </section>
       </div>
 
+      <section id="color-study" tabIndex={-1} className="overview-section learning-workspace">
+        <div className="overview-section-heading"><h2><span>03</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("하나씩 바꾸고, 비교하고, 필요한 색을 작업에 가져오세요.", "Change one thing, compare, and bring useful colors into your work.")}</p></div>
+        <div className="learning-workspace-grid"><ColorAttributeStudy hex={activeHex} onSelectColor={selectColor}/><ColorLightingStudy hex={activeHex} onSelectColor={selectColor}/></div>
+        <p className="learning-connection">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-value-study">{label("이미지 명암 실험으로 ↑", "Image value experiment ↑")}</a></p>
+      </section>
+
       <section id="color-analyze" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>03</span>{label("선택한 색 분석", "Selected color analysis")}</h2></div>
+        <div className="overview-section-heading"><h2><span>04</span>{label("선택한 색 분석", "Selected color analysis")}</h2></div>
         <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="checks" onSelectColor={selectColor}/>
       </section>
 
       <section id="color-compose" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>04</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("탐색 색을 기준으로 함께 바뀝니다. 색상칩을 눌러 다음 색을 골라보세요.", "All combinations follow your explored color. Select a swatch to explore it.")}</p></div>
+        <div className="overview-section-heading"><h2><span>05</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("탐색 색을 기준으로 함께 바뀝니다. 색상칩을 눌러 다음 색을 골라보세요.", "All combinations follow your explored color. Select a swatch to explore it.")}</p></div>
         <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={colors.length ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
 
       <section id="color-save" tabIndex={-1} className="overview-section save-overview">
-        <div className="overview-section-heading"><h2><span>05</span>{label("보관 · 내보내기", "Save & export")}</h2><div className="inline-actions"><button className="lab-button primary" disabled={!colors.length} onClick={savePalette}>{label("라이브러리에 저장", "Save to library")}</button><button className="lab-button" disabled={!colors.length} onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("파일 · 코드 내보내기", "Export files & code")}</button><Link className="lab-text-button" href="/library">{label("라이브러리", "Library")}<ArrowUpRight size={13}/></Link></div></div>
+        <div className="overview-section-heading"><h2><span>06</span>{label("보관 · 내보내기", "Save & export")}</h2><div className="inline-actions"><button className="lab-button primary" disabled={!colors.length} onClick={savePalette}>{label("라이브러리에 저장", "Save to library")}</button><button className="lab-button" disabled={!colors.length} onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("파일 · 코드 내보내기", "Export files & code")}</button><Link className="lab-text-button" href="/library">{label("라이브러리", "Library")}<ArrowUpRight size={13}/></Link></div></div>
         <div className="save-overview-content"><div className="saved-palette-row">{store.savedPalettes.length ? store.savedPalettes.slice(-4).reverse().map(item=><Link key={item.id} href={`/palette/${item.id}`} className="saved-palette-card"><div>{item.colors.map((color,index)=><span key={index} style={{background:color.hex}}/>)}</div><p>{item.name}<span>{item.colors.length}</span></p></Link>) : <p className="lab-help">{label("완성한 팔레트를 이 브라우저에 보관하세요. PNG · JSON · CSS · SCSS로 가져갈 수 있어요.", "Keep palettes in this browser, or export PNG, JSON, CSS and SCSS.")}</p>}</div><div className="favorites-area"><div className="favorites-heading"><h3>{label("즐겨찾는 단색", "Favorite colors")}</h3><button className="lab-text-button" onClick={()=>savedColors.add(activeHex)}><Plus size={13}/>{label("탐색 색 보관", "Keep explored color")}</button></div><div className="favorite-colors">{savedColors.colors.map(hex=><button key={hex} title={hex} aria-label={`${label("색 선택","Select color")} ${hex}`} style={{background:hex}} onClick={()=>selectColor(hex)}/>)}</div></div></div>
       </section>
       {currentPaletteForExport && <ExportModal open={exportOpen} onOpenChange={setExportOpen} palette={currentPaletteForExport}/>}
