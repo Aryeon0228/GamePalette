@@ -27,7 +27,7 @@ export function ColorAttributeStudy({ hex, onSelectColor }: { hex: string; onSel
   const axes = [
     { key: "h" as const, name: t("색상", "Hue"), max: 360, unit: "°", track: `linear-gradient(90deg, ${Array.from({ length: 7 }, (_, n) => `hsl(${n * 60} 85% 55%)`).join(",")})` },
     { key: "s" as const, name: t("채도", "Saturation"), max: 100, unit: "%", track: `linear-gradient(90deg,hsl(${hsl.h} 0% ${hsl.l}%),hsl(${hsl.h} 100% ${hsl.l}%))` },
-    { key: "l" as const, name: t("밝기 · HSL L", "Lightness · HSL L"), max: 100, unit: "%", track: `linear-gradient(90deg,#000,hsl(${hsl.h} ${hsl.s}% 50%),#fff)` },
+    { key: "l" as const, name: t("밝기", "Lightness"), max: 100, unit: "%", track: `linear-gradient(90deg,#000,hsl(${hsl.h} ${hsl.s}% 50%),#fff)` },
   ]
   const reset = () => { setHsl(referenceHsl); setChanged(false); setGray(false); setConnected(false); setBackgrounds(["#202020", "#E5E5E5"]) }
 
@@ -41,7 +41,7 @@ export function ColorAttributeStudy({ hex, onSelectColor }: { hex: string; onSel
     <div className="attribute-controls">
       {axes.map(axis => <label key={axis.key} htmlFor={`${id}-${axis.key}`}><span>{axis.name}</span><input id={`${id}-${axis.key}`} type="range" min={0} max={axis.max} step={0.1} value={hsl[axis.key]} style={{ backgroundImage: axis.track }} onChange={e => { setHsl(current => ({ ...current, [axis.key]: Number(e.target.value) })); setChanged(true) }}/><output htmlFor={`${id}-${axis.key}`}>{Number(hsl[axis.key].toFixed(1))}{axis.unit}</output></label>)}
     </div>
-    <div className="attribute-result-actions"><p>{t("상대 휘도 Y", "Relative luminance Y")} <strong>{(relativeLuminance(result) * 100).toFixed(1)}%</strong></p><button type="button" className="lab-button" disabled={result.toUpperCase() === base.hex.toUpperCase()} onClick={() => onSelectColor(result)}>{t("실험 결과로 선택", "Use result as selected color")}<ArrowRight size={13}/></button></div>
+    <div className="attribute-result-actions"><button type="button" className="lab-button" disabled={result.toUpperCase() === base.hex.toUpperCase()} onClick={() => onSelectColor(result)}>{t("실험 결과로 선택", "Use result as selected color")}<ArrowRight size={13}/></button></div>
     <div className="attribute-context-heading"><h4>{t("같은 색, 다른 배경", "Same color, different backgrounds")}</h4><button type="button" className="lab-text-button" onClick={() => setConnected(value => !value)} aria-pressed={connected}>{t("색 연결해 확인", "Connect to compare")}</button></div>
     <div className={`attribute-context${connected ? " is-connected" : ""}`}>
       {backgrounds.map((bg, index) => <div key={index} style={{ background: bg }}><span style={{ background: display }}/></div>)}
@@ -52,11 +52,13 @@ export function ColorAttributeStudy({ hex, onSelectColor }: { hex: string; onSel
       <button type="button" className="lab-text-button" aria-pressed={gray} onClick={() => setGray(value => !value)}>{t("중심색 흑백", "Grayscale center")}</button>
     </div>
     <p className="attribute-note">{t("중심의 두 색은 같은 값입니다.", "Both center swatches have the same value.")} <code>{display}</code></p>
-    <details className="study-explanation"><summary>{t("왜 같은 L인데 밝기가 다를까?", "Why can equal L values look different?")}</summary><div>
-      <p>{t("HSL의 L은 색을 지정하는 수치입니다. 눈에 보이는 밝기나 먼셀의 명도와 같은 척도가 아니에요. L을 고정하고 색상만 바꾸며 상대 휘도 Y와 비교해보세요.", "HSL L is a color coordinate, not the same scale as perceived lightness or Munsell Value. Keep L fixed and change hue while comparing relative luminance Y.")}</p>
-      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 60, s: 100, l: 50 }); setChanged(true) }}>{t("노랑으로 실험 · H60 S100 L50", "Try yellow · H60 S100 L50")}</button>
-      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 240, s: 100, l: 50 }); setChanged(true) }}>{t("파랑으로 실험 · H240 S100 L50", "Try blue · H240 S100 L50")}</button>
-      <p>{t("배경 실험은 중심색의 값을 그대로 두고 인상을 비교합니다. 흑백은 선형 sRGB 상대 휘도로 만든 중성색입니다. 실험은 팔레트를 자동으로 바꾸지 않습니다.", "Background comparisons keep center values identical. Grayscale uses linear-sRGB relative luminance. Experiments never automatically edit your palette.")}</p>
+    <details className="study-explanation"><summary>{t("밝기와 상대휘도는 어떻게 다를까?", "How do lightness and luminance differ?")}</summary><div>
+      <p>{t("밝기 슬라이더는 HSL의 L을 조절합니다. 같은 값이어도 노랑과 파랑은 다르게 밝아 보일 수 있어요.", "The lightness slider controls HSL L. Yellow and blue can look different in brightness even at the same value.")}</p>
+      <p>{t("상대휘도는 검정 0%, 흰색 100%를 기준으로 계산한 밝기 값입니다. 주로 글자와 배경의 대비를 구할 때 씁니다.", "Relative luminance measures a color's light level from black at 0% to white at 100%. It is used to calculate contrast between text and backgrounds.")}</p>
+      <p className="attribute-luminance">{t("현재 색의 상대휘도", "Current relative luminance")} <strong>{(relativeLuminance(result) * 100).toFixed(1)}%</strong></p>
+      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 60, s: 100, l: 50 }); setChanged(true) }}>{t("밝기 50% · 노랑으로 비교", "Compare yellow · 50% lightness")}</button>
+      <button type="button" className="lab-text-button" onClick={() => { setHsl({ h: 240, s: 100, l: 50 }); setChanged(true) }}>{t("밝기 50% · 파랑으로 비교", "Compare blue · 50% lightness")}</button>
+      <p>{t("배경을 바꿔도 중심색과 상대휘도 값은 같습니다. 중심색 흑백은 상대휘도를 기준으로 만든 회색입니다.", "Changing the background does not change the center color or its relative luminance. Grayscale center uses a gray calculated from that luminance.")}</p>
       <a href="https://www.w3.org/TR/css-color-4/#the-hsl-notation" target="_blank" rel="noreferrer">{t("참고 · W3C의 HSL 설명 ↗", "Reference · W3C on HSL ↗")}</a>
     </div></details>
   </section>
