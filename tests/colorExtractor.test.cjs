@@ -19,7 +19,7 @@ require.extensions['.ts'] = (module, filename) => {
   });
   module._compile(outputText, filename);
 };
-const { extractColors, extractColorsWithArea } = require('../src/lib/colorExtractor.ts');
+const { extractColors, extractColorsWithArea, analyzeLuminosityHistogram } = require('../src/lib/colorExtractor.ts');
 
 const red = [255, 0, 0, 255];
 const green = [0, 255, 0, 255];
@@ -164,5 +164,14 @@ for (const [width, height, expectedDimensions] of [
     const result = await extractColorsWithArea('fixture:thin', 2, 'kmeans');
     assert.deepEqual(reads, [expectedDimensions]);
     assert.deepEqual(result.areaPercentages, [100]);
+  });
+}
+
+for (const [width, height, expectedDimensions] of [[1, 1000, [1, 150]], [1000, 1, [150, 1]]]) {
+  test(`brightness histogram remains available for a ${width}×${height} image`, async t => {
+    const reads = mockImage(t, pixels(repeat(red, 150)), width, height);
+    const result = await analyzeLuminosityHistogram('fixture:narrow-histogram');
+    assert.deepEqual(reads, [expectedDimensions]);
+    assert.ok(result, 'thin images should produce a histogram, not a caught zero-canvas error');
   });
 }

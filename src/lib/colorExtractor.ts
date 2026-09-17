@@ -645,6 +645,9 @@ export async function analyzeLuminosityHistogram(
           height = maxDimension;
         }
 
+        // Extremely narrow images still need at least one sample on each axis.
+        width = Math.max(1, Math.round(width));
+        height = Math.max(1, Math.round(height));
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
