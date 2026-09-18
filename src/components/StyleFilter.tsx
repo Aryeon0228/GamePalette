@@ -52,6 +52,7 @@ export function StyleFilter({
   const t = useTranslations("styleFilter")
   const ts = useTranslations("styles")
   const ko = useLocale() === "ko"
+  const Heading = dense ? "h4" : "h3"
   const denseNames: Record<StyleType, string> = ko
     ? { original: "원본", hypercasual: "하이퍼", stylized: "스타일화", realistic: "리얼", custom: "커스텀" }
     : { original: "Original", hypercasual: "Hyper", stylized: "Stylized", realistic: "Realistic", custom: "Custom" }
@@ -59,7 +60,7 @@ export function StyleFilter({
     <div className={cn("min-w-0", dense ? "space-y-2" : "space-y-4")}>
       <div className={dense ? "flex flex-wrap items-center gap-x-2 gap-y-1" : "space-y-4"}>
       <div className={dense ? "contents" : "flex items-center justify-between"}>
-        <h3 className={dense ? "text-[11px] font-medium text-muted-foreground" : "text-sm font-medium tracking-wide"}>{dense ? (ko ? "스타일" : "Style") : t("title")}</h3>
+        <Heading className={dense ? "text-[11px] font-medium text-muted-foreground" : "text-sm font-medium tracking-wide"}>{dense ? (ko ? "스타일" : "Style") : t("title")}</Heading>
         {onValueCheckToggle && (
           <Button
             variant={valueCheckEnabled ? "secondary" : "outline"}

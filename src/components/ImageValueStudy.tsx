@@ -71,9 +71,10 @@ function makeFrame(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D)
   return { pixels, analysis: analyzeImageValues(pixels.data) }
 }
 
-export function ImageValueStudy({ imageUrl }: { imageUrl: string | null }) {
+export function ImageValueStudy({ imageUrl, headingLevel = 3 }: { imageUrl: string | null; headingLevel?: 3 | 4 }) {
   const ko = useLocale() === "ko"
   const label = (kr: string, en: string) => ko ? kr : en
+  const Heading = headingLevel === 4 ? "h4" : "h3"
   const id = useId()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // Tying the sample preference to one URL lets a newly uploaded image take over.
@@ -181,7 +182,7 @@ export function ImageValueStudy({ imageUrl }: { imageUrl: string | null }) {
   return (
     <section className="image-value-study" aria-labelledby={`${id}-heading`}>
       <div className="ivs-heading">
-        <h3 id={`${id}-heading`}>{label("명도 · 면적 실험", "Value & area study")}</h3>
+        <Heading id={`${id}-heading`}>{label("명암별 면적", "Light & dark areas")}</Heading>
         <button type="button" className="ivs-reset" onClick={reset}>{label("초기화", "Reset")}</button>
       </div>
       <div className="ivs-source-row">

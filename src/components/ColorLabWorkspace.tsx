@@ -29,6 +29,7 @@ import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@
 import type { Color } from "@/types"
 import "@/app/color-lab.css"
 import "@/app/color-learning.css"
+import "./PaletteHierarchy.css"
 
 type Category = "explore" | "import" | "edit" | "composition" | "study" | "compose" | "analyze" | "save"
 const categories = [
@@ -71,6 +72,7 @@ export function ColorLabWorkspace() {
   const [copied, setCopied] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [paletteView, setPaletteView] = useState<"edit" | "preview">("edit")
   const [imageMode, setImageMode] = useState<"extract" | "pick">("extract")
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [areaAnalysis, setAreaAnalysis] = useState<AreaAnalysis | null>(null)
@@ -132,6 +134,7 @@ export function ColorLabWorkspace() {
   useEffect(() => {
     if (!store.sourceImageUrl) { setHistogram(null); return }
     let cancelled = false
+    setHistogram(null)
     analyzeLuminosityHistogram(store.sourceImageUrl).then(result => { if (!cancelled) setHistogram(result) }).catch(() => { if (!cancelled) setHistogram(null) })
     return () => { cancelled = true }
   }, [store.sourceImageUrl])
@@ -302,22 +305,10 @@ export function ColorLabWorkspace() {
         </section>
 
         <section id="color-edit" tabIndex={-1} className="overview-panel image-palette-panel">
-          <div className="overview-section-heading"><h2><span>02</span>{label("컬러 팔레트", "Color palette")}</h2><span className="palette-count">{colors.length} {label("색", "colors")}</span></div>
-          {colors.length > 0 ? <div className="working-palette">
-            <div className="working-palette-heading"><input className="palette-name-input" aria-label={label("팔레트 이름", "Palette name")} value={palette?.name ?? "Untitled Palette"} onChange={event=>{if(palette)store.setCurrentPalette({...palette,name:event.target.value})}} maxLength={80}/><button className="lab-text-button" onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("내보내기", "Export")}</button></div>
-            <div className="palette-canvas">{colors.map((color,index)=><button key={index} aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1}${currentArea?.percentages ? ` · ${color.hex} · ${label("면적 약", "Approximate area")} ${formatArea(currentArea.percentages[index])}` : ""}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={()=>selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code>{currentArea?.percentages && <strong className="palette-area-percent">{formatArea(currentArea.percentages[index])}</strong>}</span></button>)}</div>
-            {hasImage && store.extractionMethod === "kmeans" && <div className="palette-area" aria-label={label("색별 면적 비율", "Color area proportions")} aria-busy={busy}>
-              <div className="palette-area-heading"><h3>{label("색별 면적", "Color area")}</h3>{currentArea?.percentages && <span>{currentArea.isRegion ? label("선택 영역 기준", "Selected region") : label("전체 이미지 기준", "Whole image")}</span>}</div>
-              {currentArea?.percentages ? <>
-                <div className="palette-area-bar" aria-hidden="true">{currentArea.colors.map((color, index) => <span key={index} style={{ backgroundColor: color.hex, width: `${currentArea.percentages![index]}%` }} />)}</div>
-                <p className="lab-help">{label("축소 이미지에서 비슷한 색을 묶은 추정치예요. 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced image. Pixels below 50% opacity are excluded.")}</p>
-              </> : <div className="palette-area-pending"><p className="lab-help">{busy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("원본 이미지에서 다시 추출하면 면적 비율을 확인할 수 있어요.", "Re-extract the original image colors to see their area proportions.")}</p>{!busy && !currentArea && <button className="lab-text-button" onClick={() => { store.setCurrentStyle("original"); if (extractionSource.current) void runExtraction(extractionSource.current) }}>{label("면적 다시 분석", "Analyze area again")}</button>}</div>}
-            </div>}
-            <div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 선택한 색으로 교체`, `Replace palette color ${selectedIndex+1} with selected color`)} <span style={{background:activeHex}}/></button>}</div>
-            <div className="style-section"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style=>{requestId.current++;setBusy(false);store.setCurrentStyle(style);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} customSettings={store.customSettings} onCustomSettingsChange={settings=>{requestId.current++;setBusy(false);store.setCustomSettings(settings);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} /></div>
-          </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 추출한 팔레트가 없어요.", "No palette extracted yet.")}</p><span>{label("아래에 이미지를 올리면 이곳에 색이 모입니다.", "Upload an image below to see its colors here.")}</span></div>}
-          <div id="color-import" tabIndex={-1} className="source-panel">
-            <div className="source-heading"><h3>{label("이미지에서 색 가져오기", "Pick colors from an image")}</h3>{hasImage && imageMode === "pick" && <button className="lab-text-button" onClick={clearImage}>{label("이미지 지우기", "Clear image")}</button>}</div>
+          <div className="overview-section-heading"><h2><span>02</span>{label("이미지 · 팔레트", "Image & palette")}</h2></div>
+          <div className="image-palette-flow">
+          <section id="color-import" tabIndex={-1} className="source-panel image-palette-group" aria-labelledby="palette-import-heading">
+            <div className="palette-group-heading"><h3 id="palette-import-heading">{label("이미지에서 색 가져오기", "Pick colors from an image")}</h3>{hasImage && imageMode === "pick" && <button className="lab-text-button" onClick={clearImage}>{label("이미지 지우기", "Clear image")}</button>}</div>
             <div className="source-body">
               <div className="image-workbench">
                 {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={hex=>selectColor(hex,undefined,"pixel")} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={190} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
@@ -329,13 +320,46 @@ export function ColorLabWorkspace() {
                 <span className="lab-help extraction-status" role="status">{busy ? label("추출 중…", "Extracting…") : hasImage ? label("설정 변경 시 자동 추출", "Automatically re-extracts") : label("늘리면 어울리는 색을 추가합니다.", "Adds related colors as the palette grows.")}</span>
               </div>}
             </div>
-            {colors.length > 0 && <section className="source-inspection" aria-label={label("팔레트 검사", "Palette check")}>
-              <div className="palette-inspection">
-                <div className="inspection-preview"><div className="inspection-heading"><h3>{label("팔레트 검사", "Palette check")}</h3><button className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button><select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event=>store.setColorBlindMode(event.target.value as ColorBlindnessType)}>{[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text])=><option key={value} value={value}>{text}</option>)}</select></div><div className="analysis-palette">{previewColors.map((color,index)=><div key={index} style={{background:color.hex}} title={colors[index].hex}/>)}</div><p className="lab-help">{label("검사 결과는 미리보기에만 적용됩니다.", "Checks affect this preview only.")}</p></div>
-                {histogram && <details className="legacy-brightness"><summary>{label("기존 밝기 히스토그램", "Legacy brightness histogram")}</summary><p className="lab-help">{label("전체 이미지 · 가중 RGB 밝기(0.299R + 0.587G + 0.114B). 아래 상대 휘도 실험과 계산 기준이 다릅니다.", "Whole image · weighted RGB (0.299R + 0.587G + 0.114B). This differs from the relative-luminance experiment below.")}</p><div className="compact-histogram"><HistogramSection histogram={histogram}/></div></details>}
+          </section>
+          <section className="image-palette-group" aria-labelledby="working-palette-heading">
+            <div className="palette-group-heading"><h3 id="working-palette-heading">{label("팔레트", "Palette")}</h3><span className="palette-count">{colors.length} {label("색", "colors")}</span></div>
+          {colors.length > 0 ? <div className="working-palette">
+            <div className="working-palette-heading"><input className="palette-name-input" aria-label={label("팔레트 이름", "Palette name")} value={palette?.name ?? "Untitled Palette"} onChange={event=>{if(palette)store.setCurrentPalette({...palette,name:event.target.value})}} maxLength={80}/><button className="lab-text-button" onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("내보내기", "Export")}</button></div>
+            <div className="palette-view-tools">
+              <div className="lab-segment" role="group" aria-label={label("팔레트 보기", "Palette view")}>
+                <button type="button" aria-pressed={paletteView === "edit"} onClick={() => setPaletteView("edit")}>{label("편집", "Edit")}</button>
+                <button type="button" aria-pressed={paletteView === "preview"} onClick={() => setPaletteView("preview")}>{label("색 구분", "Distinguish colors")}</button>
               </div>
-            </section>}
-            <div id="color-value-study" tabIndex={-1} className="image-value-anchor"><ImageValueStudy imageUrl={store.sourceImageUrl}/></div>
+              {paletteView === "preview" && <div className="palette-preview-controls">
+                <button type="button" className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button>
+                <select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event => store.setColorBlindMode(event.target.value as ColorBlindnessType)}>
+                  {[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text]) => <option key={value} value={value}>{text}</option>)}
+                </select>
+              </div>}
+            </div>
+            <p className="palette-view-note">{paletteView === "edit" ? label("색을 눌러 수정하고, 순서와 스타일을 조정하세요.", "Select a color to edit, reorder, or style your palette.") : label("흑백·색각 조건을 바꿔 비교하세요. 원래 색과 HEX는 유지돼요.", "Compare grayscale and color vision conditions. Original colors and HEX values stay unchanged.")}</p>
+            <div className="palette-canvas" role="group" aria-label={paletteView === "edit" ? label("편집할 팔레트 색", "Editable palette colors") : label("색 구분 미리보기", "Color distinction preview")}>
+              {colors.map((color,index) => paletteView === "edit" ? <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1} · ${color.hex}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={() => selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></button>
+                : <div key={index} className="palette-preview-swatch"><span className="palette-canvas-color" style={{background:previewColors[index].hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></div>)}
+            </div>
+            {paletteView === "edit" && <><div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 선택한 색으로 교체`, `Replace palette color ${selectedIndex+1} with selected color`)} <span style={{background:activeHex}}/></button>}</div>
+            <div className="style-section"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style=>{requestId.current++;setBusy(false);store.setCurrentStyle(style);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} customSettings={store.customSettings} onCustomSettingsChange={settings=>{requestId.current++;setBusy(false);store.setCustomSettings(settings);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} /></div>
+            </>}
+          </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 추출한 팔레트가 없어요.", "No palette extracted yet.")}</p><span>{label("위에서 이미지를 올리면 이곳에 색이 모입니다.", "Upload an image above to see its colors here.")}</span></div>}
+          </section>
+          <section className="image-palette-group image-distribution" aria-labelledby="image-distribution-heading">
+            <div className="palette-group-heading"><h3 id="image-distribution-heading">{label("이미지 분포", "Image distribution")}</h3></div>
+            {hasImage && store.extractionMethod === "kmeans" && <div className="palette-area" aria-label={label("색별 면적 비율", "Color area proportions")} aria-busy={busy}>
+              <div className="palette-area-heading"><h4>{label("색별 면적 비율", "Color area proportions")}</h4>{currentArea?.percentages && <span>{currentArea.isRegion ? label("선택 영역 기준", "Selected region") : label("전체 이미지 기준", "Whole image")}</span>}</div>
+              {currentArea?.percentages ? <>
+                <div className="palette-area-bar" aria-hidden="true">{currentArea.colors.map((color, index) => <span key={index} style={{ backgroundColor: color.hex, width: `${currentArea.percentages![index]}%` }} />)}</div>
+                <ul className="palette-area-legend">{currentArea.colors.map((color,index) => <li key={index}><span className="palette-area-chip" style={{background:color.hex}} aria-hidden="true"/><code>{color.hex}</code><strong>{formatArea(currentArea.percentages![index])}</strong></li>)}</ul>
+                <p className="lab-help">{label("축소 이미지에서 비슷한 색을 묶은 추정치예요. 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced image. Pixels below 50% opacity are excluded.")}</p>
+              </> : <div className="palette-area-pending"><p className="lab-help">{busy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("원본 이미지에서 다시 추출하면 면적 비율을 확인할 수 있어요.", "Re-extract the original image colors to see their area proportions.")}</p>{!busy && !currentArea && <button className="lab-text-button" onClick={() => { store.setCurrentStyle("original"); if (extractionSource.current) void runExtraction(extractionSource.current) }}>{label("면적 다시 분석", "Analyze area again")}</button>}</div>}
+            </div>}
+            <div id="color-value-study" tabIndex={-1} className="image-value-anchor"><ImageValueStudy imageUrl={store.sourceImageUrl} headingLevel={4}/></div>
+                {histogram && <details className="legacy-brightness"><summary>{label("밝기 분포 · 히스토그램", "Brightness distribution · histogram")}</summary><p className="lab-help">{label("전체 이미지의 밝기 분포입니다. 가중 RGB 기준으로 계산해, 위 ‘명암별 면적’과 수치가 다를 수 있어요.", "Brightness distribution across the whole image. This uses weighted RGB, so values may differ from Light & dark areas above.")}</p><div className="compact-histogram"><HistogramSection histogram={histogram}/></div></details>}
+          </section>
           </div>
         </section>
       </div>
