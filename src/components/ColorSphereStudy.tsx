@@ -46,7 +46,7 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
         </div>
       </div>
       <p className="lab-help">{mode === "normal"
-        ? (ko ? "선택한 색으로 만든 회화용 명암 단계입니다. 위의 조명 실험과 비교해보세요." : "A painterly value ramp from your selected color. Compare it with the lighting experiment above.")
+        ? (ko ? "선택한 색으로 만든 회화용 명암 단계입니다. 아래 ‘색 · 빛 실험’의 조명과 비교해보세요." : "A painterly value ramp from your selected color. Compare it with the lighting in Color & light experiments below.")
         : (ko ? "따뜻한 명부와 차가운 암부로 설계한 색 단계입니다. 모든 그림자가 차가워지는 것은 아니에요." : "A designed warm-light, cool-shadow ramp. Shadows are not always cool.")}</p>
     </section>
   )
