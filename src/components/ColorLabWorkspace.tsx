@@ -22,8 +22,6 @@ import { usePaletteStore } from "@/stores/paletteStore"
 import { useSavedColors } from "@/stores/savedColorsStore"
 import { useToast } from "@/components/ui/toast"
 import { extractColorsWithArea, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
-import { applyColorBlindnessToColors, type ColorBlindnessType } from "@/lib/colorVision"
-import { toGrayscale } from "@/lib/styleFilters"
 import { resizePaletteColors } from "@/lib/resizePalette"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
 import type { Color } from "@/types"
@@ -71,7 +69,6 @@ export function ColorLabWorkspace() {
   const [copied, setCopied] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [paletteView, setPaletteView] = useState<"edit" | "preview">("edit")
   const [imageMode, setImageMode] = useState<"extract" | "pick">("extract")
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [areaAnalysis, setAreaAnalysis] = useState<AreaAnalysis | null>(null)
@@ -273,8 +270,6 @@ export function ColorLabWorkspace() {
     } catch { addToast(label("저장 공간이 부족해요. 파일로 내보내기를 이용해주세요.", "Storage is full. Export your palette as a file."), "error") }
   }
 
-  const visionColors = applyColorBlindnessToColors(colors, store.colorBlindMode)
-  const previewColors = store.valueCheckEnabled ? toGrayscale(visionColors) : visionColors
   const currentPaletteForExport = palette?.colors.length ? { ...palette, sourceImageUrl: store.sourceImageUrl || palette.sourceImageUrl } : null
 
   return (
@@ -325,26 +320,12 @@ export function ColorLabWorkspace() {
             <div className="palette-group-heading"><h3 id="working-palette-heading">{label("팔레트", "Palette")}</h3><span className="palette-count">{colors.length} {label("색", "colors")}</span></div>
           {colors.length > 0 ? <div className="working-palette">
             <div className="working-palette-heading"><input className="palette-name-input" aria-label={label("팔레트 이름", "Palette name")} value={palette?.name ?? "Untitled Palette"} onChange={event=>{if(palette)store.setCurrentPalette({...palette,name:event.target.value})}} maxLength={80}/></div>
-            <div className="palette-view-tools">
-              <div className="lab-segment" role="group" aria-label={label("팔레트 보기", "Palette view")}>
-                <button type="button" aria-pressed={paletteView === "edit"} onClick={() => setPaletteView("edit")}>{label("편집", "Edit")}</button>
-                <button type="button" aria-pressed={paletteView === "preview"} onClick={() => setPaletteView("preview")}>{label("색 구분", "Distinguish colors")}</button>
-              </div>
-              {paletteView === "preview" && <div className="palette-preview-controls">
-                <button type="button" className="lab-button" aria-pressed={store.valueCheckEnabled} onClick={store.toggleValueCheck}>{label("흑백", "Grayscale")}</button>
-                <select aria-label={label("팔레트 색각 시뮬레이션", "Palette color vision simulation")} value={store.colorBlindMode} onChange={event => store.setColorBlindMode(event.target.value as ColorBlindnessType)}>
-                  {[["none",label("정상","Normal")],["protanopia",label("적색맹","Protanopia")],["deuteranopia",label("녹색맹","Deuteranopia")],["tritanopia",label("청색맹","Tritanopia")]].map(([value,text]) => <option key={value} value={value}>{text}</option>)}
-                </select>
-              </div>}
+            <p className="palette-edit-note">{label("색을 눌러 수정하고, 순서와 스타일을 조정하세요.", "Select a color to edit, reorder, or style your palette.")}</p>
+            <div className="palette-canvas" role="group" aria-label={label("편집할 팔레트 색", "Editable palette colors")}>
+              {colors.map((color,index) => <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1} · ${color.hex}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={() => selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></button>)}
             </div>
-            <p className="palette-view-note">{paletteView === "edit" ? label("색을 눌러 수정하고, 순서와 스타일을 조정하세요.", "Select a color to edit, reorder, or style your palette.") : label("흑백·색각 조건을 바꿔 비교하세요. 원래 색과 HEX는 유지돼요.", "Compare grayscale and color vision conditions. Original colors and HEX values stay unchanged.")}</p>
-            <div className="palette-canvas" role="group" aria-label={paletteView === "edit" ? label("편집할 팔레트 색", "Editable palette colors") : label("색 구분 미리보기", "Color distinction preview")}>
-              {colors.map((color,index) => paletteView === "edit" ? <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1} · ${color.hex}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={() => selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></button>
-                : <div key={index} className="palette-preview-swatch"><span className="palette-canvas-color" style={{background:previewColors[index].hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></div>)}
-            </div>
-            {paletteView === "edit" && <><div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 선택한 색으로 교체`, `Replace palette color ${selectedIndex+1} with selected color`)} <span style={{background:activeHex}}/></button>}</div>
+            <div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 선택한 색으로 교체`, `Replace palette color ${selectedIndex+1} with selected color`)} <span style={{background:activeHex}}/></button>}</div>
             <div className="style-section"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style=>{requestId.current++;setBusy(false);store.setCurrentStyle(style);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} customSettings={store.customSettings} onCustomSettingsChange={settings=>{requestId.current++;setBusy(false);store.setCustomSettings(settings);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} /></div>
-            </>}
           </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 추출한 팔레트가 없어요.", "No palette extracted yet.")}</p><span>{label("위에서 이미지를 올리면 이곳에 색이 모입니다.", "Upload an image above to see its colors here.")}</span></div>}
           </section>
           <section id="color-save" tabIndex={-1} className="image-palette-group palette-save" aria-labelledby="palette-save-heading">
