@@ -1,0 +1,73 @@
+.composition-arrangement-study { --cas-accent:#c7b5df; min-width:0; color:#ddd; }
+.cas-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-bottom:1px solid #343039; gap:4px; }
+.composition-arrangement-study button { color:#aaa; background:#0d0c0f; border:1px solid #343039; font:inherit; font-size:12px; line-height:1.45; cursor:pointer; min-height:38px; padding:8px 11px; transition:background .15s,border-color .15s,color .15s; }
+.composition-arrangement-study button:hover { color:#f1eaf8; border-color:#8c789d; }
+.composition-arrangement-study button:focus-visible,.composition-arrangement-study input:focus-visible { outline:2px solid var(--cas-accent); outline-offset:3px; }
+.composition-arrangement-study button[aria-pressed=true] { color:#f0e8f8; background:#2d2535; border-color:#9e88b1; }
+.composition-arrangement-study button:disabled { color:#5d5862; border-color:#27242b; cursor:default; background:#0b0a0d; }
+.cas-tabs button { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; padding:13px 10px; border:0; background:transparent; min-height:49px; }
+.cas-tabs button>span { font:10px var(--f-mono,ui-monospace,monospace); color:#776b82; }
+.cas-tabs button[aria-selected=true] { color:#e5d6f5; background:#18131e; }
+.cas-tabs button[aria-selected=true]::after { content:""; position:absolute; bottom:-1px; inset-inline:0; height:2px; background:var(--cas-accent); }
+.cas-tabs button[aria-selected=true]>span { color:var(--cas-accent); }
+.cas-intro { font-size:13px; line-height:1.75; color:#aaa3ae; margin:17px 0; }
+.cas-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:24px; align-items:start; }
+.cas-visual { min-width:0; }
+.cas-stage-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:9px; }
+.cas-stage-toolbar>span { font-size:11px; color:#a89ead; }
+.cas-stage-toolbar button { font-size:11px; min-height:33px; padding:5px 9px; }
+.cas-stage { background:#eeeaf0; border:1px solid #4a424f; overflow:hidden; }
+.cas-stage svg { width:100%; height:clamp(240px,48svh,430px); display:block; user-select:none; -webkit-user-select:none; touch-action:pan-y; }
+.cas-frame-marks { fill:none; stroke:#c9c1d0; stroke-width:1; pointer-events:none; }
+.cas-object { cursor:grab; outline:none; touch-action:none; }
+.cas-object.is-dragging { cursor:grabbing; }
+.cas-hit-area { fill:transparent; stroke:none; pointer-events:all; }
+.cas-selection { fill:none; stroke:#75608c; stroke-width:1.2; stroke-dasharray:4 4; opacity:0; pointer-events:none; }
+.cas-object.is-selected .cas-selection { opacity:.8; }
+.cas-object:focus-visible .cas-selection { opacity:1; stroke:#634087; stroke-width:2; stroke-dasharray:none; }
+.cas-help { font-size:11px; line-height:1.7; color:#96909c; margin:9px 0 0; }
+.cas-question { display:flex; gap:12px; align-items:baseline; border-top:1px solid #302a36; padding:16px 0 0; margin-top:16px; }
+.cas-question>span { color:#c6b2dd; font:13px var(--f-mono,ui-monospace,monospace); flex-shrink:0; }
+.cas-question p { font-size:13px; line-height:1.85; color:#b5aabb; margin:0; word-break:keep-all; overflow-wrap:anywhere; }
+.cas-controls { display:grid; gap:20px; padding-top:4px; }
+.cas-controls fieldset { min-width:0; border:0; border-top:1px solid #38313e; margin:0; padding:12px 0 0; }
+.cas-controls legend { font-size:11px; letter-spacing:.03em; color:#c4b9cd; padding:0 8px 0 0; }
+.cas-controls p { font-size:11px; line-height:1.75; color:#97909e; margin:9px 0 0; word-break:keep-all; overflow-wrap:anywhere; }
+.cas-presets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.cas-presets button { text-align:left; min-height:58px; padding:8px 10px; }
+.cas-presets button>span { display:block; font:10px var(--f-mono,ui-monospace,monospace); color:#8f7da1; margin-bottom:4px; }
+.cas-presets button[aria-pressed=true]>span { color:#cbb3e3; }
+.cas-controls .cas-restore { width:100%; margin-top:11px; font-size:11px; }
+.cas-object-picker { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+.cas-object-picker button { font-size:11px; padding:7px 3px; }
+.cas-selected-title { display:flex; align-items:center; gap:8px; margin-top:19px; margin-bottom:10px; }
+.cas-selected-title>span:first-child { font-size:13px; color:#d3c3e2; }
+.cas-selected-title>span:last-child { font-size:10px; color:#7e7388; }
+.cas-range { display:block; min-width:0; margin-top:9px; }
+.cas-range>span { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#b9afc2; font-size:11px; }
+.cas-range output { font:11px var(--f-mono,ui-monospace,monospace); color:#dac9ec; font-variant-numeric:tabular-nums; }
+.cas-range input { display:block; width:100%; height:29px; margin:3px 0 0; accent-color:var(--cas-accent); cursor:ew-resize; }
+.cas-order { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:8px; }
+.cas-controls .cas-reset { width:100%; border-color:#28232e; color:#9a8fa6; background:transparent; font-size:11px; }
+@media(max-width:999px) { .cas-layout { grid-template-columns:minmax(0,1fr) 230px; gap:18px; } }
+@media(max-width:759px) {
+  .cas-layout { grid-template-columns:minmax(0,1fr); gap:22px; }
+  .cas-stage svg { height:auto; }
+  .cas-controls { grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px; }
+  .cas-controls .cas-reset { grid-column:1/-1; }
+  .cas-tabs button { gap:6px; padding-inline:5px; font-size:12px; }
+  .cas-tabs button>span { font-size:9px; }
+  .cas-intro { margin:14px 0; font-size:12px; }
+  .cas-object-picker { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .cas-presets { grid-template-columns:minmax(0,1fr); }
+  .cas-presets button { min-height:43px; display:flex; align-items:center; gap:10px; }
+  .cas-presets button>span { margin:0; }
+  .cas-question { margin-top:13px; padding-top:13px; }
+}
+@media(max-width:399px) { .cas-tabs button { flex-direction:column; gap:3px; } .cas-controls { gap:13px; } .cas-order { grid-template-columns:minmax(0,1fr); } }
+@media(pointer:coarse),(max-width:600px) {
+  .composition-arrangement-study button { min-height:44px; }
+  .cas-range input { height:38px; }
+  .cas-range>span,.cas-controls p,.cas-controls legend,.cas-help { font-size:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .composition-arrangement-study button { transition:none; } }

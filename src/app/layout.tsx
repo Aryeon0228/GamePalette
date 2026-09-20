@@ -72,7 +72,7 @@ export default async function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body data-lab="color" className={`${pretendard.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
+      <body className={`${pretendard.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
         <NextIntlClientProvider>
           <AuthProvider>
             <ToastProvider>

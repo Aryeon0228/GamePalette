@@ -16,7 +16,6 @@ import { ColorSphereStudy } from "@/components/ColorSphereStudy"
 import { ColorAttributeStudy } from "@/components/ColorAttributeStudy"
 import { ColorLightingStudy } from "@/components/ColorLightingStudy"
 import { ImageValueStudy } from "@/components/ImageValueStudy"
-import { ImageCompositionStudy } from "@/components/ImageCompositionStudy"
 import { AsciiStudy } from "@/components/AsciiStudy"
 import { usePaletteStore } from "@/stores/paletteStore"
 import { useSavedColors } from "@/stores/savedColorsStore"
@@ -29,13 +28,12 @@ import "@/app/color-lab.css"
 import "@/app/color-learning.css"
 import "./PaletteHierarchy.css"
 
-type Category = "explore" | "import" | "edit" | "composition" | "study" | "compose" | "analyze" | "save"
+type Category = "explore" | "import" | "edit" | "study" | "compose" | "analyze" | "save"
 const categories = [
   { id: "explore", ko: "선택한 색", en: "Selected color" },
   { id: "edit", ko: "이미지 · 팔레트", en: "Image & palette" },
   { id: "analyze", ko: "색 분석", en: "Color analysis" },
   { id: "compose", ko: "배색 · 셰이딩", en: "Compose & shade" },
-  { id: "composition", ko: "구도 · 실루엣", en: "Frame & silhouette" },
   { id: "study", ko: "색 · 빛 실험", en: "Color & light" },
 ] as const
 const randomHex = () => `#${Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, "0").toUpperCase()}`
@@ -47,6 +45,24 @@ type AreaAnalysis = {
   sourceImageUrl: string | null
   isRegion: boolean
 }
+
+type ColorOrigin = "random" | "selected" | "pixel" | "palette"
+type ImageMode = "extract" | "pick"
+type WorkspaceSession = {
+  paletteId: string
+  colors: Color[]
+  sourceImageUrl: string | null
+  activeHex: string
+  selectedIndex: number
+  colorOrigin: ColorOrigin
+  imageMode: ImageMode
+  areaAnalysis: AreaAnalysis | null
+  extractionSource: string | null
+}
+
+// Keep an in-tab workspace across lab navigation without storing uploaded images
+// or transient selections on disk. Only client effects read/write this snapshot.
+let workspaceSession: WorkspaceSession | null = null
 
 function makeColor(hex: string): Color {
   const rgb = hexToRgb(hex)
@@ -62,14 +78,14 @@ export function ColorLabWorkspace() {
   const [activeHex, setActiveHex] = useState("#808080")
   const [hexInput, setHexInput] = useState("#808080")
   const [hexError, setHexError] = useState(false)
-  const [colorOrigin, setColorOrigin] = useState<"random" | "selected" | "pixel" | "palette">("random")
+  const [colorOrigin, setColorOrigin] = useState<ColorOrigin>("random")
   const [ready, setReady] = useState(false)
   const selectionRevision = useRef(0)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [copied, setCopied] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [imageMode, setImageMode] = useState<"extract" | "pick">("extract")
+  const [imageMode, setImageMode] = useState<ImageMode>("extract")
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [areaAnalysis, setAreaAnalysis] = useState<AreaAnalysis | null>(null)
   const [canEyedrop, setCanEyedrop] = useState(false)
@@ -98,6 +114,7 @@ export function ColorLabWorkspace() {
       const isNew = url.searchParams.get("new") === "1"
       const state = usePaletteStore.getState()
       if (isNew) {
+        workspaceSession = null
         state.resetCurrentPalette()
         url.searchParams.delete("new")
         window.history.replaceState(window.history.state, "", url.toString())
@@ -108,19 +125,46 @@ export function ColorLabWorkspace() {
         state.setCurrentPalette({ id: generateId(), name: "Untitled Palette", colors: initial, style: "original", tags: [], createdAt: now, updatedAt: now })
         state.updateColors(initial)
       }
-      const existing = usePaletteStore.getState().currentPalette?.colors[0]?.hex
-      const first = existing ?? randomHex()
-      setColorOrigin(existing ? "palette" : "random")
+      const current = usePaletteStore.getState()
+      const currentPalette = current.currentPalette
+      const restored = currentPalette && workspaceSession
+        && workspaceSession.paletteId === currentPalette.id
+        && workspaceSession.colors === currentPalette.colors
+        && workspaceSession.sourceImageUrl === current.sourceImageUrl
+        ? workspaceSession : null
+      const existing = currentPalette?.colors[0]?.hex
+      const first = restored?.activeHex ?? existing ?? randomHex()
+      setColorOrigin(restored?.colorOrigin ?? (existing ? "palette" : "random"))
+      setSelectedIndex(restored?.selectedIndex ?? 0)
+      setImageMode(restored?.imageMode ?? "extract")
+      setAreaAnalysis(restored?.areaAnalysis ?? null)
       setReady(true)
       setActiveHex(first)
       setHexInput(first)
-      extractionSource.current = usePaletteStore.getState().sourceImageUrl
+      extractionSource.current = restored ? restored.extractionSource : current.sourceImageUrl
     }
     if (usePaletteStore.persist.hasHydrated()) hydrate()
     const stop = usePaletteStore.persist.onFinishHydration(hydrate)
     const pendingRequest = requestId
     return () => { stop(); pendingRequest.current++ }
   }, [])
+
+  useEffect(() => {
+    // Before hydration the placeholder color must not replace a prior session,
+    // including React Strict Mode's first effect setup/cleanup cycle.
+    if (!ready || !palette) return
+    workspaceSession = {
+      paletteId: palette.id,
+      colors: palette.colors,
+      sourceImageUrl: store.sourceImageUrl,
+      activeHex,
+      selectedIndex,
+      colorOrigin,
+      imageMode,
+      areaAnalysis,
+      extractionSource: extractionSource.current,
+    }
+  }, [ready, palette, store.sourceImageUrl, activeHex, selectedIndex, colorOrigin, imageMode, areaAnalysis, busy])
 
   useEffect(() => {
     setHexInput(activeHex)
@@ -141,7 +185,7 @@ export function ColorLabWorkspace() {
     target?.scrollIntoView({ block: "start" })
   }
 
-  const selectColor = (hex: string, index?: number, origin: "random" | "selected" | "pixel" | "palette" = index === undefined ? "selected" : "palette") => {
+  const selectColor = (hex: string, index?: number, origin: ColorOrigin = index === undefined ? "selected" : "palette") => {
     selectionRevision.current++
     setColorOrigin(origin)
     setActiveHex(hex.toUpperCase())
@@ -273,7 +317,7 @@ export function ColorLabWorkspace() {
   const currentPaletteForExport = palette?.colors.length ? { ...palette, sourceImageUrl: store.sourceImageUrl || palette.sourceImageUrl } : null
 
   return (
-    <section className="color-lab color-overview">
+    <section className="color-lab color-overview" data-lab="color">
       <div className="color-lab-heading">
         <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>WEB 05</p><h1>Color <b>Lab</b></h1></div>
         <a className="heading-note learning-entry" href="#color-study">{label("피킹한 색으로, 빛과 명암까지 실험해보세요.", "Explore light and value with the color you pick.")} <span aria-hidden="true">↘</span></a>
@@ -369,16 +413,13 @@ export function ColorLabWorkspace() {
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
 
-      <section id="color-composition" tabIndex={-1} className="overview-section" aria-labelledby="composition-heading">
-        <div className="overview-section-heading"><h2 id="composition-heading"><span>05</span>{label("구도 · 실루엣", "Frame & silhouette")}</h2><p>{label("흑백으로 덩어리를 나누고, 구도 선을 겹쳐 비교하세요.", "Group values, layer guides, and compare the frame.")}</p></div>
-        <ImageCompositionStudy imageUrl={store.sourceImageUrl} onImageLoad={loadImage}/>
-      </section>
-
       <section id="color-study" tabIndex={-1} className="overview-section learning-workspace">
-        <div className="overview-section-heading"><h2><span>06</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("하나씩 바꾸고, 비교하고, 필요한 색을 작업에 가져오세요.", "Change one thing, compare, and bring useful colors into your work.")}</p></div>
+        <div className="overview-section-heading"><h2><span>05</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("하나씩 바꾸고, 비교하고, 필요한 색을 작업에 가져오세요.", "Change one thing, compare, and bring useful colors into your work.")}</p></div>
         <div className="learning-workspace-grid"><ColorAttributeStudy hex={activeHex} onSelectColor={selectColor}/><ColorLightingStudy hex={activeHex} onSelectColor={selectColor}/></div>
         <p className="learning-connection">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-value-study">{label("이미지 명암 실험으로 ↑", "Image value experiment ↑")}</a></p>
       </section>
+
+      <p id="color-composition" tabIndex={-1} className="learning-connection composition-moved">{label("구도 · 실루엣 실험은 Composition Lab으로 옮겼어요.", "Frame & silhouette experiments have moved to Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
 
       {currentPaletteForExport && <ExportModal open={exportOpen} onOpenChange={setExportOpen} palette={currentPaletteForExport}/>}
     </section>

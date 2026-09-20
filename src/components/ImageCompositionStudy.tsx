@@ -106,7 +106,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
 
   return <div className="image-composition-study">
     <div className="ics-toolbar">
-      <div className="ics-source"><span>{useSample ? t("구도 예시 · 팔레트와 별개", "Composition sample · separate from palette") : t("피킹 이미지 · 구도만 미리보기", "Picked image · framing preview only")}</span>
+      <div className="ics-source"><span>{useSample ? t("구도 예시", "Composition sample") : t("내 이미지 · 구도 미리보기", "My image · framing preview")}</span>
         {imageUrl && <div className="ics-buttons" role="group" aria-label={t("구도 실습 이미지", "Composition source")}><button type="button" aria-pressed={!useSample} onClick={() => setSampleFor(null)}>{t("내 이미지", "My image")}</button><button type="button" aria-pressed={useSample} onClick={() => setSampleFor(imageUrl)}>{t("구도 예시", "Sample")}</button></div>}
       </div>
       <div className="ics-buttons"><button type="button" onClick={() => fileRef.current?.click()}>{t("이미지 열기", "Open image")}</button><button type="button" onClick={reset}>{t("구도 실습 초기화", "Reset composition")}</button></div>
@@ -151,7 +151,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
         <fieldset><legend>{t("02 / 화면 비율", "02 / Frame ratio")}</legend>
           <div className="ics-buttons ics-ratios" role="group" aria-label={t("화면 비율", "Frame ratio")}>{[["original", t("원본", "Original")], ["1", "1:1"], [String(4 / 3), "4:3"], ["1.5", "3:2"], [String(16 / 9), "16:9"], [String(9 / 16), "9:16"], [String((1 + Math.sqrt(5)) / 2), "φ:1"]].map(([value, name]) => <button type="button" key={value} aria-pressed={ratio === value} onClick={() => { setRatio(value); setPanX(0); setPanY(0) }}>{name}</button>)}</div>
           {ratio !== "original" && activeSource && <div>{originalAspect > aspect + 0.0001 ? range(t("크롭 위치 좌우", "Horizontal crop position"), panX, setPanX, -100, 100) : originalAspect < aspect - 0.0001 ? range(t("크롭 위치 상하", "Vertical crop position"), panY, setPanY, -100, 100) : null}</div>}
-          <p>{t("비율을 바꾸면 미리보기만 잘립니다. 원본과 팔레트는 유지됩니다.", "Ratios crop only this preview. The source and palette stay unchanged.")}</p>
+          <p>{t("비율을 바꿔 다른 프레임을 비교하세요. 원본 파일은 그대로 유지됩니다.", "Change the ratio to compare frames. Your original file stays unchanged.")}</p>
         </fieldset>
         <fieldset><legend>{t("03 / 구도 가이드", "03 / Composition guides")}</legend>
           <div className="ics-buttons ics-guide-choices" role="group" aria-label={t("겹쳐 볼 구도 가이드", "Guide layers")}>{(Object.keys(guideNames) as Guide[]).map(kind => <button type="button" key={kind} aria-pressed={guides.includes(kind)} onClick={() => setGuides(current => current.includes(kind) ? current.filter(g => g !== kind) : [...current, kind])}>{guideNames[kind]}</button>)}<button type="button" aria-pressed={!guides.length} onClick={() => setGuides([])}>{t("선 끄기", "Hide guides")}</button></div>
@@ -164,7 +164,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
       <p>{t("실루엣은 외곽만 보고도 형태·포즈·방향이 읽히는가의 문제입니다. 이 실습의 명도 마스크는 밝기로 나눈 덩어리라서 배경이나 내부 그림자도 함께 묶일 수 있어요. 외곽을 정확히 보려면 배경과 분리된 이미지도 함께 비교하세요.", "A silhouette tests whether the outline communicates form, pose, and direction. A value mask groups brightness, so backgrounds and interior shadows may merge. Compare an isolated subject to judge its actual outline.")}</p>
       <p>{t("삼분할 선은 가로·세로의 1/3과 2/3, 황금 분할은 약 38.2%와 61.8%입니다. 황금 나선은 90°마다 반지름이 약 1.618배 커지는 곡선이며, 화면 비율에 맞춰 찌그러뜨리지 않습니다. 나선의 중심과 흐름을 옮기며 비교하세요.", "Thirds divide the frame at 1/3 and 2/3; the golden grid uses about 38.2% and 61.8%. The golden spiral grows in radius by about 1.618 per 90°. Its shape stays undistorted; move its center and flow to compare.")}</p>
       <p>{t("도타 2 아트 가이드의 관찰 포인트: 작은 크기에서도 알아볼 수 있는 외곽, 큰 명도 덩어리, 시선이 모이는 대비, 디테일 사이의 쉼. 특정 비율에 맞는다는 이유만으로 좋은 구도가 되는 것은 아닙니다.", "Observation prompts from the Dota 2 art guide: a readable outline at small scale, large value groups, contrast hierarchy, and quiet spaces between details. Matching a ratio alone does not make a successful composition.")}</p>
-      <p>{t("흑백은 선형 sRGB 휘도에서 계산하며, 투명 영역은 흰 배경에 합성합니다. 면적은 현재 잘린 프레임의 축소 미리보기 기준입니다. ‘이미지 열기’는 위의 피킹 이미지도 함께 바꾸며, 그 외 조작은 이 미리보기에만 적용됩니다.", "The mask uses linear-sRGB luminance, with transparency composited over white. Areas are measured in the reduced, cropped preview. Open image also updates the picker above; all other controls affect only this preview.")}</p>
+      <p>{t("흑백은 선형 sRGB 휘도에서 계산하며, 투명 영역은 흰 배경에 합성합니다. 면적은 현재 잘린 프레임의 축소 미리보기 기준입니다. 이미지는 이 브라우저에서 처리하며 서버로 보내지 않습니다.", "The mask uses linear-sRGB luminance, with transparency composited over white. Areas are measured in the reduced, cropped preview. Images are processed in your browser and are not uploaded to a server.")}</p>
     </div></details>
   </div>
 }

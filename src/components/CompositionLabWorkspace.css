@@ -1,0 +1,40 @@
+.composition-lab { max-width:1640px; margin:0 auto; padding:0 var(--pad,48px) 38px; }
+.composition-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px 0; }
+.composition-heading>div { display:flex; align-items:center; gap:24px; }
+.composition-eyebrow { font:400 10px/1.7 var(--f-mono,monospace); letter-spacing:.08em; color:#888; }
+.composition-eyebrow a { text-decoration:none; }
+.composition-eyebrow span { margin:0 9px; color:#555; }
+.composition-heading h1 { margin:0; font:300 32px/1.15 var(--f-lat,sans-serif); letter-spacing:-.025em; }
+.composition-heading h1 b { font-weight:600; }
+.composition-heading>p { margin:0; color:#aaa; font-size:12px; line-height:1.8; text-align:right; }
+.composition-jumps { position:sticky; top:var(--lab-header-height,130px); z-index:25; display:flex; gap:28px; padding:0 14px; border:1px solid #303030; background:#080808; }
+.composition-jumps a { display:flex; align-items:center; gap:8px; min-height:42px; color:#bbb; font-size:12px; text-decoration:none; }
+.composition-jumps a>span { color:#777; font:10px var(--f-mono,monospace); }
+.composition-jumps a:hover { color:#fff; }
+.composition-section { min-width:0; margin-top:28px; scroll-margin-top:52px; }
+.composition-section+.composition-section { margin-top:44px; padding-top:26px; border-top:1px solid #292929; }
+.composition-section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px 24px; margin-bottom:16px; }
+.composition-section-heading h2 { display:flex; align-items:center; gap:12px; flex-shrink:0; margin:0; font-size:16px; font-weight:400; }
+.composition-section-heading h2>span { color:#777; font:10px var(--f-mono,monospace); }
+.composition-section-heading p { margin:0; color:#999; font-size:12px; line-height:1.7; text-align:right; }
+.composition-lab .ics-stage { --ics-frame-height:clamp(240px,calc(100svh - 360px),460px); }
+.composition-lab .ics-visual { top:calc(var(--lab-header-height,130px) + 58px); }
+.composition-reference { display:flex; gap:18px; margin-top:32px; padding-top:18px; border-top:1px solid #292929; color:#888; font-size:11px; line-height:1.9; }
+.composition-reference>span { flex-shrink:0; }
+.composition-reference p { margin:0; }
+.composition-reference a { color:#bbb; }
+.composition-reference a:hover { color:#fff; }
+@media(max-width:1100px) { .composition-heading>div { display:block; } .composition-heading h1 { margin-top:6px; } }
+@media(max-width:759px) {
+  .composition-heading { align-items:flex-start; flex-direction:column; gap:10px; padding:20px 0; }
+  .composition-heading h1 { font-size:30px; }
+  .composition-heading>p { text-align:left; }
+  .composition-heading>p br { display:none; }
+  .composition-jumps { gap:24px; padding:0 10px; }
+  .composition-jumps a { min-height:44px; }
+  .composition-section-heading { flex-direction:column; gap:6px; }
+  .composition-section-heading p { text-align:left; }
+  .composition-section { margin-top:24px; }
+  .composition-lab .ics-stage { --ics-frame-height:min(310px,40svh); }
+  .composition-reference { gap:12px; }
+}

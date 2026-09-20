@@ -4,6 +4,7 @@
 .learning-jump-links>a{min-height:42px}.learning-pinned-color{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-left:12px;border-left:1px solid #333}.learning-pinned-color input[type=color]{width:24px;height:26px;padding:0;border:0;background:transparent;cursor:pointer}.learning-pinned-color code{font:11px var(--f-mono);color:#ddd}
 .learning-workspace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 .learning-connection{font-size:12px;line-height:1.8;color:#999;margin-top:12px}.learning-connection a{color:#ddd;white-space:nowrap;margin-left:8px;text-decoration:underline}
+.composition-moved{margin-top:26px;padding-top:16px;border-top:1px solid #292929;scroll-margin-top:52px}
 .image-value-anchor{margin-top:12px;scroll-margin-top:calc(var(--lab-header-height,130px) + 56px)}
 .legacy-brightness{min-width:0;font-size:12px;border:1px solid #292929;padding:0 10px;align-self:start}.legacy-brightness summary{padding:11px 0;min-height:40px;color:#bbb;cursor:pointer}.legacy-brightness .compact-histogram{margin:8px 0}.legacy-brightness .lab-help{margin-top:0}
 .source-inspection .palette-inspection{grid-template-columns:minmax(0,1fr)}

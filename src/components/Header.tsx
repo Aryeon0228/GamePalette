@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
 
@@ -24,6 +25,8 @@ const labs = [
 
 export function Header() {
   const isKorean = useLocale() === "ko"
+  const pathname = usePathname()
+  const isComposition = pathname === "/composition" || pathname.startsWith("/composition/")
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
@@ -51,7 +54,7 @@ export function Header() {
       cancelled = true
       window.removeEventListener("resize", revealCurrentLab)
     }
-  }, [])
+  }, [pathname])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -132,7 +135,8 @@ export function Header() {
       <div className="lab-navigation-bar">
         <nav ref={labNavigation} className="lab-navigation" aria-label={isKorean ? "시뮬레이터 랩" : "Simulator labs"}>
           {labs.map((lab) => <a key={lab.href} href={lab.href}>{lab.label}</a>)}
-          <Link href="/" aria-current="page" onClick={() => setMenuOpen(false)}>Color Lab</Link>
+          <Link href="/" aria-current={isComposition ? undefined : "page"} onClick={() => setMenuOpen(false)}>Color Lab</Link>
+          <Link href="/composition" aria-current={isComposition ? "page" : undefined} onClick={() => setMenuOpen(false)}>Composition Lab</Link>
         </nav>
       </div>
     </header>
