@@ -88,10 +88,12 @@ export function ColorLabWorkspace() {
   const [imageMode, setImageMode] = useState<ImageMode>("extract")
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [areaAnalysis, setAreaAnalysis] = useState<AreaAnalysis | null>(null)
+  const [areaBusy, setAreaBusy] = useState(false)
   const [canEyedrop, setCanEyedrop] = useState(false)
   const extractionSource = useRef<string | null>(null)
   const paletteResize = useRef<{ paletteId: string; source: Color[]; lastOutput: Color[]; fallbackHex: string } | null>(null)
   const requestId = useRef(0)
+  const areaRequestId = useRef(0)
   const initialized = useRef(false)
   const colors = store.currentPalette?.colors ?? []
   const palette = store.currentPalette
@@ -99,10 +101,8 @@ export function ColorLabWorkspace() {
   const displayedCount = hasImage ? Math.max(3, Math.min(32, store.colorCount)) : colors.length
   const countLabel = hasImage ? label("추출할 색 수", "Colors to extract") : label("팔레트 색 수", "Palette colors")
   // Area belongs to the extracted image colors, not subsequent palette edits.
-  const currentArea = !busy && hasImage && store.extractionMethod === "kmeans"
-    && store.currentStyle === "original" && areaAnalysis && areaAnalysis.sourceImageUrl === store.sourceImageUrl
-    && areaAnalysis.colors.length === colors.length
-    && areaAnalysis.colors.every((color, index) => color.hex === colors[index].hex)
+  const currentArea = !busy && !areaBusy && hasImage && store.extractionMethod === "kmeans"
+    && areaAnalysis && areaAnalysis.sourceImageUrl === store.sourceImageUrl
     ? areaAnalysis : null
 
   useEffect(() => {
@@ -146,7 +146,8 @@ export function ColorLabWorkspace() {
     if (usePaletteStore.persist.hasHydrated()) hydrate()
     const stop = usePaletteStore.persist.onFinishHydration(hydrate)
     const pendingRequest = requestId
-    return () => { stop(); pendingRequest.current++ }
+    const pendingAreaRequest = areaRequestId
+    return () => { stop(); pendingRequest.current++; pendingAreaRequest.current++ }
   }, [])
 
   useEffect(() => {
@@ -193,7 +194,6 @@ export function ColorLabWorkspace() {
   }
 
   const changeColors = (next: Color[], index: number) => {
-    setAreaAnalysis(null)
     paletteResize.current = null
     requestId.current++
     setBusy(false)
@@ -239,6 +239,8 @@ export function ColorLabWorkspace() {
   const runExtraction = useCallback(async (src: string, count?: number, method?: "histogram" | "kmeans") => {
     const id = ++requestId.current
     const selectionAtStart = selectionRevision.current
+    areaRequestId.current++
+    setAreaBusy(false)
     setBusy(true)
     setAreaAnalysis(null)
     try {
@@ -265,6 +267,24 @@ export function ColorLabWorkspace() {
     } finally { if (id === requestId.current) setBusy(false) }
   }, [addToast, ko])
 
+  const analyzeArea = async () => {
+    const state = usePaletteStore.getState()
+    const sourceImageUrl = state.sourceImageUrl
+    const src = extractionSource.current ?? sourceImageUrl
+    if (!sourceImageUrl || !src) return
+    const id = ++areaRequestId.current
+    setAreaBusy(true)
+    try {
+      // This is image analysis only. Palette colors, original colors, style,
+      // selected color, and extraction settings must remain exactly as edited.
+      const result = await extractColorsWithArea(src, Math.max(3, Math.min(32, state.colorCount)), "kmeans")
+      if (id !== areaRequestId.current || sourceImageUrl !== usePaletteStore.getState().sourceImageUrl) return
+      setAreaAnalysis({ colors: result.colors, percentages: result.areaPercentages, sourceImageUrl, isRegion: src !== sourceImageUrl })
+    } catch {
+      if (id === areaRequestId.current) addToast(label("이미지의 면적을 분석하지 못했어요. 다시 시도해주세요.", "Could not analyze image areas. Please try again."), "error")
+    } finally { if (id === areaRequestId.current) setAreaBusy(false) }
+  }
+
   const loadImage = (url: string) => {
     paletteResize.current = null
     store.setSourceImageUrl(url)
@@ -274,6 +294,8 @@ export function ColorLabWorkspace() {
 
   const clearImage = () => {
     requestId.current++
+    areaRequestId.current++
+    setAreaBusy(false)
     setBusy(false)
     setAreaAnalysis(null)
     paletteResize.current = null
@@ -319,7 +341,7 @@ export function ColorLabWorkspace() {
   return (
     <section className="color-lab color-overview" data-lab="color">
       <div className="color-lab-heading">
-        <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>WEB 05</p><h1>Color <b>Lab</b></h1></div>
+        <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>{label("색과 빛", "COLOR & LIGHT")}</p><h1>Color <b>Lab</b></h1></div>
         <a className="heading-note learning-entry" href="#color-study">{label("피킹한 색으로, 빛과 명암까지 실험해보세요.", "Explore light and value with the color you pick.")} <span aria-hidden="true">↘</span></a>
       </div>
 
@@ -387,13 +409,13 @@ export function ColorLabWorkspace() {
           </section>
           <section className="image-palette-group image-distribution" aria-labelledby="image-distribution-heading">
             <div className="palette-group-heading"><h3 id="image-distribution-heading">{label("이미지 분포", "Image distribution")}</h3></div>
-            {hasImage && store.extractionMethod === "kmeans" && <div className="palette-area" aria-label={label("색별 면적 비율", "Color area proportions")} aria-busy={busy}>
+            {hasImage && store.extractionMethod === "kmeans" && <div className="palette-area" aria-label={label("색별 면적 비율", "Color area proportions")} aria-busy={busy || areaBusy}>
               <div className="palette-area-heading"><h4>{label("색별 면적 비율", "Color area proportions")}</h4>{currentArea?.percentages && <span>{currentArea.isRegion ? label("선택 영역 기준", "Selected region") : label("전체 이미지 기준", "Whole image")}</span>}</div>
               {currentArea?.percentages ? <>
                 <div className="palette-area-bar" aria-hidden="true">{currentArea.colors.map((color, index) => <span key={index} style={{ backgroundColor: color.hex, width: `${currentArea.percentages![index]}%` }} />)}</div>
                 <ul className="palette-area-legend">{currentArea.colors.map((color,index) => <li key={index}><span className="palette-area-chip" style={{background:color.hex}} aria-hidden="true"/><code>{color.hex}</code><strong>{formatArea(currentArea.percentages![index])}</strong></li>)}</ul>
-                <p className="lab-help">{label("축소 이미지에서 비슷한 색을 묶은 추정치예요. 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced image. Pixels below 50% opacity are excluded.")}</p>
-              </> : <div className="palette-area-pending"><p className="lab-help">{busy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("원본 이미지에서 다시 추출하면 면적 비율을 확인할 수 있어요.", "Re-extract the original image colors to see their area proportions.")}</p>{!busy && !currentArea && <button className="lab-text-button" onClick={() => { store.setCurrentStyle("original"); if (extractionSource.current) void runExtraction(extractionSource.current) }}>{label("면적 다시 분석", "Analyze area again")}</button>}</div>}
+                <p className="lab-help">{label("축소한 원본 이미지의 비슷한 색을 묶은 추정치예요. 팔레트 편집과는 별개이며, 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced source image, independently of palette edits. Pixels below 50% opacity are excluded.")}</p>
+              </> : <div className="palette-area-pending"><p className="lab-help">{busy || areaBusy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("이미지의 원래 색을 분석해 면적 비율을 확인하세요. 편집한 팔레트는 유지됩니다.", "Analyze source-image colors to see their area proportions. Your edited palette stays unchanged.")}</p>{!busy && !areaBusy && !currentArea && <button className="lab-text-button" onClick={() => void analyzeArea()}>{label("면적 다시 분석", "Analyze area again")}</button>}</div>}
             </div>}
             <div id="color-value-study" tabIndex={-1} className="image-value-anchor"><ImageValueStudy imageUrl={store.sourceImageUrl} headingLevel={4}/></div>
                 {histogram && <details className="legacy-brightness"><summary>{label("밝기 분포 · 히스토그램", "Brightness distribution · histogram")}</summary><p className="lab-help">{label("전체 이미지의 밝기 분포입니다. 가중 RGB 기준으로 계산해, 위 ‘명암별 면적’과 수치가 다를 수 있어요.", "Brightness distribution across the whole image. This uses weighted RGB, so values may differ from Light & dark areas above.")}</p><div className="compact-histogram"><HistogramSection histogram={histogram}/></div></details>}

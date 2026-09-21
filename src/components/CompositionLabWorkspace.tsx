@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { useLocale } from "next-intl"
+import { useCompositionState } from "@/stores/compositionSessionStore"
 import { CompositionArrangementStudy } from "@/components/CompositionArrangementStudy"
 import { ImageCompositionStudy } from "@/components/ImageCompositionStudy"
 import "./CompositionLabWorkspace.css"
@@ -9,13 +9,13 @@ import "./CompositionLabWorkspace.css"
 export function CompositionLabWorkspace() {
   const ko = useLocale() === "ko"
   const t = (kr: string, en: string) => ko ? kr : en
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useCompositionState("imageUrl")
 
   return (
     <div className="composition-lab" data-lab="composition">
       <header className="composition-heading">
         <div>
-          <p className="composition-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>INTERACTIVE STUDY</p>
+          <p className="composition-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>{t("화면 구성과 사용성", "COMPOSITION & USABILITY")}</p>
           <h1>Composition <b>Lab</b></h1>
         </div>
         <p>{t("같은 물건, 다른 배치.", "Same objects, different arrangements.")}<br /> {t("무엇이 먼저 보이는지 비교해보세요.", "Compare what catches your eye first.")}</p>

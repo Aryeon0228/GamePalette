@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
 
@@ -16,17 +16,29 @@ const siteLinks = [
   { section: "awards", label: "Awards", korean: "수상 내역" },
   { section: "about", label: "About / Contact", korean: "소개 · 연락처" },
 ]
-const labs = [
-  { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html` },
-  { label: "Weathering Lab", href: `${STUDIO_URL}/weathering-lab.html` },
-  { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html` },
-  { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html` },
+const labGroups = [
+  { korean: "색과 빛", english: "Color & light", labs: [
+    { label: "Color Lab", href: "/", development: false },
+    { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html`, development: false },
+  ] },
+  { korean: "표면과 공간", english: "Surface & space", labs: [
+    { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html`, development: false },
+    { label: "Weathering Lab", href: `${STUDIO_URL}/weathering-lab.html`, development: true },
+    { label: "UV Lab", href: `${STUDIO_URL}/uv-lab.html`, development: false },
+    { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html`, development: false },
+  ] },
+  { korean: "화면 구성과 사용성", english: "Composition & usability", labs: [
+    { label: "Composition Lab", href: "/composition", development: false },
+    { label: "UI/UX Lab", href: `${STUDIO_URL}/uiux-lab.html`, development: false },
+  ] },
 ]
 
 export function Header() {
   const isKorean = useLocale() === "ko"
   const pathname = usePathname()
+  const router = useRouter()
   const isComposition = pathname === "/composition" || pathname.startsWith("/composition/")
+  const currentLab = isComposition ? "/composition" : "/"
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
   const header = useRef<HTMLElement>(null)
@@ -132,12 +144,28 @@ export function Header() {
           </a>
         </div>
       </nav>
-      <div className="lab-navigation-bar">
-        <nav ref={labNavigation} className="lab-navigation" aria-label={isKorean ? "시뮬레이터 랩" : "Simulator labs"}>
-          {labs.map((lab) => <a key={lab.href} href={lab.href}>{lab.label}</a>)}
-          <Link href="/" aria-current={isComposition ? undefined : "page"} onClick={() => setMenuOpen(false)}>Color Lab</Link>
-          <Link href="/composition" aria-current={isComposition ? "page" : undefined} onClick={() => setMenuOpen(false)}>Composition Lab</Link>
+      <div className="lab-navigation-bar has-lab-picker">
+        <nav ref={labNavigation} className="lab-navigation" aria-label={isKorean ? "랩 이동" : "Switch labs"}>
+          {labGroups.flatMap((group) => group.labs).map((lab) => lab.href.startsWith("/") ? (
+            <Link key={lab.href} href={lab.href} aria-current={currentLab === lab.href ? "page" : undefined} onClick={() => setMenuOpen(false)}>{lab.label}</Link>
+          ) : (
+            <a key={lab.href} href={lab.href}>{lab.label}{lab.development && <span className="lab-development-status">(In Development)</span>}</a>
+          ))}
         </nav>
+        <label className="lab-picker">
+          <span>{isKorean ? "랩 이동" : "Labs"}</span>
+          <select aria-label={isKorean ? "랩 이동" : "Switch labs"} value={currentLab} onChange={(event) => {
+            const href = event.target.value
+            setMenuOpen(false)
+            if (href === currentLab) return
+            if (href.startsWith("/")) router.push(href)
+            else window.location.assign(href)
+          }}>
+            {labGroups.map((group) => <optgroup key={group.english} label={isKorean ? group.korean : group.english}>
+              {group.labs.map((lab) => <option key={lab.href} value={lab.href}>{lab.label}{lab.development ? " (In Development)" : ""}</option>)}
+            </optgroup>)}
+          </select>
+        </label>
       </div>
     </header>
   )

@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useLocale } from "next-intl"
+import { useCompositionState, type Guide } from "@/stores/compositionSessionStore"
 import { compositionCrop, compositionGuideGeometry, renderCompositionMask } from "@/lib/imageCompositionStudy"
 import { compositionLessonSample } from "@/lib/compositionLessonSample"
 import "./ImageCompositionStudy.css"
 
-type Guide = "thirds" | "golden" | "diagonals" | "spiral"
 type Source = { key: string; canvas: HTMLCanvasElement; aspect: number } | null
 
 export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: string | null; onImageLoad: (url: string) => void }) {
@@ -15,26 +15,27 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const fileRead = useRef<{ generation: number; reader: FileReader | null }>({ generation: 0, reader: null })
-  const [sampleFor, setSampleFor] = useState<string | null>(null)
+  const [sampleFor, setSampleFor] = useCompositionState("sampleFor")
   const useSample = !imageUrl || sampleFor === imageUrl
   const sourceKey = useSample ? "sample" : imageUrl!
+  const previousSourceKey = useRef(sourceKey)
   const [source, setSource] = useState<Source>(null)
   const [loadError, setLoadError] = useState(false)
   const [fileError, setFileError] = useState("")
   const [retry, setRetry] = useState(0)
-  const [ratio, setRatio] = useState("original")
-  const [panX, setPanX] = useState(0)
-  const [panY, setPanY] = useState(0)
-  const [threshold, setThreshold] = useState(128)
-  const [inverted, setInverted] = useState(false)
-  const [original, setOriginal] = useState(false)
-  const [guides, setGuides] = useState<Guide[]>(["thirds"])
-  const [opacity, setOpacity] = useState(85)
-  const [rotation, setRotation] = useState(0)
-  const [flipped, setFlipped] = useState(false)
-  const [scale, setScale] = useState(100)
-  const [offsetX, setOffsetX] = useState(0)
-  const [offsetY, setOffsetY] = useState(0)
+  const [ratio, setRatio] = useCompositionState("ratio")
+  const [panX, setPanX] = useCompositionState("panX")
+  const [panY, setPanY] = useCompositionState("panY")
+  const [threshold, setThreshold] = useCompositionState("threshold")
+  const [inverted, setInverted] = useCompositionState("inverted")
+  const [original, setOriginal] = useCompositionState("original")
+  const [guides, setGuides] = useCompositionState("guides")
+  const [opacity, setOpacity] = useCompositionState("opacity")
+  const [rotation, setRotation] = useCompositionState("rotation")
+  const [flipped, setFlipped] = useCompositionState("flipped")
+  const [scale, setScale] = useCompositionState("scale")
+  const [offsetX, setOffsetX] = useCompositionState("offsetX")
+  const [offsetY, setOffsetY] = useCompositionState("offsetY")
   const [darkArea, setDarkArea] = useState<number | null>(null)
   const activeSource = source?.key === sourceKey ? source.canvas : null
   const measuredArea = activeSource ? darkArea : null
@@ -48,7 +49,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
   const previewLabel = original ? t("원본 색", "Original color") : `${t("흑백 경계", "Threshold")} ${threshold}`
   const geometries = useMemo(() => guides.map(kind => ({ kind, ...compositionGuideGeometry(kind) })), [guides])
 
-  useEffect(() => { if (!imageUrl) setSampleFor(null) }, [imageUrl])
+  useEffect(() => { if (!imageUrl) setSampleFor(null) }, [imageUrl, setSampleFor])
   useEffect(() => {
     const pending = fileRead.current
     return () => { pending.generation++; pending.reader?.abort() }
@@ -58,7 +59,10 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
     let cancelled = false
     let image: HTMLImageElement | undefined
     let timeout: ReturnType<typeof setTimeout> | undefined
-    setSource(null); setLoadError(false); setPanX(0); setPanY(0); setDarkArea(null)
+    setSource(null); setLoadError(false); setDarkArea(null)
+    // Rebuild the canvas on remount, but retain the crop for the same source.
+    if (previousSourceKey.current !== sourceKey) { setPanX(0); setPanY(0) }
+    previousSourceKey.current = sourceKey
     const fail = () => { if (!cancelled) setLoadError(true); cancelled = true; if (timeout) clearTimeout(timeout) }
     if (useSample) setSource({ key: sourceKey, canvas: compositionLessonSample(), aspect: 1.5 })
     else {
@@ -81,7 +85,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
       image.src = sourceKey
     }
     return () => { cancelled = true; clearTimeout(timeout); if (image) { image.onload = null; image.onerror = null; image.removeAttribute("src") } }
-  }, [sourceKey, useSample, retry])
+  }, [sourceKey, useSample, retry, setPanX, setPanY])
 
   useEffect(() => {
     const canvas = canvasRef.current

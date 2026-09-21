@@ -2,12 +2,9 @@
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react"
 import { useLocale } from "next-intl"
+import { initialStudy, useCompositionState, type ArrangementObject, type Lesson, type ObjectId } from "@/stores/compositionSessionStore"
 import "./CompositionArrangementStudy.css"
 
-type Lesson = "scale" | "space" | "direction"
-type ObjectId = "box" | "cup" | "pencil" | "disc"
-type ArrangementObject = { id: ObjectId; x: number; y: number; scale: number; angle: number }
-type Study = { objects: ArrangementObject[]; preset: 0 | 1 | null; savedObjects?: ArrangementObject[] }
 type Drag = { pointerId: number; id: ObjectId; offsetX: number; offsetY: number; svg: SVGSVGElement }
 
 const WIDTH = 700
@@ -15,30 +12,6 @@ const HEIGHT = 430
 const LESSONS: Lesson[] = ["scale", "space", "direction"]
 const OBJECTS: ObjectId[] = ["box", "cup", "pencil", "disc"]
 const BOUNDS: Record<ObjectId, [number, number]> = { box: [56, 49], cup: [76, 53], pencil: [91, 13], disc: [50, 50] }
-
-function initialStudy(lesson: Lesson, preset: 0 | 1 = 1): Study {
-  const object = (id: ObjectId, x: number, y: number, scale = 1, angle = 0): ArrangementObject => ({ id, x, y, scale, angle })
-  if (lesson === "scale") return { preset, objects: [
-    object("box", 175, 210, preset ? 1.7 : 1),
-    object("cup", 375, 185, 1.1),
-    object("pencil", 375, 327, preset ? 0.9 : 1.8, -8),
-    object("disc", 550, 235, preset ? 0.6 : 1.18),
-  ] }
-  if (lesson === "space") return { preset, objects: preset ? [
-    object("box", 205, 215), object("cup", 326, 205, 0.9),
-    object("pencil", 270, 304, 0.88, -80), object("disc", 550, 213, 0.9),
-  ] : [
-    object("box", 120, 218), object("cup", 280, 218, 0.9),
-    object("pencil", 435, 218, 0.88, -80), object("disc", 575, 218, 0.9),
-  ] }
-  return { preset, objects: preset ? [
-    object("box", 288, 225, 1.2), object("disc", 432, 288, 0.9),
-    object("pencil", 342, 285, 1.1, -28), object("cup", 387, 192, 1.1, 12),
-  ] : [
-    object("box", 130, 220, 1.2), object("disc", 580, 220, 0.9),
-    object("pencil", 450, 220, 1.1, -90), object("cup", 300, 220, 1.1),
-  ] }
-}
 
 function objectExtent(object: ArrangementObject) {
   const [halfWidth, halfHeight] = BOUNDS[object.id]
@@ -76,10 +49,10 @@ export function CompositionArrangementStudy() {
   const ko = useLocale() === "ko"
   const t = (kr: string, en: string) => ko ? kr : en
   const uid = useId()
-  const [lesson, setLesson] = useState<Lesson>("scale")
-  const [studies, setStudies] = useState<Record<Lesson, Study>>(() => ({ scale: initialStudy("scale"), space: initialStudy("space"), direction: initialStudy("direction") }))
-  const [selectedId, setSelectedId] = useState<ObjectId>("box")
-  const [silhouette, setSilhouette] = useState(false)
+  const [lesson, setLesson] = useCompositionState("lesson")
+  const [studies, setStudies] = useCompositionState("studies")
+  const [selectedId, setSelectedId] = useCompositionState("selectedId")
+  const [silhouette, setSilhouette] = useCompositionState("silhouette")
   const [draggingId, setDraggingId] = useState<ObjectId | null>(null)
   const dragRef = useRef<Drag | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)

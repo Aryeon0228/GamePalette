@@ -215,6 +215,35 @@ button[class*="bg-gradient-"] { background-image: none; background-color: #222; 
 .lab-navigation a:hover, .lab-navigation a:focus-visible, .lab-navigation a[aria-current="page"] { color: #fff; }
 .lab-navigation a[aria-current="page"] { border-bottom-color: #ccc; }
 .lab-navigation a:focus-visible { outline-offset: -4px; }
+.lab-development-status { margin-left: .5em; color: #b9a3e3; }
+.lab-picker { display: none; }
+@media (max-width: 640px) {
+  .has-lab-picker .lab-navigation { display: none; }
+  .lab-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: var(--lab-navigation-height);
+    padding: 0 var(--pad);
+    font: 400 12px/1.4 var(--f-ko);
+  }
+  .lab-picker > span { flex: none; color: #aaa; }
+  .lab-picker select {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 0;
+    border: 0;
+    border-radius: 0;
+    color: #eee;
+    background: #000;
+    color-scheme: dark;
+    font: 400 12px/1.4 var(--f-ko);
+    cursor: pointer;
+  }
+  .lab-picker select:focus-visible { outline: 2px solid #eee; outline-offset: 0; }
+}
 .portfolio-footer {
   display: flex;
   align-items: flex-start;
