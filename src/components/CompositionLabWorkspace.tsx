@@ -23,7 +23,7 @@ export function CompositionLabWorkspace() {
 
       <nav className="composition-jumps" aria-label={t("구도 실험 바로가기", "Jump to composition experiments")}>
         <a href="#composition-arrange"><span>01</span>{t("물건 배치", "Object arrangement")}</a>
-        <a href="#composition-image"><span>02</span>{t("이미지 · 실루엣", "Image & silhouette")}</a>
+        <a href="#composition-image"><span>02</span>{t("이미지 · 명암 덩어리", "Image & value masses")}</a>
       </nav>
 
       <section id="composition-arrange" tabIndex={-1} className="composition-section" aria-labelledby="arrangement-heading">
@@ -36,7 +36,7 @@ export function CompositionLabWorkspace() {
 
       <section id="composition-image" tabIndex={-1} className="composition-section" aria-labelledby="image-composition-heading">
         <div className="composition-section-heading">
-          <h2 id="image-composition-heading"><span>02</span>{t("이미지 · 실루엣", "Image & silhouette")}</h2>
+          <h2 id="image-composition-heading"><span>02</span>{t("이미지 · 명암 덩어리", "Image & value masses")}</h2>
           <p>{t("내 이미지의 덩어리와 여백을 나누고, 구도 선을 겹쳐보세요.", "Inspect masses and negative space, then layer guides over your image.")}</p>
         </div>
         <ImageCompositionStudy imageUrl={imageUrl} onImageLoad={setImageUrl} />

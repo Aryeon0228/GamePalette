@@ -226,6 +226,12 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
     <label className="overview-select"><span>{title}</span><select value={value} onChange={(event) => onChange((typeof value === "number" ? Number(event.target.value) : event.target.value) as T)}>{values.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}</select></label>
   )
 
+  const renderOverviewFormats = (formats: ColorFormat[]) => <div className="overview-formats">{formats.map(fmt => {
+    const value = formatColor(color, fmt)
+    const display = fmt === "HEX" ? value : value.replace(/^[a-z]+\(/i, "").replace(/\)$/, "").replace(/,\s*/g, " ")
+    return <div key={fmt} title={`${t(`fmtDesc.${fmt}`)} · ${value}`}><span>{fmt}</span><code>{display}</code>{renderCompactCopy(value, `overview-format-${fmt}`)}</div>
+  })}</div>
+
   if (overview) {
     return <div className={cn("color-tools-overview", mode === "compose" ? "overview-compose" : "overview-analysis", mode === "analyze" && `overview-analysis-${analysisSection}`)}>
       <p className="sr-only" role="status" aria-live="polite">{copied === "error" ? label("복사하지 못했습니다.", "Copy failed.") : copied ? label("클립보드에 복사했습니다.", "Copied to clipboard.") : ""}</p>
@@ -259,18 +265,22 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
         {extraCard}
       </> : <>
         {analysisSection !== "checks" && renderCompactCard(t("formatsTitle"), <>
-          <div className="overview-formats">{COLOR_FORMATS.map((fmt) => { const value = formatColor(color, fmt); const display = fmt === "HEX" ? value : value.replace(/^[a-z]+\(/i, "").replace(/\)$/, "").replace(/,\s*/g, " "); return <div key={fmt} title={`${t(`fmtDesc.${fmt}`)} · ${value}`}><span>{fmt}</span><code>{display}</code>{renderCompactCopy(value, `overview-format-${fmt}`)}</div> })}</div>
+          {renderOverviewFormats(["HEX", "RGB", "HSL"])}
+          <details className="overview-extra-formats">
+            <summary>{label("추가 색상 형식 · 채널", "More formats & channels")}</summary>
+            {renderOverviewFormats(COLOR_FORMATS.filter(fmt => !["HEX", "RGB", "HSL"].includes(fmt)))}
           <div className="overview-format-actions">{renderCompactCopy(colorToAllFormatsText(color), "overview-formats-all", label("모두 복사", "Copy all"))}{(["JSON", "CSS"] as const).map((kind) => <button key={kind} type="button" className="overview-action" aria-label={`${kind} ${label("다운로드", "download")}`} onClick={() => downloadFile(kind === "JSON" ? colorToJson(color) : colorToCss(color), `color-${color.hex.slice(1).toLowerCase()}.${kind.toLowerCase()}`, kind === "JSON" ? "application/json" : "text/css")}><IoDownloadOutline />{kind}</button>)}</div>
           <div className="overview-channels"><div className="overview-channel-heading"><span>{t("channels")}</span><select value={format} aria-label={label("채널 색상 모델", "Channel color model")} onChange={(event) => setFormat(event.target.value as ColorFormat)}>{CHANNEL_FORMATS.map((value) => <option key={value} value={value}>{value}</option>)}</select></div><div className="overview-channel-bars" style={{ gridTemplateColumns: `repeat(${channels.length}, minmax(0, 1fr))` }}>{channels.map((channel) => <ColorChannelBar key={`${format}-${channel.label}`} {...channel} />)}</div></div>
+          </details>
         </>, undefined, "overview-formats-card")}
         {analysisSection !== "formats" && renderCompactCard(t("contrastTitle"), <>
           <div className="overview-contrast">{[{ bg: "#FFFFFF", title: t("onWhite") }, { bg: "#000000", title: t("onBlack") }].map(({ bg, title }) => { const report = contrastReport(color.hex, bg); return <div key={bg}><div className="overview-aa" style={{ background: bg, color: color.hex }}>Aa<span>{report.ratio.toFixed(2)} : 1</span></div><p>{title}</p><div className="overview-passes">{[{ ok: report.aaLarge, label: label("큰 AA", "AA L") }, { ok: report.aaNormal, label: "AA" }, { ok: report.aaaNormal, label: "AAA" }].map((item) => <span key={item.label} className={item.ok ? "pass" : "fail"}>{item.ok ? "✓" : "×"} {item.label}</span>)}</div></div> })}</div>
           <p className="overview-note">{t("bestText")} <strong>{textColor === "#FFFFFF" ? t("white") : t("black")}</strong></p>
         </>, undefined, "overview-contrast-card")}
         {analysisSection !== "formats" && renderCompactCard(t("cvdTitle"), <div className="overview-vision">{[{ hex: color.hex, name: t("cvdNormal") }, ...CVD_TYPES.map((type) => ({ hex: simulateColorBlindness(color.hex, type), name: t(`cvd.${type}`) }))].map((item, index) => <div key={index}><button type="button" className="overview-swatch" style={{ background: item.hex, height: 40 }} aria-label={`${label("색상 선택", "Select color")} ${item.name} ${item.hex}`} onClick={() => onSelectColor(item.hex)} /><p>{item.name}</p>{renderCompactCopy(item.hex, `overview-vision-${index}`, item.hex.toUpperCase())}</div>)}</div>, undefined, "overview-vision-card")}
-        {analysisSection !== "formats" && renderCompactCard(label("이름 · 의미", "Name & meaning"), <>
+        {analysisSection !== "formats" && renderCompactCard(label("이름 · 인상", "Name & impression"), <>
           <div className="overview-name"><span className="overview-dot" style={{ background: color.hex }} /><strong>{color.name}</strong><span>{t(`family.${family}`)} · {t(`temp.${colorTemperature(color)}`)}</span></div>
-          <h4 className="overview-meaning-title">{t(`psy.${family}.title`)}</h4><p className="overview-note">{t(`psy.${family}.desc`)}</p><p className="overview-note"><strong>{t("usage")}: </strong>{t(`psy.${family}.usage`)}</p>
+          <p className="overview-note">{t("psySub")}</p><h4 className="overview-meaning-title">{t(`psy.${family}.title`)}</h4><p className="overview-note">{t(`psy.${family}.desc`)}</p><p className="overview-note"><strong>{t("usage")}: </strong>{t(`psy.${family}.usage`)}</p>
         </>, undefined, "overview-meaning-card")}
         {extraCard}
       </>}

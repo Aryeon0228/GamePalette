@@ -30,7 +30,7 @@ import "./PaletteHierarchy.css"
 
 type Category = "explore" | "import" | "edit" | "study" | "compose" | "analyze" | "save"
 const categories = [
-  { id: "explore", ko: "선택한 색", en: "Selected color" },
+  { id: "explore", ko: "탐색 중인 색", en: "Explored color" },
   { id: "edit", ko: "이미지 · 팔레트", en: "Image & palette" },
   { id: "analyze", ko: "색 분석", en: "Color analysis" },
   { id: "compose", ko: "배색 · 셰이딩", en: "Compose & shade" },
@@ -352,15 +352,16 @@ export function ColorLabWorkspace() {
 
       <div className="overview-start selection-workspace">
         <section id="color-explore" tabIndex={-1} className="overview-panel selected-color-panel">
-          <div className="overview-section-heading"><h2><span>01</span>{label("선택한 색", "Selected color")}</h2><span className="color-origin">{colorOrigin === "random" ? label("시작용 랜덤 색", "Random starting color") : colorOrigin === "pixel" ? label("이미지에서 피킹", "Picked from image") : colorOrigin === "palette" ? label("팔레트에서 선택", "Selected from palette") : label("직접 선택한 색", "Selected color")}</span></div>
+          <div className="overview-section-heading"><h2><span>01</span>{label("탐색 중인 색", "Explored color")}</h2><span className="color-origin">{colorOrigin === "random" ? label("시작용 랜덤 색", "Random starting color") : colorOrigin === "pixel" ? label("이미지에서 피킹", "Picked from image") : colorOrigin === "palette" ? label("팔레트에서 선택", "Selected from palette") : label("직접 선택한 색", "Selected color")}</span></div>
           <div className="selected-color-card" aria-busy={!ready}>
             <input className="selected-color-swatch" type="color" aria-label={label("현재 색 고르기", "Pick current color")} value={activeHex} onChange={event => selectColor(event.target.value)} />
             <div className="selected-color-controls">
-              <div className="selected-hex-row"><form onSubmit={event => { event.preventDefault(); commitHex() }}><label className="sr-only" htmlFor="selected-color-hex">{label("현재 색 HEX", "Current color HEX")}</label><input id="selected-color-hex" className="hex-input" aria-invalid={hexError} value={hexInput} onChange={event => setHexInput(event.target.value)} onBlur={commitHex} maxLength={7} spellCheck={false} /></form><button className="lab-icon-button" onClick={copy} aria-label={label("현재 색 복사", "Copy current color")}>{copied ? <Check size={16} /> : <Copy size={16} />}</button></div>
-              <div className="inline-actions"><button className="lab-text-button" onClick={() => selectColor(randomHex(), undefined, "random")}>{label("랜덤 색", "Random color")}</button>{canEyedrop && <button className="lab-text-button" onClick={eyedrop}><Pipette size={14} />{label("화면 피킹", "Screen picker")}</button>}{colors.length > 0 && <button className="lab-text-button" onClick={() => addColors([activeHex])} aria-label={label("탐색 색을 팔레트에 추가", "Add explored color to palette")}><Plus size={14}/>{label("팔레트에 추가", "Add to palette")}</button>}</div>
+              <div className="selected-hex-row"><form onSubmit={event => { event.preventDefault(); commitHex() }}><label className="sr-only" htmlFor="selected-color-hex">{label("탐색 중인 색 HEX", "Explored color HEX")}</label><input id="selected-color-hex" className="hex-input" aria-invalid={hexError} value={hexInput} onChange={event => setHexInput(event.target.value)} onBlur={commitHex} maxLength={7} spellCheck={false} /></form><button className="lab-icon-button" onClick={copy} aria-label={label("현재 색 복사", "Copy current color")}>{copied ? <Check size={16} /> : <Copy size={16} />}</button></div>
+              <div className="inline-actions"><button className="lab-text-button" onClick={() => selectColor(randomHex(), undefined, "random")}>{label("랜덤 색", "Random color")}</button>{canEyedrop && <button className="lab-text-button" onClick={eyedrop}><Pipette size={14} />{label("화면 피킹", "Screen picker")}</button>}<button className="lab-text-button" disabled={!ready || busy} onClick={() => addColors([activeHex])} aria-label={label("탐색 색을 팔레트에 추가", "Add explored color to palette")}><Plus size={14}/>{label("팔레트에 추가", "Add to palette")}</button></div>
             </div>
           </div>
           {hexError && <p className="hex-error" role="alert">{label("HEX는 #A8B5A2처럼 3자리 또는 6자리로 입력해주세요.", "Enter a 3- or 6-digit HEX, such as #A8B5A2.")}</p>}
+          <p className="color-scope-note">{label("분석·실험의 기준색이에요. 팔레트에는 추가 또는 교체로 적용하세요.", "The reference for analysis and experiments. Add or replace a palette color to apply it.")}</p>
           <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="formats" onSelectColor={selectColor}/>
           <div className="favorites-area"><div className="favorites-heading"><h3>{label("즐겨찾는 단색", "Favorite colors")}</h3><button className="lab-text-button" onClick={()=>savedColors.add(activeHex)}><Plus size={13}/>{label("탐색 색 보관", "Keep explored color")}</button></div><div className="favorite-colors">{savedColors.colors.map(hex=><button key={hex} title={hex} aria-label={`${label("색 선택","Select color")} ${hex}`} style={{background:hex}} onClick={()=>selectColor(hex)}/>)}</div></div>
         </section>
@@ -390,9 +391,9 @@ export function ColorLabWorkspace() {
             <div className="palette-canvas" role="group" aria-label={label("편집할 팔레트 색", "Editable palette colors")}>
               {colors.map((color,index) => <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1} · ${color.hex}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={() => selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></button>)}
             </div>
-            <div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 선택한 색으로 교체`, `Replace palette color ${selectedIndex+1} with selected color`)} <span style={{background:activeHex}}/></button>}</div>
+            <div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 탐색 색으로 교체`, `Replace palette color ${selectedIndex+1} with explored color`)} <span style={{background:activeHex}}/></button>}</div>
             <div className="style-section"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style=>{requestId.current++;setBusy(false);store.setCurrentStyle(style);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} customSettings={store.customSettings} onCustomSettingsChange={settings=>{requestId.current++;setBusy(false);store.setCustomSettings(settings);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} /></div>
-          </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 추출한 팔레트가 없어요.", "No palette extracted yet.")}</p><span>{label("위에서 이미지를 올리면 이곳에 색이 모입니다.", "Upload an image above to see its colors here.")}</span></div>}
+          </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 팔레트가 비어 있어요.", "Your palette is empty.")}</p><span>{label("탐색 중인 색으로 시작하거나, 이미지에서 색을 가져오세요.", "Start with the explored color, or extract colors from an image.")}</span><button type="button" className="lab-button" disabled={!ready || busy} onClick={() => addColors([activeHex])}><Plus size={14}/>{label("이 색으로 팔레트 시작", "Start a palette with this color")}<span className="palette-start-chip" style={{ backgroundColor: activeHex }} aria-hidden="true"/></button></div>}
           </section>
           <section id="color-save" tabIndex={-1} className="image-palette-group palette-save" aria-labelledby="palette-save-heading">
             <div className="palette-group-heading"><h3 id="palette-save-heading">{label("보관 · 내보내기", "Save & export")}</h3></div>
@@ -425,13 +426,13 @@ export function ColorLabWorkspace() {
       </div>
 
       <section id="color-analyze" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>03</span>{label("선택한 색 분석", "Selected color analysis")}</h2></div>
+        <div className="overview-section-heading"><h2><span>03</span>{label("탐색 색 분석", "Explored color analysis")}</h2></div>
         <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="checks" onSelectColor={selectColor}/>
       </section>
 
       <section id="color-compose" tabIndex={-1} className="overview-section">
         <div className="overview-section-heading"><h2><span>04</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("탐색 색을 기준으로 함께 바뀝니다. 색상칩을 눌러 다음 색을 골라보세요.", "All combinations follow your explored color. Select a swatch to explore it.")}</p></div>
-        <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={colors.length ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
+        <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={ready && !busy ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
 
@@ -441,7 +442,7 @@ export function ColorLabWorkspace() {
         <p className="learning-connection">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-value-study">{label("이미지 명암 실험으로 ↑", "Image value experiment ↑")}</a></p>
       </section>
 
-      <p id="color-composition" tabIndex={-1} className="learning-connection composition-moved">{label("구도 · 실루엣 실험은 Composition Lab으로 옮겼어요.", "Frame & silhouette experiments have moved to Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
+      <p id="color-composition" tabIndex={-1} className="learning-connection composition-moved">{label("구도 · 명암 덩어리 실험은 Composition Lab으로 옮겼어요.", "Frame & value-mass experiments have moved to Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
 
       {currentPaletteForExport && <ExportModal open={exportOpen} onOpenChange={setExportOpen} palette={currentPaletteForExport}/>}
     </section>

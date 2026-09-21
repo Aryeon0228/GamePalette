@@ -140,10 +140,9 @@ export function PaletteEditor({ colors, selectedIndex, onSelect, onChange, fallb
       {selectedColor ? (
         <>
           <div className={cn(!dense && "space-y-2", !minimal && "border-t border-border pt-4")}>
-            <p id={`${inputId}-selection`} className={dense ? "sr-only" : "text-xs text-muted-foreground"}>{ko ? `선택한 색상 · ${activeIndex + 1} / ${colors.length}` : `Selected color · ${activeIndex + 1} / ${colors.length}`}</p>
-            <label htmlFor={inputId} className={dense ? "sr-only" : "block text-xs font-medium"}>HEX</label>
+            <p id={`${inputId}-selection`} className={dense ? "palette-edit-scope" : "text-xs text-muted-foreground"}>{ko ? `팔레트 ${activeIndex + 1}번 편집` : `Editing palette color ${activeIndex + 1}`}</p>
+            <label htmlFor={inputId} className={dense ? "sr-only" : "block text-xs font-medium"}>{ko ? `팔레트 ${activeIndex + 1}번 HEX` : `Palette color ${activeIndex + 1} HEX`}</label>
             <div className="flex items-center gap-2">
-              {dense && <span className="shrink-0 font-mono text-[10px] text-muted-foreground" aria-hidden="true">{activeIndex + 1}/{colors.length}</span>}
               <input
                 type="color"
                 value={selectedColor.hex}

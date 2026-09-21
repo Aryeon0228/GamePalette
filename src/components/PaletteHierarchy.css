@@ -108,6 +108,31 @@
   line-height: 1.65;
 }
 
+.color-scope-note {
+  margin:10px 0 12px;
+  color:#aaa;
+  font-size:12px;
+  line-height:1.65;
+}
+
+.palette-edit-scope {
+  margin:0 0 8px;
+  color:#bbb;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.empty-palette .lab-button {
+  align-self:flex-start;
+  margin-top:5px;
+  flex-wrap:wrap;
+  white-space:normal;
+  text-align:left;
+}
+
+.palette-start-chip { width:16px; height:16px; border:1px solid #ffffff40; flex-shrink:0; }
+.selected-color-controls .lab-text-button:disabled { opacity:.45; cursor:default; }
+
 .image-distribution > .palette-area {
   margin-top: 0;
 }

@@ -11,9 +11,11 @@
 .cas-tabs button[aria-selected=true]::after { content:""; position:absolute; bottom:-1px; inset-inline:0; height:2px; background:var(--cas-accent); }
 .cas-tabs button[aria-selected=true]>span { color:var(--cas-accent); }
 .cas-intro { font-size:13px; line-height:1.75; color:#aaa3ae; margin:17px 0; }
+.cas-lesson-note { margin:0 0 12px; color:#a69bad; font-size:12px; line-height:1.7; }
 .cas-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:24px; align-items:start; }
 .cas-visual { min-width:0; }
-.cas-stage-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:9px; }
+.cas-stage-toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 10px; margin-bottom:9px; }
+.cas-view-actions { display:flex; flex-wrap:wrap; gap:6px; }
 .cas-stage-toolbar>span { font-size:11px; color:#a89ead; }
 .cas-stage-toolbar button { font-size:11px; min-height:33px; padding:5px 9px; }
 .cas-stage { background:#eeeaf0; border:1px solid #4a424f; overflow:hidden; }
@@ -24,6 +26,9 @@
 .cas-hit-area { fill:transparent; stroke:none; pointer-events:all; }
 .cas-selection { fill:none; stroke:#75608c; stroke-width:1.2; stroke-dasharray:4 4; opacity:0; pointer-events:none; }
 .cas-object.is-selected .cas-selection { opacity:.8; }
+.is-observing .cas-object.is-selected .cas-selection { opacity:0; }
+/* Keep keyboard focus visible even while the passive selection mark is hidden. */
+.is-observing .cas-object:focus-visible .cas-selection,
 .cas-object:focus-visible .cas-selection { opacity:1; stroke:#634087; stroke-width:2; stroke-dasharray:none; }
 .cas-help { font-size:11px; line-height:1.7; color:#96909c; margin:9px 0 0; }
 .cas-question { display:flex; gap:12px; align-items:baseline; border-top:1px solid #302a36; padding:16px 0 0; margin-top:16px; }

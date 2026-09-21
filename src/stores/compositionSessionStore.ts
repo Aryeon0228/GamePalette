@@ -37,6 +37,7 @@ type CompositionSession = {
   studies: Record<Lesson, Study>
   selectedId: ObjectId
   silhouette: boolean
+  showSelection: boolean
   imageUrl: string | null
   sampleFor: string | null
   ratio: string
@@ -63,6 +64,7 @@ export const compositionSession = createStore<CompositionSession>(() => ({
   studies: { scale: initialStudy("scale"), space: initialStudy("space"), direction: initialStudy("direction") },
   selectedId: "box",
   silhouette: false,
+  showSelection: true,
   imageUrl: null,
   sampleFor: null,
   ratio: "original",

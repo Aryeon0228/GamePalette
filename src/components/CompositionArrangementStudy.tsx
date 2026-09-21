@@ -53,6 +53,7 @@ export function CompositionArrangementStudy() {
   const [studies, setStudies] = useCompositionState("studies")
   const [selectedId, setSelectedId] = useCompositionState("selectedId")
   const [silhouette, setSilhouette] = useCompositionState("silhouette")
+  const [showSelection, setShowSelection] = useCompositionState("showSelection")
   const [draggingId, setDraggingId] = useState<ObjectId | null>(null)
   const dragRef = useRef<Drag | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -168,7 +169,8 @@ export function CompositionArrangementStudy() {
     <input type="range" min={min} max={max} value={value} aria-label={`${names[selectedId]} · ${label}`} onChange={event => change(Number(event.target.value))} />
   </label>
 
-  return <section className="composition-arrangement-study" aria-label={t("물건 배치 실습", "Object arrangement exercise")}>
+  return <section className={`composition-arrangement-study${showSelection ? "" : " is-observing"}`} aria-label={t("물건 배치 실습", "Object arrangement exercise")}>
+    <p className="cas-lesson-note">{t("주제마다 독립된 예제예요. 바꾼 배치는 각 주제에 그대로 남습니다.", "Each topic is an independent example. Your arrangement stays with its topic.")}</p>
     <div className="cas-tabs" role="tablist" aria-label={t("배치 관찰 주제", "Arrangement lessons")}>
       {LESSONS.map((item, index) => <button key={item} ref={node => { tabRefs.current[item] = node }} type="button" role="tab" id={`${uid}-tab-${item}`} aria-controls={`${uid}-panel`} aria-selected={lesson === item} tabIndex={lesson === item ? 0 : -1} onClick={() => changeLesson(item)} onKeyDown={event => {
         let next: Lesson | undefined
@@ -186,7 +188,10 @@ export function CompositionArrangementStudy() {
         <div className="cas-visual">
           <div className="cas-stage-toolbar">
             <span>{preset === null ? t("직접 바꾼 배치", "Your arrangement") : presetNames[lesson][preset]}</span>
-            <button type="button" aria-pressed={silhouette} onClick={() => setSilhouette(value => !value)}>{t("실루엣으로 보기", "Silhouette view")}</button>
+            <div className="cas-view-actions">
+              <button type="button" aria-pressed={silhouette} onClick={() => setSilhouette(value => !value)}>{t("실루엣으로 보기", "Silhouette view")}</button>
+              <button type="button" aria-pressed={!showSelection} onClick={() => { endDrag(); setShowSelection(value => !value) }}>{t("선택 표시 숨기기", "Hide selection marks")}</button>
+            </div>
           </div>
           <div className="cas-stage">
             <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="group" aria-label={t("물건 네 개를 옮길 수 있는 구도 프레임", "Composition frame with four movable objects")} aria-describedby={`${uid}-help`} onPointerMove={moveDrag} onPointerUp={event => endDrag(event.pointerId)} onPointerCancel={event => endDrag(event.pointerId)} onLostPointerCapture={event => endDrag(event.pointerId)}>
@@ -226,7 +231,7 @@ export function CompositionArrangementStudy() {
               <p>{t("가까운 것끼리 모은 뒤 하나만 떨어뜨려보세요. 가장자리의 여백도 함께 달라져요.", "Group some objects, then move one away. Notice how the margins change too.")}</p>
             </>}
             {lesson === "direction" && <>
-              {range(t("기울기", "Rotation"), selected.angle, -90, 90, value => editObject(selectedId, { angle: value }), "°")}
+              {range(t("회전", "Rotation"), selected.angle, -180, 180, value => editObject(selectedId, { angle: value }), "°")}
               <div className="cas-order"><button type="button" disabled={objects[objects.length - 1].id === selectedId} onClick={() => changeOrder(true)}>{t("맨 앞으로", "To front")}</button><button type="button" disabled={objects[0].id === selectedId} onClick={() => changeOrder(false)}>{t("맨 뒤로", "To back")}</button></div>
               <p>{t("드래그로 겹친 뒤 앞뒤를 바꿔보세요. 원형처럼 돌려도 외곽이 같은 모양도 있어요.", "Overlap objects, then change their order. A disc keeps the same outline when rotated.")}</p>
             </>}

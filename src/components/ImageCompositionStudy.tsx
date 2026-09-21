@@ -147,10 +147,10 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
         <p className="ics-note">{t("구도 선은 정답이 아닌 비교 도구예요. 큰 덩어리, 여백, 시선이 모이는 위치를 관찰하세요.", "Guides help comparison, not grading. Look at large shapes, negative space, and the focal point.")}</p>
       </div>
       <div className="ics-controls">
-        <fieldset><legend>{t("01 / 흑백 덩어리", "01 / Value masses")}</legend>
+        <fieldset><legend>{t("01 / 명암 덩어리", "01 / Value masses")}</legend>
           {range(t("흑백 경계 · Threshold", "Threshold"), threshold, setThreshold, 0, 255)}
           <div className="ics-buttons"><button type="button" aria-pressed={inverted} onClick={() => setInverted(v => !v)}>{t("흑백 반전", "Invert mask")}</button></div>
-          <p>{t("경계보다 어두운 픽셀을 검정으로 묶습니다. 자동 피사체 분리와는 달라요.", "Pixels below the boundary form the dark mass. This is not automatic subject segmentation.")}</p>
+          <p>{t("밝기를 기준으로 배경과 내부 그림자까지 묶어 보여줍니다.", "Groups pixels by brightness, including backgrounds and interior shadows.")}</p>
         </fieldset>
         <fieldset><legend>{t("02 / 화면 비율", "02 / Frame ratio")}</legend>
           <div className="ics-buttons ics-ratios" role="group" aria-label={t("화면 비율", "Frame ratio")}>{[["original", t("원본", "Original")], ["1", "1:1"], [String(4 / 3), "4:3"], ["1.5", "3:2"], [String(16 / 9), "16:9"], [String(9 / 16), "9:16"], [String((1 + Math.sqrt(5)) / 2), "φ:1"]].map(([value, name]) => <button type="button" key={value} aria-pressed={ratio === value} onClick={() => { setRatio(value); setPanX(0); setPanY(0) }}>{name}</button>)}</div>
@@ -164,7 +164,7 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
         </fieldset>
       </div>
     </div>
-    <details className="ics-explanation"><summary>{t("실루엣과 구도를 함께 읽는 법", "Reading silhouette and composition")}</summary><div>
+    <details className="ics-explanation"><summary>{t("명암 덩어리와 구도를 읽는 법", "Reading value masses and composition")}</summary><div>
       <p>{t("실루엣은 외곽만 보고도 형태·포즈·방향이 읽히는가의 문제입니다. 이 실습의 명도 마스크는 밝기로 나눈 덩어리라서 배경이나 내부 그림자도 함께 묶일 수 있어요. 외곽을 정확히 보려면 배경과 분리된 이미지도 함께 비교하세요.", "A silhouette tests whether the outline communicates form, pose, and direction. A value mask groups brightness, so backgrounds and interior shadows may merge. Compare an isolated subject to judge its actual outline.")}</p>
       <p>{t("삼분할 선은 가로·세로의 1/3과 2/3, 황금 분할은 약 38.2%와 61.8%입니다. 황금 나선은 90°마다 반지름이 약 1.618배 커지는 곡선이며, 화면 비율에 맞춰 찌그러뜨리지 않습니다. 나선의 중심과 흐름을 옮기며 비교하세요.", "Thirds divide the frame at 1/3 and 2/3; the golden grid uses about 38.2% and 61.8%. The golden spiral grows in radius by about 1.618 per 90°. Its shape stays undistorted; move its center and flow to compare.")}</p>
       <p>{t("도타 2 아트 가이드의 관찰 포인트: 작은 크기에서도 알아볼 수 있는 외곽, 큰 명도 덩어리, 시선이 모이는 대비, 디테일 사이의 쉼. 특정 비율에 맞는다는 이유만으로 좋은 구도가 되는 것은 아닙니다.", "Observation prompts from the Dota 2 art guide: a readable outline at small scale, large value groups, contrast hierarchy, and quiet spaces between details. Matching a ratio alone does not make a successful composition.")}</p>
