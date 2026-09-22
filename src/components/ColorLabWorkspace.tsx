@@ -431,13 +431,13 @@ export function ColorLabWorkspace() {
       </section>
 
       <section id="color-compose" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>04</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("탐색 색을 기준으로 함께 바뀝니다. 색상칩을 눌러 다음 색을 골라보세요.", "All combinations follow your explored color. Select a swatch to explore it.")}</p></div>
+        <div className="overview-section-heading"><h2><span>04</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("색상칩으로 탐색하고, 필요한 세트는 팔레트에 추가하세요.", "Select a swatch to explore it, or add a color set to your palette.")}</p></div>
         <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={ready && !busy ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
         <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
       </section>
 
       <section id="color-study" tabIndex={-1} className="overview-section learning-workspace">
-        <div className="overview-section-heading"><h2><span>05</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("하나씩 바꾸고, 비교하고, 필요한 색을 작업에 가져오세요.", "Change one thing, compare, and bring useful colors into your work.")}</p></div>
+        <div className="overview-section-heading"><h2><span>05</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("색값·주변색·조명을 바꾸며 색이 어떻게 보이는지 비교하세요.", "Compare how color values, surroundings and lighting change what you see.")}</p></div>
         <div className="learning-workspace-grid"><ColorAttributeStudy hex={activeHex} onSelectColor={selectColor}/><ColorLightingStudy hex={activeHex} onSelectColor={selectColor}/></div>
         <p className="learning-connection">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-value-study">{label("이미지 명암 실험으로 ↑", "Image value experiment ↑")}</a></p>
       </section>

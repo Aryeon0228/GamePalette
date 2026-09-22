@@ -12,8 +12,15 @@
   background: hsl(var(--card));
 }
 .overview-compose .overview-tool { min-height: 250px; }
+.color-tools-overview.overview-compose { display: flex; flex-direction: column; gap: 22px; }
+.overview-compose-group { min-width: 0; }
+.overview-compose-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.overview-group-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 0 0 10px; font-size: 13px; line-height: 1.5; font-weight: 500; }
+.overview-group-heading > span { color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 400; }
+.overview-tool .overview-purpose { margin: 0 0 10px; color: hsl(var(--muted-foreground)); font-size: 12px; line-height: 1.6; }
 .overview-tool-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 9px; }
-.color-tools-overview .overview-tool-heading h3 { margin: 0; font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em; }
+.color-tools-overview .overview-tool-heading :is(h3, h4), .overview-sphere .sphere-heading h4 { margin: 0; font-size: 13px; line-height: 1.3; font-weight: 600; letter-spacing: -.01em; }
+.overview-compose .overview-tool-heading, .overview-compose .sphere-heading { flex-wrap: wrap; }
 .color-tools-overview button, .color-tools-overview select { border-radius: 0; }
 .color-tools-overview button:focus-visible, .color-tools-overview select:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
 .overview-action { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 4px; min-height: 24px; padding: 2px 3px; color: hsl(var(--muted-foreground)); font-size: 10px; line-height: 1.25; white-space: nowrap; }
@@ -34,7 +41,7 @@
 .overview-dot { display: inline-block; width: 9px; height: 9px; flex-shrink: 0; }
 .overview-ramps { display: grid; gap: 3px; }
 .overview-row-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.color-tools-overview .overview-row-heading h4 { margin: 0; color: hsl(var(--muted-foreground)); font-size: 11px; line-height: 1.3; font-weight: 400; }
+.color-tools-overview .overview-row-heading h5 { margin: 0; color: hsl(var(--muted-foreground)); font-size: 11px; line-height: 1.3; font-weight: 400; }
 .overview-select { display: grid; min-width: 0; gap: 3px; }
 .overview-select > span { font-size: 10px; line-height: 1.2; color: hsl(var(--muted-foreground)); }
 .overview-select select { width: 100%; min-width: 0; height: 27px; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); padding: 3px 5px; color: hsl(var(--foreground)); font-size: 11px; }
@@ -90,10 +97,10 @@
 .overview-name > span:last-child { color: hsl(var(--muted-foreground)); font-size: 10px; }
 .overview-tool .overview-meaning-title { margin: 7px 0 0; font-size: 11px; font-weight: 500; }
 @media (min-width: 680px) {
-  .color-tools-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .color-tools-overview, .overview-compose-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 1100px) {
-  .color-tools-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .color-tools-overview, .overview-compose-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .overview-analysis .overview-formats-card { grid-column: 1; grid-row: 1 / span 2; }
   .overview-analysis .overview-contrast-card { grid-column: 2; grid-row: 1; }
   .overview-analysis .overview-meaning-card { grid-column: 3; grid-row: 1; }

@@ -23,11 +23,11 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
   return (
     <section className="overview-sphere">
       <div className="sphere-heading">
-        <h3>{ko ? "회화적 구체 셰이딩" : "Painterly sphere shading"}</h3>
+        <h4>{ko ? "구체에 적용" : "Apply to a sphere"}</h4>
         <div className="sphere-modes" role="group" aria-label={ko ? "구체 셰이딩 방식" : "Sphere shading mode"}>
           {(["normal", "coldwarm"] as const).map(value => (
             <button key={value} type="button" aria-pressed={mode === value} onClick={() => setMode(value)}>
-              {value === "normal" ? (ko ? "노멀" : "Normal") : (ko ? "콜드웜" : "Coldwarm")}
+              {value === "normal" ? (ko ? "기본 명암" : "Value") : (ko ? "한난 명암" : "Warm / cool")}
             </button>
           ))}
         </div>
@@ -46,8 +46,8 @@ export function ColorSphereStudy({ hex, onSelectColor }: ColorSphereStudyProps) 
         </div>
       </div>
       <p className="lab-help">{mode === "normal"
-        ? (ko ? "선택한 색으로 만든 회화용 명암 단계입니다. 아래 ‘색 · 빛 실험’의 조명과 비교해보세요." : "A painterly value ramp from your selected color. Compare it with the lighting in Color & light experiments below.")
-        : (ko ? "따뜻한 명부와 차가운 암부로 설계한 색 단계입니다. 모든 그림자가 차가워지는 것은 아니에요." : "A designed warm-light, cool-shadow ramp. Shadows are not always cool.")}</p>
+        ? (ko ? "탐색 색으로 만든 밝고 어두운 단계를 구체에 적용한 회화 예시입니다." : "A painting example that applies lighter and darker steps from the explored color to a sphere.")
+        : (ko ? "따뜻한 명부와 차가운 암부로 설계한 회화 예시입니다." : "A painting example designed with warm light and cool shadows.")}</p>
     </section>
   )
 }

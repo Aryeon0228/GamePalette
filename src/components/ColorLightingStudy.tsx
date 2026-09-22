@@ -137,11 +137,11 @@ export function ColorLightingStudy({ hex, onSelectColor }: ColorLightingStudyPro
   )
 
   return (
-    <section className="color-lighting-study" aria-labelledby={`${id}-title`}>
+    <section id="color-lighting-study" tabIndex={-1} className="color-lighting-study" aria-labelledby={`${id}-title`}>
       <header className="lighting-study-heading">
         <div>
-          <h3 id={`${id}-title`}>{text("빛과 표면색", "Light & surface color")}</h3>
-          <p>{text("빛을 움직이고, 색이 달라지는 곳을 보세요.", "Move the light. Watch the surface change.")}</p>
+          <h3 id={`${id}-title`}>{text("빛에 따른 표면색", "Surface color under light")}</h3>
+          <p>{text("재질색을 기준으로, 빛의 방향과 색에 따른 변화를 관찰하세요.", "Observe how light direction and color change the surface appearance of this material color.")}</p>
         </div>
         <button className="lighting-reset" type="button" onClick={() => { setSettings({ ...DEFAULT_COLOR_LIGHTING }); setView("render") }}>{text("초기화", "Reset")}</button>
       </header>
@@ -205,6 +205,7 @@ export function ColorLightingStudy({ hex, onSelectColor }: ColorLightingStudyPro
         ))}
       </div>
       <p className="lighting-model-note"><strong>{text("비금속 조명 모델", "Dielectric lighting model")}</strong>{text(" · 바닥 반사광과 부드러운 그림자는 근사 표현입니다. 표면색 칩을 누르면 그 색으로 탐색합니다.", " · Ground bounce and soft shadows are approximations. Select a surface swatch to explore that color.")}</p>
+      <p className="lighting-lab-connection">{text("광량·거리·노출을 비교하려면", "To compare light output, distance and exposure,")} <a href="https://studio-penumbra.com/lighting-lab.html#experiment-panel">{text("Light Lab에서 비교하기 ↗", "continue in Light Lab ↗")}</a></p>
       <details className="lighting-explanation">
         <summary>{text("왜 색이 달라질까요?", "Why does the color change?")}</summary>
         <p>{text("명부는 주광원이 직접 닿는 면입니다. 하이라이트는 빛과 시선의 관계에 따라 이동하는 반사로, 재질색과 별도로 빛의 색을 띱니다. 암부의 색은 환경과 반사광에 따라 달라집니다. 그림자가 항상 파란색인 것은 아닙니다.", "The lit side receives direct light. A highlight is a reflection that moves with the light and viewing direction, taking on the light’s color separately from the material. The dark side depends on ambient light and reflected surroundings; shadows are not always blue.")}</p>

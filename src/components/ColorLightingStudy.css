@@ -43,6 +43,10 @@
 .lighting-sample-arrow{position:absolute;right:5px;top:2px;color:#888;font-size:12px}
 .lighting-model-note{font-size:12px;line-height:1.65;color:#989898;margin:12px 0 0}
 .lighting-model-note strong{font-weight:400;color:#b6b6b6}
+.color-lighting-study{scroll-margin-top:54px}
+.lighting-lab-connection{margin:12px 0 4px;padding-top:12px;border-top:1px solid #303030;color:#aaa;font-size:12px;line-height:1.8}
+.lighting-lab-connection a{color:#ddd;text-decoration:underline;text-underline-offset:3px}
+.lighting-lab-connection a:focus-visible{outline:2px solid #eee;outline-offset:3px}
 .lighting-explanation{margin-top:4px}
 .lighting-explanation summary{min-height:40px;padding:10px 0;cursor:pointer;font-size:12px;color:#c1c1c1}
 .lighting-explanation p{margin:0;padding-bottom:3px;line-height:1.75;color:#a0a0a0;font-size:12px}
