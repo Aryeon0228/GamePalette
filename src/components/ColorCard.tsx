@@ -99,7 +99,7 @@ export function ColorCard({ color, selected, onClick, showDetails = false, fill 
             className="p-1 rounded hover:bg-white/20 transition-colors"
           >
             {copiedField === 'quick' ? (
-              <IoCheckmarkOutline className="h-3 w-3 text-green-400" />
+              <IoCheckmarkOutline className="h-3 w-3 text-white" />
             ) : (
               <IoCopyOutline className="h-3 w-3 text-white" />
             )}
@@ -130,7 +130,7 @@ function CopyRow({
       >
         <span>{value}</span>
         {copied ? (
-          <IoCheckmarkOutline className="h-3 w-3 text-green-500" />
+          <IoCheckmarkOutline className="h-3 w-3 text-white" />
         ) : (
           <IoCopyOutline className="h-3 w-3" />
         )}

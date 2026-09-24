@@ -59,10 +59,10 @@ function ToastContainer() {
         <div
           key={toast.id}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-3 text-sm shadow-lg",
+            "flex items-center gap-2 px-4 py-3 text-sm",
             {
-              'bg-green-600 text-white': toast.type === 'success',
-              'bg-red-600 text-white': toast.type === 'error',
+              'bg-[#ececec] text-black': toast.type === 'success',
+              'bg-black text-white border border-white': toast.type === 'error',
               'bg-card text-card-foreground border border-border': toast.type === 'info',
             }
           )}

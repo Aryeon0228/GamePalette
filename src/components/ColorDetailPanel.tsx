@@ -132,7 +132,7 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">{t("channels")}</h3>
-          <span className="text-[10px] font-mono text-muted-foreground">{format}</span>
+          <span className="text-xs font-mono text-muted-foreground">{format}</span>
         </div>
         <div className="space-y-2">
           {getChannels(color, format).map((ch) => (
@@ -226,8 +226,8 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
             >
               <div className="h-16" style={{ backgroundColor: variation.color.hex }} />
               <div className="px-2 py-1.5 bg-background">
-                <p className="text-[10px] text-muted-foreground">{t(variation.labelKey)}</p>
-                <p className="text-[10px] font-mono truncate">{variation.color.hex.toUpperCase()}</p>
+                <p className="text-xs text-muted-foreground">{t(variation.labelKey)}</p>
+                <p className="text-xs font-mono truncate">{variation.color.hex.toUpperCase()}</p>
               </div>
             </button>
           ))}
@@ -273,8 +273,8 @@ export function ColorDetailPanel({ color }: ColorDetailPanelProps) {
                 >
                   <div className="h-14" style={{ backgroundColor: item.hex }} />
                   <div className="px-2 py-1.5 bg-background">
-                    <p className="text-[10px] text-muted-foreground">{th(HARMONY_ROLE_KEY[item.name] ?? "roleBase")}</p>
-                    <p className="text-[10px] font-mono">{item.hex.toUpperCase()}</p>
+                    <p className="text-xs text-muted-foreground">{th(HARMONY_ROLE_KEY[item.name] ?? "roleBase")}</p>
+                    <p className="text-xs font-mono">{item.hex.toUpperCase()}</p>
                   </div>
                 </button>
               ))}

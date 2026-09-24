@@ -20,6 +20,7 @@ const labGroups = [
   { korean: "색과 빛", english: "Color & light", labs: [
     { label: "Color Lab", href: "/", development: false },
     { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html`, development: false },
+    { label: "Focus Lab", href: `${STUDIO_URL}/focus-lab.html`, development: false },
   ] },
   { korean: "표면과 공간", english: "Surface & space", labs: [
     { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html`, development: false },
@@ -90,7 +91,7 @@ export function Header() {
   return (
     <header ref={header} className={`site-header${menuOpen ? " menu-open" : ""}`}>
       <a className="skip-link" href="#main-content">{isKorean ? "본문으로 이동" : "Skip to content"}</a>
-      <nav className="site-nav nav-wrap" aria-label={isKorean ? "주 메뉴" : "Main navigation"}>
+      <nav className="site-nav" aria-label={isKorean ? "주 메뉴" : "Main navigation"}>
         <a className="wordmark" href={`${STUDIO_URL}/#home`} aria-label="Studio Penumbra">
           <span className="brand-orbit" aria-hidden="true">
             <svg viewBox="0 0 36 28" focusable="false">

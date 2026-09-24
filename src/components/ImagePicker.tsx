@@ -95,7 +95,7 @@ export function ImagePicker({ src, onPick, className }: ImagePickerProps) {
       {hoverHex && (
         <div className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-md border border-border bg-card/95 px-1.5 py-1 shadow-sm backdrop-blur">
           <span className="h-4 w-4 rounded border border-border" style={{ backgroundColor: hoverHex }} />
-          <span className="font-mono text-[10px] font-medium">{hoverHex}</span>
+          <span className="font-mono text-xs font-medium">{hoverHex}</span>
         </div>
       )}
     </div>

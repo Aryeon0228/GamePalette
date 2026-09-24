@@ -85,15 +85,15 @@ const config: Config = {
       fontFamily: {
         sans: [
           "var(--font-ibm-plex-sans)",
-          "var(--font-pretendard)",
+          "var(--font-ibm-plex-sans-kr)",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
           "sans-serif",
         ],
-        // The same Latin typefaces as Studio Penumbra, with local Korean coverage.
-        display: ["var(--font-ibm-plex-sans)", "var(--font-pretendard)", "ui-sans-serif", "sans-serif"],
-        mono: ["var(--font-ibm-plex-mono)", "var(--font-pretendard)", "ui-monospace", "monospace"],
+        // The same typefaces as Studio Penumbra: IBM Plex Sans, Sans KR and Mono.
+        display: ["var(--font-ibm-plex-sans)", "var(--font-ibm-plex-sans-kr)", "ui-sans-serif", "sans-serif"],
+        mono: ["var(--font-ibm-plex-mono)", "var(--font-ibm-plex-sans-kr)", "ui-monospace", "monospace"],
       },
     },
   },

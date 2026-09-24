@@ -145,7 +145,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
     >
       <IoAddOutline className="h-4 w-4" />
       {text ?? label("팔레트에 색상 세트 추가", "Add set to palette")}
-      <span className="font-mono text-[10px] text-muted-foreground">{new Set(colors.map((item) => item.hex.toUpperCase())).size}</span>
+      <span className="font-mono text-xs text-muted-foreground">{new Set(colors.map((item) => item.hex.toUpperCase())).size}</span>
     </button>
   ) : null
 
@@ -165,8 +165,8 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
           />
           <div className="flex min-w-0 items-center justify-between gap-0.5 px-2 py-1.5">
             <div className="min-w-0">
-              {roles && <p className="truncate text-[10px] text-muted-foreground" title={roles[index]}>{roles[index]}</p>}
-              <p className="truncate font-mono text-[10px] sm:text-[11px]">{item.hex.toUpperCase()}</p>
+              {roles && <p className="truncate text-xs text-muted-foreground" title={roles[index]}>{roles[index]}</p>}
+              <p className="truncate font-mono text-xs sm:text-xs">{item.hex.toUpperCase()}</p>
             </div>
             {renderCopyButton({ compact: true, value: item.hex, token: `${token}-${index}` })}
           </div>
@@ -389,9 +389,9 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
           <Choice value={intensity} onChange={setIntensity} label={label("색온도 변화 강도", "Temperature shift strength")}
             options={(["subtle", "normal", "strong"] as ColdwarmIntensity[]).map((value) => ({ value, label: tc(value) }))} />
           <div className="mx-auto max-w-xl space-y-2">
-            <div className="ml-7 flex justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground"><span>← {tc("cold")}</span><span>{tc("warm")} →</span></div>
+            <div className="ml-7 flex justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground"><span>← {tc("cold")}</span><span>{tc("warm")} →</span></div>
             <div className="flex gap-2">
-              <div className="flex w-5 shrink-0 flex-col justify-between py-1 text-[10px] text-muted-foreground"><span>{tc("light")}</span><span>{tc("dark")}</span></div>
+              <div className="flex w-5 shrink-0 flex-col justify-between py-1 text-xs text-muted-foreground"><span>{tc("light")}</span><span>{tc("dark")}</span></div>
               <div className="grid min-w-0 flex-1 gap-1" style={{ gridTemplateColumns: `repeat(${grid.size}, minmax(0, 1fr))` }}>
                 {grid.rows.flat().map((cell) => (
                   <button key={`${cell.tempStep}:${cell.valueStep}`} type="button" onClick={() => onSelectColor(cell.color.hex)}
@@ -428,8 +428,8 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
                   <tbody>{COLOR_FORMATS.map((fmt) => {
                     const value = formatColor(color, fmt)
                     return <tr key={fmt} className="border-b border-border last:border-0" title={t(`fmtDesc.${fmt}`)}>
-                      <th scope="row" className="px-3 py-3 text-[10px] tracking-wide text-muted-foreground">{fmt}</th>
-                      <td className="px-2 py-3 font-mono text-[11px] break-all">{value}</td>
+                      <th scope="row" className="px-3 py-3 text-xs tracking-wide text-muted-foreground">{fmt}</th>
+                      <td className="px-2 py-3 font-mono text-xs break-all">{value}</td>
                       <td className="w-9 pr-1">{renderCopyButton({ compact: true, value, token: `format-${fmt}` })}</td>
                     </tr>
                   })}</tbody>
@@ -486,13 +486,13 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
           <div className="grid gap-6 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <div className="space-y-4 border border-border p-5">
               <span className="block h-24 w-full" style={{ backgroundColor: color.hex }} />
-              <div><p className="text-[11px] text-muted-foreground">{t("closestName")}</p><p className="mt-1 text-2xl font-medium tracking-tight">{color.name}</p></div>
+              <div><p className="text-xs text-muted-foreground">{t("closestName")}</p><p className="mt-1 text-2xl font-medium tracking-tight">{color.name}</p></div>
               <div className="flex gap-2 text-xs text-muted-foreground"><span>{t(`family.${family}`)}</span><span aria-hidden>·</span><span>{t(`temp.${colorTemperature(color)}`)}</span></div>
             </div>
             <div className="space-y-4 py-2">
               <h4 className="text-xl font-medium">{t(`psy.${family}.title`)}</h4>
               <p className="text-sm leading-relaxed text-muted-foreground">{t(`psy.${family}.desc`)}</p>
-              <div className="border-t border-border pt-4"><p className="mb-2 text-[11px] font-semibold uppercase tracking-wide">{t("usage")}</p><p className="text-sm leading-relaxed text-muted-foreground">{t(`psy.${family}.usage`)}</p></div>
+              <div className="border-t border-border pt-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide">{t("usage")}</p><p className="text-sm leading-relaxed text-muted-foreground">{t(`psy.${family}.usage`)}</p></div>
             </div>
           </div>
         </ToolSection>
@@ -502,7 +502,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
 }
 
 function Badge({ ok, label }: { ok: boolean; label: string }) {
-  return <span className={cn("border px-2 py-1 text-[10px] font-medium", ok ? "border-emerald-500/30 text-emerald-400" : "border-red-400/30 text-red-400")}>
+  return <span className={cn("border px-2 py-1 text-xs font-medium", ok ? "border-[#8f8f8f] text-[#ececec]" : "border-dashed border-[#4d4d4d] text-[#8f8f8f]")}>
     <span aria-hidden>{ok ? "✓" : "✕"}</span> {label}
   </span>
 }

@@ -84,7 +84,7 @@ export function ColorCountSelector({
         onValueCommit={(next) => onChange(clamp(next))}
         aria-label={a("colorCountSlider")}
       />
-      <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums">
+      <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
         <span>{min}</span>
         <span>{max}</span>
       </div>

@@ -43,7 +43,7 @@ function Section({ title, subtitle, children, className }: SectionProps) {
     <section className={cn("border border-border bg-card p-4 space-y-3", className)}>
       <div className="space-y-0.5">
         <h2 className="text-sm font-semibold">{title}</h2>
-        {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {children}
     </section>
@@ -232,7 +232,7 @@ export function ColorAnalyzer() {
                       type="button"
                       onClick={() => handleMethodChange(m)}
                       className={cn(
-                        "px-2.5 py-1 text-[11px] font-medium transition-colors",
+                        "px-2.5 py-1 text-xs font-medium transition-colors",
                         extractMethod === m ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
                       )}
                     >
@@ -247,11 +247,11 @@ export function ColorAnalyzer() {
               </div>
 
               <ImagePicker src={imageUrl} onPick={applyColor} />
-              <p className="text-[11px] text-muted-foreground">{t("pickHint")}</p>
+              <p className="text-xs text-muted-foreground">{t("pickHint")}</p>
 
               {sourceColors.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium text-muted-foreground">{t("extractedColors")}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t("extractedColors")}</p>
                   <div className="flex flex-wrap gap-2">
                     {sourceColors.map((c, i) => (
                       <button
@@ -295,7 +295,7 @@ export function ColorAnalyzer() {
           </button>
           <div className="min-w-0">
             <h1 className="text-lg font-bold truncate">{color.name}</h1>
-            <p className="text-[11px] uppercase tracking-widest opacity-70">{t(`temp.${temperature}`)}</p>
+            <p className="text-xs uppercase tracking-widest opacity-70">{t(`temp.${temperature}`)}</p>
           </div>
         </div>
         <span

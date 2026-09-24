@@ -141,7 +141,7 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
         <div className="min-h-0 overflow-y-auto overscroll-contain p-5">
           <div className="grid gap-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <section className="min-w-0 space-y-4">
-              <div><h3 className="text-sm font-semibold">{t("pngLayout")}</h3><p className="mt-1 text-[11px] text-muted-foreground">{label("내보낼 이미지의 실제 미리보기입니다.", "A preview of the image you will export.")}</p></div>
+              <div><h3 className="text-sm font-semibold">{t("pngLayout")}</h3><p className="mt-1 text-xs text-muted-foreground">{label("내보낼 이미지의 실제 미리보기입니다.", "A preview of the image you will export.")}</p></div>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("pngLayout")}>
                 {(["sns", "moodboard"] as const).map((mode) => <button type="button" key={mode} className={cn(CONTROL, pngMode === mode && "border-primary bg-primary/10 text-primary")} aria-pressed={pngMode === mode} onClick={() => setPngMode(mode)}>{mode === "sns" ? t("snsCard") : t("moodboard")}</button>)}
               </div>
@@ -159,13 +159,13 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
               <button type="button" className={cn(CONTROL, "w-full border-primary text-primary")} onClick={() => handleExport("png", "download")} disabled={!!exporting || previewStatus !== "ready"}><IoDownloadOutline className="h-4 w-4" />{exporting === "png" ? label("내보내는 중…", "Exporting…") : label("PNG 다운로드", "Download PNG")}</button>
             </section>
             <section className="min-w-0 space-y-4">
-              <div><h3 className="text-sm font-semibold">{label("데이터 · 코드", "Data & code")}</h3><p className="mt-1 text-[11px] text-muted-foreground">{label("파일로 저장하거나 프로젝트에 복사하세요.", "Download a file or copy directly into your project.")}</p></div>
+              <div><h3 className="text-sm font-semibold">{label("데이터 · 코드", "Data & code")}</h3><p className="mt-1 text-xs text-muted-foreground">{label("파일로 저장하거나 프로젝트에 복사하세요.", "Download a file or copy directly into your project.")}</p></div>
               <div className="divide-y divide-border border-y border-border">
                 {exportOptions.map((option) => {
                   const locked = !!option.proOnly && !isPro
                   const title = option.format === "lighting" ? label("라이팅 JSON", "Lighting JSON") : t(`opt.${option.optKey}Label`)
                   return <div key={option.format} className="space-y-2.5 py-4">
-                    <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="text-xs font-semibold">{title}</h4>{locked && <span className="border border-border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">PRO</span>}</div><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{t(`opt.${option.optKey}Desc`)}</p></div>
+                    <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="text-xs font-semibold">{title}</h4>{locked && <span className="border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground">PRO</span>}</div><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t(`opt.${option.optKey}Desc`)}</p></div>
                     <div className="flex flex-wrap gap-1.5">
                       {locked ? <button type="button" className={CONTROL} disabled><IoLockClosedOutline className="h-3.5 w-3.5" />{label("Pro 전용", "Pro only")}</button> : <>
                         <button type="button" className={CONTROL} onClick={() => handleExport(option.format, "download", option.proOnly)} disabled={!!exporting} aria-label={`${title} ${t("download")}`}><IoDownloadOutline className="h-3.5 w-3.5" />{exporting === option.format ? label("처리 중…", "Working…") : t("download")}</button>
@@ -175,12 +175,12 @@ export function ExportModal({ open, onOpenChange, palette, isPro = false }: Expo
                   </div>
                 })}
               </div>
-              {!isPro && <p className="text-[11px] leading-relaxed text-muted-foreground">{label("Unity와 Unreal 내보내기는 Pro 전용 기능입니다.", "Unity and Unreal exports are available with Pro.")}</p>}
+              {!isPro && <p className="text-xs leading-relaxed text-muted-foreground">{label("Unity와 Unreal 내보내기는 Pro 전용 기능입니다.", "Unity and Unreal exports are available with Pro.")}</p>}
             </section>
           </div>
         </div>
         <div className="shrink-0 border-t border-border px-5 py-3">
-          <p role={feedback === "error" ? "alert" : "status"} className={cn("min-h-4 text-xs", feedback === "error" ? "text-red-400" : "text-muted-foreground")}>
+          <p role={feedback === "error" ? "alert" : "status"} className={cn("min-h-4 text-xs", feedback === "error" ? "text-white font-medium" : "text-muted-foreground")}>
             {feedback === "error" ? label("내보내지 못했습니다. 다시 시도하거나 다른 형식을 선택해주세요.", "Export failed. Try again or choose another format.") : feedback === "copied" ? label("클립보드에 복사했습니다.", "Copied to clipboard.") : feedback === "downloaded" ? label("다운로드를 시작했습니다.", "Download started.") : label("작업 팔레트의 현재 색상을 내보냅니다.", "Exports the current colors in your working palette.")}
           </p>
         </div>

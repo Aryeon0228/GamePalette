@@ -85,6 +85,14 @@ export function ColorLabWorkspace() {
   const [copied, setCopied] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  // The image stage grows with the viewport, like the stages of the other labs.
+  const [stageHeight, setStageHeight] = useState(190)
+  useEffect(() => {
+    const measure = () => setStageHeight(window.innerWidth < 760 ? 240 : Math.round(Math.min(440, Math.max(190, window.innerHeight - 470))))
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [])
   const [imageMode, setImageMode] = useState<ImageMode>("extract")
   const [histogram, setHistogram] = useState<LuminosityHistogram | null>(null)
   const [areaAnalysis, setAreaAnalysis] = useState<AreaAnalysis | null>(null)
@@ -373,7 +381,7 @@ export function ColorLabWorkspace() {
             <div className="palette-group-heading"><h3 id="palette-import-heading">{label("이미지에서 색 가져오기", "Pick colors from an image")}</h3>{hasImage && imageMode === "pick" && <button className="lab-text-button" onClick={clearImage}>{label("이미지 지우기", "Clear image")}</button>}</div>
             <div className="source-body">
               <div className="image-workbench">
-                {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={hex=>selectColor(hex,undefined,"pixel")} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={190} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
+                {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={hex=>selectColor(hex,undefined,"pixel")} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={stageHeight} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
               </div>
               {(hasImage || colors.length > 0) && <div className="extraction-controls">
                 {hasImage && <div className="lab-segment"><button aria-pressed={imageMode === "extract"} onClick={() => setImageMode("extract")}>{label("영역 추출", "Extract region")}</button><button aria-pressed={imageMode === "pick"} onClick={() => setImageMode("pick")}>{label("픽셀 피킹", "Pick a pixel")}</button></div>}

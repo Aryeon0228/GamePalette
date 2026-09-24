@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Script from "next/script"
 import localFont from "next/font/local"
+import { IBM_Plex_Sans_KR } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getTranslations } from "next-intl/server"
 import "./globals.css"
@@ -24,10 +25,12 @@ const ibmPlexMono = localFont({
   display: "swap",
 })
 
-// Pretendard (variable) — primary UI/body font with full Korean coverage.
-const pretendard = localFont({
-  src: [{ path: "../../public/fonts/PretendardVariable.woff2", weight: "45 920", style: "normal" }],
-  variable: "--font-pretendard",
+// Korean text uses IBM Plex Sans KR, the same family as the other Studio Penumbra labs.
+const ibmPlexSansKr = IBM_Plex_Sans_KR({
+  weight: ["300", "400", "500", "600"],
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-ibm-plex-sans-kr",
   display: "swap",
 })
 
@@ -72,7 +75,7 @@ export default async function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body className={`${pretendard.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
+      <body className={`${ibmPlexSans.variable} ${ibmPlexSansKr.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
         <NextIntlClientProvider>
           <AuthProvider>
             <ToastProvider>
