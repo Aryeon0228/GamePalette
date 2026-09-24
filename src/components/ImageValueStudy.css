@@ -13,8 +13,6 @@
 .image-value-study button:disabled { opacity: .45; cursor: not-allowed; }
 .ivs-reset { min-height: 28px; padding: 3px 0 3px 8px; color: hsl(var(--muted-foreground)); }
 .ivs-reset:hover { color: hsl(var(--foreground)); }
-.ivs-source-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin: 3px 0 7px; }
-.ivs-source-row > span { font-size: 12px; line-height: 1.45; color: hsl(var(--muted-foreground)); }
 .ivs-switch { display: flex; min-width: 0; gap: 2px; }
 .ivs-switch button { min-height: 27px; padding: 4px 7px; border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); background: hsl(var(--background)); }
 .ivs-switch button[aria-pressed="true"] { border-color: hsl(var(--foreground) / .55); background: hsl(var(--muted)); color: hsl(var(--foreground)); }
@@ -62,8 +60,10 @@
 }
 @media (pointer: coarse), (max-width: 600px) {
   .image-value-study button { min-width: 44px; min-height: 44px; font-size: 12px; }
-  .ivs-source-row > span, .ivs-scale-label, .image-value-study .ivs-selection-note { font-size: 12px; }
+  .ivs-scale-label, .image-value-study .ivs-selection-note { font-size: 12px; }
   .ivs-threshold > span, .ivs-areas strong, .ivs-explanation { font-size: 12px; }
   .ivs-threshold input { height: 32px; }
   .ivs-explanation summary { min-height: 44px; padding-block: 12px; }
 }
+.ivs-preview:has(.ivs-empty) { background: #080808; }
+.ivs-empty { background: transparent; }
