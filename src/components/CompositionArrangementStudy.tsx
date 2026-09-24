@@ -26,20 +26,20 @@ function keepInFrame(object: ArrangementObject): ArrangementObject {
 }
 
 function ObjectShape({ id, silhouette }: { id: ObjectId; silhouette: boolean }) {
-  const color = silhouette ? "#242128" : { box: "#8e8499", cup: "#aaa0bb", pencil: "#615768", disc: "#827987" }[id]
+  const color = silhouette ? "#222222" : { box: "#888888", cup: "#a4a4a4", pencil: "#5a5a5a", disc: "#7c7c7c" }[id]
   if (id === "box") return <g fill={color}>
     <rect x="-56" y="-49" width="112" height="98" rx="3" />
-    {!silhouette && <g stroke="#e6dfec" opacity="0.25" strokeWidth="2"><path d="M-56-23H56M0-49V-23" /><path d="M-15 31H15" /></g>}
+    {!silhouette && <g stroke="#e1e1e1" opacity="0.25" strokeWidth="2"><path d="M-56-23H56M0-49V-23" /><path d="M-15 31H15" /></g>}
   </g>
   if (id === "cup") return <g fill={color}>
     <path d="M40-28H53C79-28 79 24 53 24H40" fill="none" stroke={color} strokeWidth="12" />
     <path d="M-44-43H44L39 37Q38 49 26 49H-26Q-38 49-39 37Z" />
     <ellipse cy="-43" rx="44" ry="10" />
-    {!silhouette && <ellipse cy="-43" rx="35" ry="5" fill="#675d74" />}
+    {!silhouette && <ellipse cy="-43" rx="35" ry="5" fill="#616161" />}
   </g>
   if (id === "pencil") return <g fill={color}>
     <path d="M-91-11H62L91 0 62 11H-91Z" />
-    {!silhouette && <><path d="M62-11L91 0 62 11Z" fill="#c4bdcb" /><path d="M80-4L91 0 80 4Z" fill="#514757" /><path d="M-81-11V11" stroke="#c4bdcb" strokeWidth="4" /></>}
+    {!silhouette && <><path d="M62-11L91 0 62 11Z" fill="#bfbfbf" /><path d="M80-4L91 0 80 4Z" fill="#4a4a4a" /><path d="M-81-11V11" stroke="#bfbfbf" strokeWidth="4" /></>}
   </g>
   return <circle r="50" fill={color} />
 }

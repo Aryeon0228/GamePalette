@@ -75,12 +75,12 @@ export function MobileAppBanner() {
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold leading-snug">{t("title")}</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{t("subtitle")}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">{t("subtitle")}</p>
               <a
                 href={MOBILE_APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
               >
                 <IoLogoAppleAppstore className="h-3.5 w-3.5" />
                 {t("storeButton")}

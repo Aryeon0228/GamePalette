@@ -37,7 +37,7 @@
 }
 
 .palette-group-heading .palette-count {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .image-palette-flow .source-body,
@@ -78,7 +78,7 @@
 .palette-save .recent-palettes h4 {
   margin: 0 0 8px;
   color: #999;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
 }
 
@@ -104,7 +104,7 @@
 .palette-edit-note {
   margin: 7px 0 10px;
   color: #929292;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.65;
 }
 
@@ -167,7 +167,7 @@
   gap: 7px;
   min-width: 0;
   color: #aaa;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .palette-area-chip {
@@ -179,13 +179,13 @@
 }
 
 .palette-area-legend code {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .palette-area-legend strong {
   margin-left: auto;
   color: #ddd;
-  font: 400 11px/1.5 ui-monospace, monospace;
+  font: 400 12px/1.5 ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -208,7 +208,7 @@
 }
 
 .image-distribution > .legacy-brightness summary {
-  font-size: 11px;
+  font-size: 12px;
   color: #929292;
 }
 

@@ -91,7 +91,7 @@ export function HistogramSection({ histogram }: HistogramSectionProps) {
               {stat.value}
               {stat.accent ? "" : "%"}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t(stat.key)}</p>
+            <p className="text-xs text-muted-foreground">{t(stat.key)}</p>
           </div>
         ))}
       </div>

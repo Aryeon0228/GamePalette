@@ -101,7 +101,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
         </div>
 
         {/* Compact Labels */}
-        <div className="flex bg-card/80 border-t border-border text-[10px]">
+        <div className="flex bg-card/80 border-t border-border text-xs">
           {variationSteps.map((step) => {
             const hueDiff = step.color.hsl.h - color.hsl.h
             const normalizedDiff = hueDiff > 180 ? hueDiff - 360 : hueDiff < -180 ? hueDiff + 360 : hueDiff
@@ -207,7 +207,7 @@ export function ColorVariations({ color, className, compact = false }: ColorVari
                     </td>
                     <td className="px-2 py-1.5 font-mono">
                       {step.color.hsl.l}
-                      <span className="text-muted-foreground text-[10px] ml-0.5">
+                      <span className="text-muted-foreground text-xs ml-0.5">
                         ({step.delta >= 0 ? "+" : ""}{step.delta})
                       </span>
                     </td>

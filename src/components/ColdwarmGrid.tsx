@@ -50,7 +50,7 @@ export function ColdwarmGrid({ color, className, steps = 4, showTitle = true }: 
         {showTitle && (
           <div>
             <h3 className="text-sm font-semibold">{t("title")}</h3>
-            <p className="text-[11px] text-muted-foreground">{t("subtitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("subtitle")}</p>
           </div>
         )}
         <div className="flex gap-1.5">
@@ -68,7 +68,7 @@ export function ColdwarmGrid({ color, className, steps = 4, showTitle = true }: 
       </div>
 
       {/* Axis labels (top): Cold ← → Warm */}
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground px-0.5">
+      <div className="flex items-center justify-between text-xs text-muted-foreground px-0.5">
         <span className="flex items-center gap-1 text-sky-400">
           <IoSnowOutline className="h-3.5 w-3.5" />
           {t("cold")}
@@ -81,7 +81,7 @@ export function ColdwarmGrid({ color, className, steps = 4, showTitle = true }: 
 
       <div className="flex gap-2">
         {/* Axis labels (left): Light (top) / Dark (bottom) */}
-        <div className="flex flex-col items-center justify-between text-[10px] text-muted-foreground py-1">
+        <div className="flex flex-col items-center justify-between text-xs text-muted-foreground py-1">
           <span>{t("light")}</span>
           <span>{t("dark")}</span>
         </div>
@@ -117,7 +117,7 @@ export function ColdwarmGrid({ color, className, steps = 4, showTitle = true }: 
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-foreground">{t("hint")}</p>
+      <p className="text-xs text-muted-foreground">{t("hint")}</p>
     </div>
   )
 }

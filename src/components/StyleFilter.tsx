@@ -60,7 +60,7 @@ export function StyleFilter({
     <div className={cn("min-w-0", dense ? "space-y-2" : "space-y-4")}>
       <div className={dense ? "flex flex-wrap items-center gap-x-2 gap-y-1" : "space-y-4"}>
       <div className={dense ? "contents" : "flex items-center justify-between"}>
-        <Heading className={dense ? "text-[11px] font-medium text-muted-foreground" : "text-sm font-medium tracking-wide"}>{dense ? (ko ? "스타일" : "Style") : t("title")}</Heading>
+        <Heading className={dense ? "text-xs font-medium text-muted-foreground" : "text-sm font-medium tracking-wide"}>{dense ? (ko ? "스타일" : "Style") : t("title")}</Heading>
         {onValueCheckToggle && (
           <Button
             variant={valueCheckEnabled ? "secondary" : "outline"}
@@ -96,8 +96,8 @@ export function StyleFilter({
               style={isActive ? { borderColor: "#bbb", backgroundColor: "#1a1a1a" } : undefined}
             >
               {!dense && <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? "#eee" : "#888" }} />}
-              <span className={dense ? "block whitespace-nowrap text-[11px] font-medium leading-tight" : "block text-xs font-semibold leading-tight"}>{dense ? denseNames[style.id] : ts(style.id)}</span>
-              {!dense && <p className="mt-1 text-[10px] text-muted-foreground leading-snug">{ts(style.descKey)}</p>}
+              <span className={dense ? "block whitespace-nowrap text-xs font-medium leading-tight" : "block text-xs font-semibold leading-tight"}>{dense ? denseNames[style.id] : ts(style.id)}</span>
+              {!dense && <p className="mt-1 text-xs text-muted-foreground leading-snug">{ts(style.descKey)}</p>}
             </button>
           )
         })}
@@ -173,8 +173,8 @@ function SliderControl({
   return (
     <div className={dense ? "min-w-0" : "space-y-2"}>
       <div className={cn("flex items-center justify-between", dense && "flex-wrap gap-x-1 gap-y-0.5")}>
-        <label htmlFor={inputId} className={dense ? "text-[10px] text-muted-foreground" : "text-sm text-muted-foreground"}>{label}</label>
-        <output htmlFor={inputId} className={dense ? "font-mono text-[10px]" : "text-sm font-mono"}>{formatValue(value)}</output>
+        <label htmlFor={inputId} className={dense ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>{label}</label>
+        <output htmlFor={inputId} className={dense ? "font-mono text-xs" : "text-sm font-mono"}>{formatValue(value)}</output>
       </div>
       <Slider
         id={inputId}

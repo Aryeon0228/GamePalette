@@ -101,7 +101,7 @@ export function AsciiStudy({ imageUrl, palette, onImport }: AsciiStudyProps) {
         <>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-2">
-              <p className="text-[11px] text-muted-foreground">{label("한 줄의 문자 수", "Characters per row")}</p>
+              <p className="text-xs text-muted-foreground">{label("한 줄의 문자 수", "Characters per row")}</p>
               <div className="flex gap-1.5" role="group" aria-label={label("ASCII 너비", "ASCII width")}>
                 {[40, 80, 120].map((value) => <button key={value} type="button" aria-pressed={width === value} onClick={() => setWidth(value)} className={cn(CONTROL, "min-w-14 font-mono", width === value && "border-primary bg-primary/10 text-primary")}>{value}</button>)}
               </div>
@@ -117,11 +117,11 @@ export function AsciiStudy({ imageUrl, palette, onImport }: AsciiStudyProps) {
                 <div className="flex gap-1.5" role="group" aria-label={label("미리보기 방식", "Preview appearance")}>
                   {(["color", "text"] as const).map((value) => <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)} className={cn(CONTROL, view === value && "border-primary text-primary")}>{value === "color" ? label("팔레트 색상", "Palette colors") : label("텍스트", "Plain text")}</button>)}
                 </div>
-                <span className="font-mono text-[11px] text-muted-foreground">{art.cols} × {art.rows}</span>
+                <span className="font-mono text-xs text-muted-foreground">{art.cols} × {art.rows}</span>
               </div>
               <div className="max-h-[32rem] overflow-auto border border-border bg-background p-4" tabIndex={0} aria-label={label("ASCII 미리보기, 스크롤 가능", "ASCII preview, scrollable")}>
-                {view === "color" ? <pre className="m-0 w-max font-mono text-[8px] leading-[8px] tracking-normal" dangerouslySetInnerHTML={{ __html: art.htmlBody }} />
-                  : <pre className="m-0 w-max font-mono text-[8px] leading-[8px] tracking-normal text-foreground">{art.text}</pre>}
+                {view === "color" ? <pre className="m-0 w-max font-mono text-xs leading-[8px] tracking-normal" dangerouslySetInnerHTML={{ __html: art.htmlBody }} />
+                  : <pre className="m-0 w-max font-mono text-xs leading-[8px] tracking-normal text-foreground">{art.text}</pre>}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={CONTROL} onClick={copy}>{copied ? <IoCheckmarkOutline className="h-4 w-4" /> : <IoCopyOutline className="h-4 w-4" />}{copied ? t("copied") : t("copyText")}</button>
@@ -130,10 +130,10 @@ export function AsciiStudy({ imageUrl, palette, onImport }: AsciiStudyProps) {
               </div>
             </div>
           ) : <div className="flex min-h-64 items-center justify-center border border-border px-6 py-12 text-center text-xs text-muted-foreground" aria-busy={generating}>{generating ? t("generating") : label("너비를 고른 뒤 생성 버튼을 눌러보세요.", "Choose a width, then generate your study.")}</div>}
-          <p className="text-[11px] leading-relaxed text-muted-foreground">{label("이미지, 너비, 팔레트 색상이 바뀌면 다시 생성하세요. TXT는 문자만, HTML은 팔레트 색상도 저장합니다.", "Generate again after changing the image, width, or palette colors. TXT saves characters; HTML includes palette colors.")}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">{label("이미지, 너비, 팔레트 색상이 바뀌면 다시 생성하세요. TXT는 문자만, HTML은 팔레트 색상도 저장합니다.", "Generate again after changing the image, width, or palette colors. TXT saves characters; HTML includes palette colors.")}</p>
         </>
       )}
-      <p role={feedback?.endsWith("error") ? "alert" : "status"} className={cn("min-h-4 text-xs", feedback?.endsWith("error") ? "text-red-400" : "text-muted-foreground")}>{feedbackText}</p>
+      <p role={feedback?.endsWith("error") ? "alert" : "status"} className={cn("min-h-4 text-xs", feedback?.endsWith("error") ? "text-white font-medium" : "text-muted-foreground")}>{feedbackText}</p>
     </section>
   )
 }

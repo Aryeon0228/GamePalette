@@ -1,11 +1,11 @@
 .image-composition-study { min-width:0; color:#ddd; }
 .ics-toolbar,.ics-source,.ics-preview-toolbar,.ics-area { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .ics-toolbar { margin-bottom:14px; }
-.ics-source>span,.ics-preview-toolbar>span,.ics-area { font-size:11px; color:#999; line-height:1.6; }
+.ics-source>span,.ics-preview-toolbar>span,.ics-area { font-size:12px; color:#999; line-height:1.6; }
 .ics-buttons { display:flex; gap:5px; flex-wrap:wrap; }
-.image-composition-study button { border:1px solid #343434; padding:7px 10px; min-height:34px; font-size:11px; line-height:1.4; color:#bbb; background:#0b0b0b; }
+.image-composition-study button { border:1px solid #343434; padding:7px 10px; min-height:34px; font-size:12px; line-height:1.4; color:#bbb; background:#0b0b0b; }
 .image-composition-study button:hover { border-color:#888; color:#fff; }
-.image-composition-study button[aria-pressed=true] { background:#deded8; color:#141414; border-color:#deded8; }
+.image-composition-study button[aria-pressed=true] { background:#dedede; color:#141414; border-color:#dedede; }
 .image-composition-study button:focus-visible,.image-composition-study input:focus-visible,.ics-explanation summary:focus-visible { outline:2px solid #eee; outline-offset:3px; }
 .ics-layout { display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:22px; align-items:start; }
 .ics-visual { min-width:0; position:sticky; top:calc(var(--lab-header-height,130px) + 52px); background:#000; z-index:2; padding-bottom:8px; }
@@ -17,20 +17,20 @@
 .ics-guide { position:absolute; inset:0; width:100%; height:100%; overflow:visible; transform-origin:center; }
 .ics-guide path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
 .ics-guide-shadow { stroke:#101010; stroke-width:3.5px; }
-.ics-guide-line { stroke:#f6d27c; stroke-width:1.4px; }
-.ics-guide-golden .ics-guide-line { stroke:#8adbd7; }
-.ics-guide-diagonals .ics-guide-line { stroke:#e8a1b1; }
-.ics-guide-spiral .ics-guide-line { stroke:#e9e9ff; stroke-width:1.8px; }
+.ics-guide-line { stroke:#fff; stroke-width:1.4px; }
+.ics-guide-golden .ics-guide-line { stroke-dasharray:8 5; }
+.ics-guide-diagonals .ics-guide-line { stroke-dasharray:2 5; }
+.ics-guide-spiral .ics-guide-line { stroke-width:1.8px; }
 .ics-area { margin-top:9px; font-variant-numeric:tabular-nums; }
 .ics-area b { color:#ddd; font-weight:500; }
-.image-composition-study .ics-note { font-size:11px; line-height:1.7; color:#999; margin:7px 0 0; }
+.image-composition-study .ics-note { font-size:12px; line-height:1.7; color:#999; margin:7px 0 0; }
 .ics-controls { display:grid; gap:15px; }
 .ics-controls fieldset { border:0; border-top:1px solid #303030; min-width:0; padding:10px 0 0; margin:0; }
-.ics-controls legend { font-size:11px; padding:0 8px 0 0; letter-spacing:.03em; color:#ccc; }
-.ics-controls p { font-size:11px; line-height:1.7; color:#999; margin:8px 0 0; }
+.ics-controls legend { font-size:12px; padding:0 8px 0 0; letter-spacing:.03em; color:#ccc; }
+.ics-controls p { font-size:12px; line-height:1.7; color:#999; margin:8px 0 0; }
 .ics-range { display:block; min-width:0; margin:6px 0; }
-.ics-range>span { display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:11px; color:#bbb; }
-.ics-range output { font:11px ui-monospace,monospace; color:#eee; }
+.ics-range>span { display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:12px; color:#bbb; }
+.ics-range output { font:12px ui-monospace,monospace; color:#eee; }
 .ics-range input { display:block; width:100%; height:28px; margin:3px 0 0; accent-color:#ddd; cursor:ew-resize; }
 .ics-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .ics-ratios button { min-width:42px; }
