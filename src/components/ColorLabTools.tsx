@@ -284,13 +284,11 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
         </section>
       </> : <>
         {analysisSection !== "checks" && renderCompactCard(t("formatsTitle"), <>
-          {renderOverviewFormats(["HEX", "RGB", "HSL"])}
-          <details className="overview-extra-formats">
-            <summary>{label("추가 색상 형식 · 채널", "More formats & channels")}</summary>
-            {renderOverviewFormats(COLOR_FORMATS.filter(fmt => !["HEX", "RGB", "HSL"].includes(fmt)))}
+          {renderOverviewFormats(COLOR_FORMATS)}
+          <div className="overview-extra-formats">
           <div className="overview-format-actions">{renderCompactCopy(colorToAllFormatsText(color), "overview-formats-all", label("모두 복사", "Copy all"))}{(["JSON", "CSS"] as const).map((kind) => <button key={kind} type="button" className="overview-action" aria-label={`${kind} ${label("다운로드", "download")}`} onClick={() => downloadFile(kind === "JSON" ? colorToJson(color) : colorToCss(color), `color-${color.hex.slice(1).toLowerCase()}.${kind.toLowerCase()}`, kind === "JSON" ? "application/json" : "text/css")}><IoDownloadOutline />{kind}</button>)}</div>
           <div className="overview-channels"><div className="overview-channel-heading"><span>{t("channels")}</span><select value={format} aria-label={label("채널 색상 모델", "Channel color model")} onChange={(event) => setFormat(event.target.value as ColorFormat)}>{CHANNEL_FORMATS.map((value) => <option key={value} value={value}>{value}</option>)}</select></div><div className="overview-channel-bars" style={{ gridTemplateColumns: `repeat(${channels.length}, minmax(0, 1fr))` }}>{channels.map((channel) => <ColorChannelBar key={`${format}-${channel.label}`} {...channel} />)}</div></div>
-          </details>
+          </div>
         </>, undefined, "overview-formats-card")}
         {analysisSection !== "formats" && renderCompactCard(t("contrastTitle"), <>
           <div className="overview-contrast">{[{ bg: "#FFFFFF", title: t("onWhite") }, { bg: "#000000", title: t("onBlack") }].map(({ bg, title }) => { const report = contrastReport(color.hex, bg); return <div key={bg}><div className="overview-aa" style={{ background: bg, color: color.hex }}>Aa<span>{report.ratio.toFixed(2)} : 1</span></div><p>{title}</p><div className="overview-passes">{[{ ok: report.aaLarge, label: label("큰 AA", "AA L") }, { ok: report.aaNormal, label: "AA" }, { ok: report.aaaNormal, label: "AAA" }].map((item) => <span key={item.label} className={item.ok ? "pass" : "fail"}>{item.ok ? "✓" : "×"} {item.label}</span>)}</div></div> })}</div>
