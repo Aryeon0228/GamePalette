@@ -93,17 +93,17 @@
 
 /* Stage first, as on the other labs: a one-row title, then the explored color and the image are
    the large stage of the first screen. Formats, notes and the tools below are reached by scrolling. */
-.color-lab{--color-stage:clamp(190px,calc(100svh - 470px),440px)}
+.color-lab{--color-stage:clamp(190px,calc(100svh - 470px),440px);--color-swatch:clamp(96px,16svh,150px)}
 .color-lab-heading{align-items:baseline;padding:14px 0 12px}
 .overview-title{align-items:baseline;gap:18px}
 .color-lab-heading h1{font-size:26px;line-height:1.2}
 .overview-start{margin-top:14px}
 .selected-color-card{flex-direction:column;align-items:stretch;gap:12px}
-.selected-color-swatch{width:100%;height:var(--color-stage)}
+.selected-color-swatch{width:100%;height:var(--color-swatch)}
 .image-workbench{min-height:calc(var(--color-stage) + 12px)}
 .image-workbench img{max-height:var(--color-stage)}
 .image-workbench .p-8{padding:calc(var(--color-stage)/2 - 60px) 12px}
 @media(max-width:999px){.color-lab-heading h1{font-size:26px}}
-@media(max-width:759px){.color-lab-heading{flex-wrap:wrap;gap:4px 20px}.color-lab .heading-note{max-width:none;text-align:left}.color-lab{--color-stage:clamp(150px,28svh,240px)}.color-lab-heading h1{font-size:22px}.image-workbench .p-8{padding:13px 12px}}
-@media(max-width:479px){.color-lab-heading{padding:12px 0 10px}.color-lab .heading-note{max-width:none}.overview-title{display:flex;flex-wrap:wrap;gap:4px 14px}.color-lab-heading h1{margin-top:0;font-size:22px}.selected-color-swatch{width:100%;height:var(--color-stage)}}
-@media(min-width:680px) and (max-width:759px){.selected-color-swatch{width:100%;height:var(--color-stage)}}
+@media(max-width:759px){.color-lab-heading{flex-wrap:wrap;gap:4px 20px}.color-lab .heading-note{max-width:none;text-align:left}.color-lab{--color-stage:clamp(150px,28svh,240px);--color-swatch:clamp(80px,14svh,120px)}.color-lab-heading h1{font-size:22px}.image-workbench .p-8{padding:13px 12px}}
+@media(max-width:479px){.color-lab-heading{padding:12px 0 10px}.color-lab .heading-note{max-width:none}.overview-title{display:flex;flex-wrap:wrap;gap:4px 14px}.color-lab-heading h1{margin-top:0;font-size:22px}.selected-color-swatch{width:100%;height:var(--color-swatch)}}
+@media(min-width:680px) and (max-width:759px){.selected-color-swatch{width:100%;height:var(--color-swatch)}}
