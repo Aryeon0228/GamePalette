@@ -75,7 +75,7 @@ export function StyleFilter({
         )}
       </div>
 
-      <div className={dense ? "contents" : "grid grid-cols-2 sm:grid-cols-5 gap-2"}>
+      <div className={dense ? "style-choices" : "grid grid-cols-2 sm:grid-cols-5 gap-2"} role={dense ? "group" : undefined} aria-label={dense ? t("title") : undefined}>
         {styleOptions.map((style) => {
           const isActive = currentStyle === style.id
 
@@ -93,7 +93,7 @@ export function StyleFilter({
               aria-pressed={isActive}
               aria-label={ts(style.id)}
               title={dense ? ts(style.descKey) : undefined}
-              style={isActive ? { borderColor: "#bbb", backgroundColor: "#1a1a1a" } : undefined}
+              style={isActive && !dense ? { borderColor: "#bbb", backgroundColor: "#1a1a1a" } : undefined}
             >
               {!dense && <style.icon className="h-4 w-4 mb-2" style={{ color: isActive ? "#eee" : "#888" }} />}
               <span className={dense ? "block whitespace-nowrap text-xs font-medium leading-tight" : "block text-xs font-semibold leading-tight"}>{dense ? denseNames[style.id] : ts(style.id)}</span>

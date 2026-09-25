@@ -36,6 +36,8 @@ export interface ColorLabToolsProps {
   overview?: boolean
   extraCard?: ReactNode
   analysisSection?: "all" | "formats" | "checks"
+  /** In overview compose mode: both groups, or only the combining or only the shading cards. */
+  composeSection?: "all" | "combine" | "shade"
 }
 
 type ComposeTool = "shading" | "ramps" | "gradient" | "harmony" | "coldwarm"
@@ -83,7 +85,7 @@ function Choice<T extends string | number>({ value, options, onChange, label }: 
 }
 
 /** Controlled tools for the shared workspace. Generated swatches always select; copying is explicit. */
-export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview = false, extraCard, analysisSection = "all" }: ColorLabToolsProps) {
+export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview = false, extraCard, analysisSection = "all", composeSection = "all" }: ColorLabToolsProps) {
   const t = useTranslations("analyzer")
   const th = useTranslations("harmony")
   const tc = useTranslations("coldwarm")
@@ -199,7 +201,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
       <IoAddOutline />{text ?? label("팔레트에 추가", "Add to palette")}
     </button>
   ) : null
-  const CardHeading = mode === "compose" ? "h4" : "h3"
+  const CardHeading = mode === "compose" && composeSection === "all" ? "h4" : "h3"
   const renderCompactCard = (title: string, children: ReactNode, action?: ReactNode, className?: string) => (
     <section className={cn("overview-tool", className)}>
       <div className="overview-tool-heading"><CardHeading>{title}</CardHeading>{action}</div>
@@ -237,8 +239,8 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
     return <div className={cn("color-tools-overview", mode === "compose" ? "overview-compose" : "overview-analysis", mode === "analyze" && `overview-analysis-${analysisSection}`)}>
       <p className="sr-only" role="status" aria-live="polite">{copied === "error" ? label("복사하지 못했습니다.", "Copy failed.") : copied ? label("클립보드에 복사했습니다.", "Copied to clipboard.") : ""}</p>
       {mode === "compose" ? <>
-        <section className="overview-compose-group" aria-label={label("배색", "Color combinations")}>
-          <h3 className="overview-group-heading"><span>{label("배색", "Combine")}</span>{label("함께 쓸 색 만들기", "Make colors to use together")}</h3>
+        {composeSection !== "shade" && <section className="overview-compose-group" aria-label={label("배색", "Color combinations")}>
+          {composeSection === "all" && <h3 className="overview-group-heading"><span>{label("배색", "Combine")}</span>{label("함께 쓸 색 만들기", "Make colors to use together")}</h3>}
           <div className="overview-compose-grid">
             {renderCompactCard(t("harmonyTitle"), <>
               <p className="overview-purpose">{t("harmonySub")}</p>
@@ -254,7 +256,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
                 {renderCompactSelect(gradientStops, [5, 7, 9, 12], setGradientStops, t("stops"))}
               </div>
               <div className="overview-gradient" aria-hidden style={{ background: `linear-gradient(to right, ${gradient.map((item) => item.hex).join(", ")})` }} />
-              {renderCompactStrip(gradient, "overview-gradient", { height: 40 })}
+              {renderCompactStrip(gradient, "overview-gradient", { height: 44 })}
             </>, renderCompactAdd(gradient))}
             {renderCompactCard(t("coldwarmTitle"), <>
               <p className="overview-purpose">{t("coldwarmSub")}</p>
@@ -264,24 +266,24 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
               </div>
             </>, renderCompactAdd(grid.rows[Math.floor(grid.size / 2)].map((cell) => cell.color)))}
           </div>
-        </section>
-        <section className="overview-compose-group" aria-label={label("셰이딩", "Shading")}>
-          <h3 className="overview-group-heading"><span>{label("셰이딩", "Shade")}</span>{label("명암 단계 만들기", "Make light and dark color steps")}</h3>
+        </section>}
+        {composeSection !== "combine" && <section className="overview-compose-group" aria-label={label("셰이딩", "Shading")}>
+          {composeSection === "all" && <h3 className="overview-group-heading"><span>{label("셰이딩", "Shade")}</span>{label("명암 단계 만들기", "Make light and dark color steps")}</h3>}
           <div className="overview-compose-grid">
             {renderCompactCard(t("shadingTitle"), <>
               <p className="overview-purpose">{t("shadingSub")}</p>
-              {renderCompactStrip(shading.map((step) => step.color), "overview-shading", { roles: shading.map((step) => t(`shade.${step.role}`)), shortRoles: isKo ? ["빛점", "밝음", "중간", "음영", "그림자", "역광", "배경"] : ["HIGH", "LIGHT", "MID", "SHADE", "DARK", "RIM", "BG"], height: 44 })}
+              {renderCompactStrip(shading.map((step) => step.color), "overview-shading", { roles: shading.map((step) => t(`shade.${step.role}`)), shortRoles: isKo ? ["빛점", "밝음", "중간", "음영", "그림자", "역광", "배경"] : ["HIGH", "LIGHT", "MID", "SHADE", "DARK", "RIM", "BG"], height: 56 })}
               <div className="overview-shading-key">{shading.map((step) => <div key={step.role}><span className="overview-dot" style={{ background: step.color.hex }} /><span>{t(`shade.${step.role}`)}</span>{renderCompactCopy(step.color.hex, `overview-role-${step.role}`, step.color.hex)}</div>)}</div>
             </>, renderCompactAdd(shading.map((step) => step.color)))}
             {renderCompactCard(t("rampsTitle"), <>
               <p className="overview-purpose">{t("rampsSub")}</p>
               <div className="overview-ramps">
-                {(["tints", "shades", "tones"] as const).map((ramp) => <div key={ramp}><div className="overview-row-heading"><h5>{t(ramp)}</h5></div>{renderCompactStrip(ramps[ramp], `overview-${ramp}`, { height: 30, extraAction: renderCompactAdd(ramps[ramp]) })}</div>)}
+                {(["tints", "shades", "tones"] as const).map((ramp) => <div key={ramp}><div className="overview-row-heading"><h5>{t(ramp)}</h5></div>{renderCompactStrip(ramps[ramp], `overview-${ramp}`, { height: 36, extraAction: renderCompactAdd(ramps[ramp]) })}</div>)}
               </div>
             </>)}
             {extraCard}
           </div>
-        </section>
+        </section>}
       </> : <>
         {analysisSection !== "checks" && renderCompactCard(t("formatsTitle"), <>
           {renderOverviewFormats(COLOR_FORMATS)}
@@ -294,7 +296,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
           <div className="overview-contrast">{[{ bg: "#FFFFFF", title: t("onWhite") }, { bg: "#000000", title: t("onBlack") }].map(({ bg, title }) => { const report = contrastReport(color.hex, bg); return <div key={bg}><div className="overview-aa" style={{ background: bg, color: color.hex }}>Aa<span>{report.ratio.toFixed(2)} : 1</span></div><p>{title}</p><div className="overview-passes">{[{ ok: report.aaLarge, label: label("큰 AA", "AA L") }, { ok: report.aaNormal, label: "AA" }, { ok: report.aaaNormal, label: "AAA" }].map((item) => <span key={item.label} className={item.ok ? "pass" : "fail"}>{item.ok ? "✓" : "×"} {item.label}</span>)}</div></div> })}</div>
           <p className="overview-note">{t("bestText")} <strong>{textColor === "#FFFFFF" ? t("white") : t("black")}</strong></p>
         </>, undefined, "overview-contrast-card")}
-        {analysisSection !== "formats" && renderCompactCard(t("cvdTitle"), <div className="overview-vision">{[{ hex: color.hex, name: t("cvdNormal") }, ...CVD_TYPES.map((type) => ({ hex: simulateColorBlindness(color.hex, type), name: t(`cvd.${type}`) }))].map((item, index) => <div key={index}><button type="button" className="overview-swatch" style={{ background: item.hex, height: 40 }} aria-label={`${label("색상 선택", "Select color")} ${item.name} ${item.hex}`} onClick={() => onSelectColor(item.hex)} /><p>{item.name}</p>{renderCompactCopy(item.hex, `overview-vision-${index}`, item.hex.toUpperCase())}</div>)}</div>, undefined, "overview-vision-card")}
+        {analysisSection !== "formats" && renderCompactCard(t("cvdTitle"), <div className="overview-vision">{[{ hex: color.hex, name: t("cvdNormal") }, ...CVD_TYPES.map((type) => ({ hex: simulateColorBlindness(color.hex, type), name: t(`cvd.${type}`) }))].map((item, index) => <div key={index}><button type="button" className="overview-swatch" style={{ background: item.hex, height: 56 }} aria-label={`${label("색상 선택", "Select color")} ${item.name} ${item.hex}`} onClick={() => onSelectColor(item.hex)} /><p>{item.name}</p>{renderCompactCopy(item.hex, `overview-vision-${index}`, item.hex.toUpperCase())}</div>)}</div>, undefined, "overview-vision-card")}
         {analysisSection !== "formats" && renderCompactCard(label("이름 · 인상", "Name & impression"), <>
           <div className="overview-name"><span className="overview-dot" style={{ background: color.hex }} /><strong>{color.name}</strong><span>{t(`family.${family}`)} · {t(`temp.${colorTemperature(color)}`)}</span></div>
           <p className="overview-note">{t("psySub")}</p><h4 className="overview-meaning-title">{t(`psy.${family}.title`)}</h4><p className="overview-note">{t(`psy.${family}.desc`)}</p><p className="overview-note"><strong>{t("usage")}: </strong>{t(`psy.${family}.usage`)}</p>

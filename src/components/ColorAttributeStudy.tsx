@@ -36,7 +36,7 @@ export function ColorAttributeStudy({ hex, onSelectColor }: { hex: string; onSel
   const reset = () => { setHsl(referenceHsl); setChanged(false); setGray(false); setExample(null); setConnected(false); setBackgrounds(["#202020", "#E5E5E5"]) }
 
   return <section className="attribute-study" aria-labelledby={`${id}-title`}>
-    <header className="attribute-heading"><div><span className="study-kicker">01 / COLOR & PERCEPTION</span><h3 id={`${id}-title`}>{t("색의 세 속성 · 주변색", "Color properties & context")}</h3></div><button type="button" className="lab-text-button" onClick={reset} aria-label={t("색 속성 실험 초기화", "Reset color property experiment")}><RotateCcw size={13}/>{t("초기화", "Reset")}</button></header>
+    <header className="attribute-heading"><div><h3 id={`${id}-title`}>{t("색의 세 속성 · 주변색", "Color properties & context")}</h3></div><button type="button" className="lab-text-button" onClick={reset} aria-label={t("색 속성 실험 초기화", "Reset color property experiment")}><RotateCcw size={13}/>{t("초기화", "Reset")}</button></header>
     <div className="attribute-comparison">
       <div><span style={{ background: base.hex }}/><p>{t("선택한 기준색", "Selected reference")}<code>{base.hex}</code></p></div>
       <ArrowRight size={15} aria-hidden="true"/>
