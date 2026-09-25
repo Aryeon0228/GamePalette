@@ -1,78 +1,106 @@
-.composition-arrangement-study { --cas-accent:#bcbcbc; min-width:0; color:#ddd; }
-.cas-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-bottom:1px solid #323232; gap:4px; }
-.composition-arrangement-study button { color:#aaa; background:#0c0c0c; border:1px solid #323232; font:inherit; font-size:12px; line-height:1.45; cursor:pointer; min-height:38px; padding:8px 11px; transition:background .15s,border-color .15s,color .15s; }
-.composition-arrangement-study button:hover { color:#ececec; border-color:#7f7f7f; }
-.composition-arrangement-study button:focus-visible,.composition-arrangement-study input:focus-visible { outline:2px solid var(--cas-accent); outline-offset:3px; }
-.composition-arrangement-study button[aria-pressed=true] { color:#ebebeb; background:#282828; border-color:#909090; }
-.composition-arrangement-study button:disabled { color:#5a5a5a; border-color:#252525; cursor:default; background:#0a0a0a; }
-.cas-tabs button { display:flex; align-items:center; justify-content:center; gap:10px; position:relative; padding:13px 10px; border:0; background:transparent; min-height:49px; }
-.cas-tabs button>span { font:12px var(--f-mono,ui-monospace,monospace); color:#6f6f6f; }
-.cas-tabs button[aria-selected=true] { color:#dbdbdb; background:#151515; }
-.cas-tabs button[aria-selected=true]::after { content:""; position:absolute; bottom:-1px; inset-inline:0; height:2px; background:var(--cas-accent); }
-.cas-tabs button[aria-selected=true]>span { color:var(--cas-accent); }
-.cas-intro { font-size:13px; line-height:1.75; color:#a5a5a5; margin:17px 0; }
-.cas-lesson-note { margin:0 0 12px; color:#9f9f9f; font-size:12px; line-height:1.7; }
-.cas-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:24px; align-items:start; }
-.cas-visual { min-width:0; }
-.cas-stage-toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 10px; margin-bottom:9px; }
-.cas-view-actions { display:flex; flex-wrap:wrap; gap:6px; }
-.cas-stage-toolbar>span { font-size:12px; color:#a1a1a1; }
-.cas-stage-toolbar button { font-size:12px; min-height:33px; padding:5px 9px; }
-.cas-stage { background:#ebebeb; border:1px solid #454545; overflow:hidden; }
-.cas-stage svg { width:100%; height:clamp(240px,48svh,430px); display:block; user-select:none; -webkit-user-select:none; touch-action:pan-y; }
-.cas-frame-marks { fill:none; stroke:#c4c4c4; stroke-width:1; pointer-events:none; }
-.cas-object { cursor:grab; outline:none; touch-action:none; }
-.cas-object.is-dragging { cursor:grabbing; }
-.cas-hit-area { fill:transparent; stroke:none; pointer-events:all; }
-.cas-selection { fill:none; stroke:#686868; stroke-width:1.2; stroke-dasharray:4 4; opacity:0; pointer-events:none; }
-.cas-object.is-selected .cas-selection { opacity:.8; }
-.is-observing .cas-object.is-selected .cas-selection { opacity:0; }
+/* Object arrangement: lesson tabs, then one card with the stage beside its controls. */
+.composition-arrangement-study { display: flex; flex-direction: column; min-width: 0; color: var(--k9); }
+.composition-arrangement-study button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px;
+  border: 0; border-radius: 999px; background: var(--k2); color: var(--k9); font-size: 14px; line-height: 1.35;
+  transition: background-color .15s, color .15s;
+}
+.composition-arrangement-study button:hover { background: var(--k3); color: var(--k10); }
+.composition-arrangement-study button[aria-pressed=true] { background: var(--k10); color: var(--k0); }
+.composition-arrangement-study button:disabled { opacity: .4; cursor: default; }
+.composition-arrangement-study button:disabled:hover { background: var(--k2); color: var(--k9); }
+
+/* Lessons: page tabs, pills on the card gray. */
+.cas-tabs { order: 1; display: flex; gap: 2px; width: fit-content; max-width: 100%; padding: 4px; overflow-x: auto; border-radius: 999px; background: var(--k1); scrollbar-width: none; }
+.cas-tabs::-webkit-scrollbar { display: none; }
+.composition-arrangement-study .cas-tabs button { flex-shrink: 0; padding: 0 22px; background: transparent; color: var(--k6); white-space: nowrap; }
+.composition-arrangement-study .cas-tabs button:hover { background: transparent; color: var(--k10); }
+.composition-arrangement-study .cas-tabs button[aria-selected=true] { background: var(--k10); color: var(--k0); font-weight: 500; }
+.cas-tabs button > span { color: inherit; font: 12px var(--f-mono); opacity: .6; }
+.cas-panel { order: 2; display: flex; flex-direction: column; }
+.cas-panel > .cas-layout { order: 1; margin-top: 12px; }
+.cas-panel > .cas-intro { order: 2; margin: 16px 4px 4px; color: var(--k6); font-size: 14px; line-height: 1.75; }
+.cas-lesson-note { order: 3; margin: 4px 4px 0; color: var(--k5); font-size: 12px; line-height: 1.7; }
+
+.cas-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; align-items: start; gap: 12px 20px; padding: 12px; border-radius: var(--co-radius); background: var(--k1); }
+.cas-visual { min-width: 0; }
+.cas-stage-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 4px 12px; }
+.cas-stage-toolbar > span { color: var(--k6); font-size: 14px; }
+.cas-view-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.composition-arrangement-study .cas-view-actions button { min-height: 36px; padding: 0 14px; }
+
+/* The drawing surface stays light: the arrangement is read as tones on paper. */
+.cas-stage { overflow: hidden; border-radius: var(--co-radius-m); background: #ececec; }
+.cas-stage svg { display: block; width: 100%; height: clamp(240px, 48svh, 430px); user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+.cas-frame-marks { fill: none; stroke: #bfbfbf; stroke-width: 1; pointer-events: none; }
+.cas-object { cursor: grab; outline: none; touch-action: none; }
+.cas-object.is-dragging { cursor: grabbing; }
+.cas-hit-area { fill: transparent; stroke: none; pointer-events: all; }
+.cas-selection { fill: none; stroke: #666; stroke-width: 1.2; stroke-dasharray: 4 4; opacity: 0; pointer-events: none; }
+.cas-object.is-selected .cas-selection { opacity: .8; }
+.is-observing .cas-object.is-selected .cas-selection { opacity: 0; }
 /* Keep keyboard focus visible even while the passive selection mark is hidden. */
 .is-observing .cas-object:focus-visible .cas-selection,
-.cas-object:focus-visible .cas-selection { opacity:1; stroke:#4d4d4d; stroke-width:2; stroke-dasharray:none; }
-.cas-help { font-size:12px; line-height:1.7; color:#929292; margin:9px 0 0; }
-.cas-question { display:flex; gap:12px; align-items:baseline; border-top:1px solid #2c2c2c; padding:16px 0 0; margin-top:16px; }
-.cas-question>span { color:#b9b9b9; font:13px var(--f-mono,ui-monospace,monospace); flex-shrink:0; }
-.cas-question p { font-size:13px; line-height:1.85; color:#aeaeae; margin:0; word-break:keep-all; overflow-wrap:anywhere; }
-.cas-controls { display:grid; gap:20px; padding-top:4px; }
-.cas-controls fieldset { min-width:0; border:0; border-top:1px solid #333333; margin:0; padding:12px 0 0; }
-.cas-controls legend { font-size:12px; letter-spacing:.03em; color:#bdbdbd; padding:0 8px 0 0; }
-.cas-controls p { font-size:12px; line-height:1.75; color:#929292; margin:9px 0 0; word-break:keep-all; overflow-wrap:anywhere; }
-.cas-presets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-.cas-presets button { text-align:left; min-height:58px; padding:8px 10px; }
-.cas-presets button>span { display:block; font:12px var(--f-mono,ui-monospace,monospace); color:#838383; margin-bottom:4px; }
-.cas-presets button[aria-pressed=true]>span { color:#bcbcbc; }
-.cas-controls .cas-restore { width:100%; margin-top:11px; font-size:12px; }
-.cas-object-picker { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
-.cas-object-picker button { font-size:12px; padding:7px 3px; }
-.cas-selected-title { display:flex; align-items:center; gap:8px; margin-top:19px; margin-bottom:10px; }
-.cas-selected-title>span:first-child { font-size:13px; color:#c9c9c9; }
-.cas-selected-title>span:last-child { font-size:12px; color:#777777; }
-.cas-range { display:block; min-width:0; margin-top:9px; }
-.cas-range>span { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#b2b2b2; font-size:12px; }
-.cas-range output { font:12px var(--f-mono,ui-monospace,monospace); color:#cfcfcf; font-variant-numeric:tabular-nums; }
-.cas-range input { display:block; width:100%; height:29px; margin:3px 0 0; accent-color:var(--cas-accent); cursor:ew-resize; }
-.cas-order { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:8px; }
-.cas-controls .cas-reset { width:100%; border-color:#252525; color:#939393; background:transparent; font-size:12px; }
-@media(max-width:999px) { .cas-layout { grid-template-columns:minmax(0,1fr) 230px; gap:18px; } }
-@media(max-width:759px) {
-  .cas-layout { grid-template-columns:minmax(0,1fr); gap:22px; }
-  .cas-stage svg { height:auto; }
-  .cas-controls { grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px; }
-  .cas-controls .cas-reset { grid-column:1/-1; }
-  .cas-tabs button { gap:6px; padding-inline:5px; font-size:12px; }
-  .cas-tabs button>span { font-size:12px; }
-  .cas-intro { margin:14px 0; font-size:12px; }
-  .cas-object-picker { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .cas-presets { grid-template-columns:minmax(0,1fr); }
-  .cas-presets button { min-height:43px; display:flex; align-items:center; gap:10px; }
-  .cas-presets button>span { margin:0; }
-  .cas-question { margin-top:13px; padding-top:13px; }
+.cas-object:focus-visible .cas-selection { opacity: 1; stroke: #4d4d4d; stroke-width: 2; stroke-dasharray: none; }
+.cas-help { margin: 12px 4px 0; color: var(--k5); font-size: 12px; line-height: 1.7; }
+.cas-question { display: flex; align-items: baseline; gap: 12px; margin: 16px 4px 4px; padding-top: 16px; border-top: 1px solid var(--k2); }
+.cas-question > span { flex-shrink: 0; color: var(--k9); font: 500 16px var(--f-mono); }
+.cas-question p { color: var(--k9); font-size: 16px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+
+/* Controls: fieldsets split by hairlines on the card. */
+.cas-controls { display: grid; gap: 16px; padding: 4px 8px 8px 0; }
+.cas-controls fieldset { min-width: 0; margin: 0; padding: 12px 0 0; border: 0; border-top: 1px solid var(--k2); }
+.cas-controls fieldset:first-child { padding-top: 4px; border-top: 0; }
+.cas-controls legend { padding: 0 0 8px; color: var(--k5); font-size: 12px; letter-spacing: .04em; }
+.cas-controls p { margin: 8px 0 0; color: var(--k5); font-size: 12px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+.cas-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.composition-arrangement-study .cas-presets button { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 60px; padding: 8px 12px; border-radius: 12px; background: var(--k0); text-align: left; }
+.composition-arrangement-study .cas-presets button:hover { background: var(--k2); }
+.composition-arrangement-study .cas-presets button[aria-pressed=true] { background: var(--k10); color: var(--k0); }
+.cas-presets button > span { display: block; color: var(--k5); font: 12px var(--f-mono); }
+.cas-presets button[aria-pressed=true] > span { color: var(--k3); }
+.composition-arrangement-study .cas-restore { width: 100%; margin-top: 12px; }
+.cas-object-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 3px; border-radius: 999px; background: var(--k0); }
+.composition-arrangement-study .cas-object-picker button { min-height: 34px; padding: 0 4px; background: transparent; color: var(--k6); }
+.composition-arrangement-study .cas-object-picker button:hover { background: transparent; color: var(--k10); }
+.composition-arrangement-study .cas-object-picker button[aria-pressed=true] { background: var(--k10); color: var(--k0); }
+.cas-selected-title { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; }
+.cas-selected-title > span:first-child { color: var(--k9); font-size: 16px; font-weight: 500; }
+.cas-selected-title > span:last-child { color: var(--k5); font-size: 12px; }
+.cas-range { display: block; min-width: 0; margin-top: 8px; }
+.cas-range > span { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; color: var(--k6); font-size: 14px; }
+.cas-range output { color: var(--k10); font-size: 14px; }
+.cas-order { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.composition-arrangement-study .cas-reset { width: 100%; background: transparent; color: var(--k6); }
+.composition-arrangement-study .cas-reset:hover { background: var(--k2); color: var(--k10); }
+
+@media (max-width: 999px) { .cas-layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 12px 16px; } }
+@media (max-width: 759px) {
+  .cas-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; border-radius: var(--co-radius-m); }
+  .composition-arrangement-study .cas-tabs button { flex-direction: column; gap: 0; min-height: 48px; padding: 6px 8px; border-radius: 11px; line-height: 1.3; text-align: center; white-space: normal; }
+  .cas-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 8px; border-radius: 18px; }
+  .cas-stage { border-radius: 12px; }
+  .cas-stage svg { height: auto; }
+  .cas-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0 8px 8px; }
+  .cas-controls fieldset:first-child { padding-top: 12px; border-top: 1px solid var(--k2); }
+  .composition-arrangement-study .cas-reset { grid-column: 1 / -1; }
+  .cas-panel > .cas-intro { margin-top: 14px; }
+  .cas-object-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: var(--co-radius-m); }
+  .cas-presets { grid-template-columns: minmax(0, 1fr); }
+  .composition-arrangement-study .cas-presets button { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 44px; }
+  .cas-question { margin-top: 12px; padding-top: 12px; }
+  .cas-question > span, .cas-question p { font-size: 14px; }
 }
-@media(max-width:399px) { .cas-tabs button { flex-direction:column; gap:3px; } .cas-controls { gap:13px; } .cas-order { grid-template-columns:minmax(0,1fr); } }
-@media(pointer:coarse),(max-width:600px) {
-  .composition-arrangement-study button { min-height:44px; }
-  .cas-range input { height:38px; }
-  .cas-range>span,.cas-controls p,.cas-controls legend,.cas-help { font-size:12px; }
+@media (max-width: 479px) {
+  .cas-controls { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .cas-controls fieldset + fieldset { padding-top: 12px; }
+  .cas-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .composition-arrangement-study .cas-presets button { flex-direction: column; align-items: flex-start; gap: 2px; min-height: 56px; }
+  .cas-object-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); border-radius: 999px; }
 }
-@media(prefers-reduced-motion:reduce) { .composition-arrangement-study button { transition:none; } }
+@media (pointer: coarse), (max-width: 600px) {
+  .composition-arrangement-study button { min-height: 44px; }
+  .composition-arrangement-study .cas-object-picker button { min-height: 40px; }
+  .cas-range input { height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .composition-arrangement-study button { transition: none; } }
