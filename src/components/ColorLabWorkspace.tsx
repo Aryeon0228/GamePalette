@@ -1,9 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react"
 import Link from "next/link"
-import { useLocale } from "next-intl"
-import { ArrowDownToLine, ArrowUpRight, Check, Copy, Pipette, Plus } from "lucide-react"
+import { useLocale, useTranslations } from "next-intl"
+import { ArrowDownToLine, ArrowUpRight, Check, Copy, Pipette, Plus, Shuffle, Star } from "lucide-react"
 import { ImageUploader } from "@/components/ImageUploader"
 import { ImageSelector } from "@/components/ImageSelector"
 import { ImagePicker } from "@/components/ImagePicker"
@@ -21,23 +21,34 @@ import { usePaletteStore } from "@/stores/paletteStore"
 import { useSavedColors } from "@/stores/savedColorsStore"
 import { useToast } from "@/components/ui/toast"
 import { extractColorsWithArea, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
+import { colorFromHex, colorTemperature, hueFamily } from "@/lib/colorAnalysis"
+import { formatColor, type ColorFormat } from "@/lib/colorFormats"
 import { resizePaletteColors } from "@/lib/resizePalette"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
 import type { Color } from "@/types"
 import "@/app/color-lab.css"
-import "@/app/color-learning.css"
-import "./PaletteHierarchy.css"
 
-type Category = "explore" | "import" | "edit" | "study" | "compose" | "analyze" | "save"
-const categories = [
-  { id: "explore", ko: "탐색 중인 색", en: "Explored color" },
-  { id: "edit", ko: "이미지 · 팔레트", en: "Image & palette" },
-  { id: "analyze", ko: "색 분석", en: "Color analysis" },
-  { id: "compose", ko: "배색 · 셰이딩", en: "Compose & shade" },
-  { id: "study", ko: "색 · 빛 실험", en: "Color & light" },
-] as const
+// One workspace up top (image, palette, current color); the tools below sit behind five tabs,
+// so only one group of cards competes for attention at a time.
+type ToolTab = "analyze" | "combine" | "shade" | "image" | "study"
+const TOOL_TABS: Array<{ id: ToolTab; panel: string; ko: string; en: string; koNote: string; enNote: string }> = [
+  { id: "analyze", panel: "color-analyze", ko: "분석", en: "Analyze", koNote: "현재 색의 값, 대비, 색각 차이, 인상을 봅니다.", enNote: "Values, contrast, color vision and impression of the current color." },
+  { id: "combine", panel: "color-compose", ko: "배색", en: "Combine", koNote: "현재 색과 함께 쓸 색을 만듭니다.", enNote: "Make colors to use with the current color." },
+  { id: "shade", panel: "color-shade", ko: "명암", en: "Shade", koNote: "현재 색으로 밝고 어두운 단계를 만듭니다.", enNote: "Make light and dark steps from the current color." },
+  { id: "image", panel: "color-image", ko: "이미지", en: "Image", koNote: "올린 이미지의 색 면적과 밝기 분포를 봅니다.", enNote: "Color areas and brightness across the uploaded image." },
+  { id: "study", panel: "color-study", ko: "실험", en: "Experiment", koNote: "색값, 주변색, 조명을 바꾸며 보이는 색을 비교합니다.", enNote: "Compare how values, surroundings and light change what you see." },
+]
+// Older links point at sections that now live inside a tab; open that tab first.
+const TAB_FOR_ANCHOR: Record<string, ToolTab> = {
+  ...Object.fromEntries(TOOL_TABS.map(tab => [tab.panel, tab.id])),
+  "color-value-study": "image",
+  "color-lighting-study": "study",
+}
+const QUICK_FORMATS: ColorFormat[] = ["RGB", "HSL", "OKLCH"]
 const randomHex = () => `#${Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, "0").toUpperCase()}`
 const formatArea = (percentage: number) => percentage > 0 && percentage < 0.1 ? "<0.1%" : `${percentage.toFixed(1)}%`
+// "rgb(157, 213, 238)" reads as "157 213 238" beside its label.
+const bareValue = (value: string) => value.replace(/^[a-z]+\(/i, "").replace(/\)$/, "").replace(/,\s*/g, " ")
 
 type AreaAnalysis = {
   colors: Color[]
@@ -72,6 +83,7 @@ function makeColor(hex: string): Color {
 export function ColorLabWorkspace() {
   const ko = useLocale() === "ko"
   const label = (kr: string, en: string) => ko ? kr : en
+  const ta = useTranslations("analyzer")
   const store = usePaletteStore()
   const savedColors = useSavedColors()
   const { addToast } = useToast()
@@ -82,13 +94,17 @@ export function ColorLabWorkspace() {
   const [ready, setReady] = useState(false)
   const selectionRevision = useRef(0)
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [tab, setTab] = useState<ToolTab>("analyze")
+  const tabRefs = useRef<Partial<Record<ToolTab, HTMLButtonElement | null>>>({})
+  const toolsRef = useRef<HTMLElement | null>(null)
   // The image stage grows with the viewport, like the stages of the other labs.
-  const [stageHeight, setStageHeight] = useState(190)
+  const [stageHeight, setStageHeight] = useState(240)
   useEffect(() => {
-    const measure = () => setStageHeight(window.innerWidth < 760 ? 240 : Math.round(Math.min(440, Math.max(190, window.innerHeight - 470))))
+    const measure = () => setStageHeight(window.innerWidth < 760 ? 240 : Math.round(Math.min(400, Math.max(220, window.innerHeight - 600))))
     measure()
     window.addEventListener("resize", measure)
     return () => window.removeEventListener("resize", measure)
@@ -108,6 +124,8 @@ export function ColorLabWorkspace() {
   const hasImage = Boolean(store.sourceImageUrl)
   const displayedCount = hasImage ? Math.max(3, Math.min(32, store.colorCount)) : colors.length
   const countLabel = hasImage ? label("추출할 색 수", "Colors to extract") : label("팔레트 색 수", "Palette colors")
+  const current = useMemo(() => colorFromHex(activeHex), [activeHex])
+  const kept = savedColors.colors.includes(activeHex.toUpperCase())
   // Area belongs to the extracted image colors, not subsequent palette edits.
   const currentArea = !busy && !areaBusy && hasImage && store.extractionMethod === "kmeans"
     && areaAnalysis && areaAnalysis.sourceImageUrl === store.sourceImageUrl
@@ -188,10 +206,44 @@ export function ColorLabWorkspace() {
     return () => { cancelled = true }
   }, [store.sourceImageUrl])
 
-  const jumpTo = (next: Category) => {
-    const target = document.getElementById(`color-${next}`)
-    target?.focus({ preventScroll: true })
-    target?.scrollIntoView({ block: "start" })
+  useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
+
+  // A link to an older section anchor opens the tab that now holds it.
+  useEffect(() => {
+    const openAnchor = () => {
+      const anchor = window.location.hash.slice(1)
+      const next = TAB_FOR_ANCHOR[anchor]
+      if (!next) return
+      setTab(next)
+      requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: "start" }))
+    }
+    openAnchor()
+    window.addEventListener("hashchange", openAnchor)
+    return () => window.removeEventListener("hashchange", openAnchor)
+  }, [])
+
+  const openTab = (next: ToolTab, focus = false) => {
+    setTab(next)
+    if (focus) tabRefs.current[next]?.focus()
+    // Switching from deep inside a long panel keeps the new panel's start in view.
+    const tools = toolsRef.current
+    if (tools && tools.getBoundingClientRect().top < 0) tools.scrollIntoView({ block: "start" })
+  }
+
+  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = TOOL_TABS.length - 1
+    const target = event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
+      : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
+      : event.key === "Home" ? 0 : event.key === "End" ? last : -1
+    if (target < 0) return
+    event.preventDefault()
+    openTab(TOOL_TABS[target].id, true)
+  }
+
+  const focusSource = () => {
+    const source = document.getElementById("color-import")
+    source?.focus({ preventScroll: true })
+    source?.scrollIntoView({ block: "start" })
   }
 
   const selectColor = (hex: string, index?: number, origin: ColorOrigin = index === undefined ? "selected" : "palette") => {
@@ -233,9 +285,14 @@ export function ColorLabWorkspace() {
     setHexError(false)
   }
 
-  const copy = async () => {
-    try { await copyToClipboard(activeHex); setCopied(true); setTimeout(() => setCopied(false), 1500) }
-    catch { addToast(label("색상 코드를 직접 선택해 복사해주세요.", "Select the HEX value to copy it manually."), "error") }
+  const copy = async (value: string, token: string) => {
+    try {
+      await copyToClipboard(value)
+      if (copiedTimer.current) clearTimeout(copiedTimer.current)
+      setCopied(token)
+      copiedTimer.current = setTimeout(() => setCopied(null), 1500)
+    }
+    catch { addToast(label("색상 코드를 직접 선택해 복사해주세요.", "Select the value to copy it manually."), "error") }
   }
 
   const eyedrop = async () => {
@@ -311,6 +368,11 @@ export function ColorLabWorkspace() {
     store.setSourceImageUrl(null)
   }
 
+  const changeMethod = (method: "histogram" | "kmeans") => {
+    store.setExtractionMethod(method)
+    if (extractionSource.current) void runExtraction(extractionSource.current, undefined, method)
+  }
+
   const changeCount = (count: number) => {
     const state = usePaletteStore.getState()
     if (state.sourceImageUrl) {
@@ -345,112 +407,177 @@ export function ColorLabWorkspace() {
   }
 
   const currentPaletteForExport = palette?.colors.length ? { ...palette, sourceImageUrl: store.sourceImageUrl || palette.sourceImageUrl } : null
+  const originText = colorOrigin === "random" ? label("시작용 랜덤 색", "Random start")
+    : colorOrigin === "pixel" ? label("이미지에서 피킹", "Picked from image")
+    : colorOrigin === "palette" ? label("팔레트에서 선택", "From the palette")
+    : label("직접 고른 색", "Chosen color")
+
+  const countControl = (
+    <label className="cl-range" htmlFor="extract-count">
+      <span>{countLabel}</span>
+      <input id="extract-count" type="range" aria-label={countLabel} min={hasImage ? 3 : 1} max={32} value={displayedCount} disabled={!palette} onChange={event => changeCount(Number(event.target.value))}/>
+      <output htmlFor="extract-count">{displayedCount}</output>
+    </label>
+  )
+
+  const panelContent = (id: ToolTab) => {
+    switch (id) {
+      case "analyze":
+        return <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="all" onSelectColor={selectColor}/>
+      case "combine":
+        return <ColorLabTools overview hex={activeHex} mode="compose" composeSection="combine" onSelectColor={selectColor} onAddColors={ready && !busy ? addColors : undefined}/>
+      case "shade":
+        return <ColorLabTools overview hex={activeHex} mode="compose" composeSection="shade" onSelectColor={selectColor} onAddColors={ready && !busy ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />}/>
+      case "image":
+        return hasImage ? <div className="cl-grid cl-grid-image">
+          <section className="cl-card cl-area" aria-labelledby="cl-area-title" aria-busy={busy || areaBusy}>
+            <header className="cl-card-head"><h3 id="cl-area-title">{label("색별 면적", "Color areas")}</h3>{currentArea?.percentages && <span className="cl-meta">{currentArea.isRegion ? label("선택 영역 기준", "Selected region") : label("전체 이미지 기준", "Whole image")}</span>}</header>
+            {store.extractionMethod !== "kmeans" ? <div className="cl-card-empty">
+              <p>{label("면적 기반 · K-Means로 추출하면 색마다 차지하는 면적을 볼 수 있어요.", "Extract with Area-based · K-Means to see how much of the image each color covers.")}</p>
+              <button type="button" className="cl-btn" disabled={busy} onClick={() => changeMethod("kmeans")}>{label("K-Means로 다시 추출", "Re-extract with K-Means")}</button>
+            </div> : currentArea?.percentages ? <>
+              <div className="palette-area-bar" aria-hidden="true">{currentArea.colors.map((color, index) => <span key={index} style={{ backgroundColor: color.hex, width: `${currentArea.percentages![index]}%` }} />)}</div>
+              <ul className="palette-area-legend">{currentArea.colors.map((color, index) => <li key={index}><span className="palette-area-chip" style={{ background: color.hex }} aria-hidden="true"/><code>{color.hex}</code><strong>{formatArea(currentArea.percentages![index])}</strong></li>)}</ul>
+              <p className="cl-note">{label("축소한 원본 이미지에서 비슷한 색을 묶은 추정치예요. 팔레트 편집과는 별개이며, 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced source image, independently of palette edits. Pixels below 50% opacity are excluded.")}</p>
+            </> : <div className="cl-card-empty">
+              <p>{busy || areaBusy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("이미지의 원래 색을 분석해 면적 비율을 확인하세요. 편집한 팔레트는 유지됩니다.", "Analyze source-image colors to see their area proportions. Your edited palette stays unchanged.")}</p>
+              {!busy && !areaBusy && !currentArea && <button type="button" className="cl-btn" onClick={() => void analyzeArea()}>{label("면적 다시 분석", "Analyze area again")}</button>}
+            </div>}
+          </section>
+          <div id="color-value-study" tabIndex={-1} className="cl-card cl-value"><ImageValueStudy imageUrl={store.sourceImageUrl} headingLevel={3}/></div>
+          {histogram && <section className="cl-card cl-histogram" aria-labelledby="cl-histogram-title">
+            <header className="cl-card-head"><h3 id="cl-histogram-title">{label("밝기 분포", "Brightness")}</h3></header>
+            <HistogramSection histogram={histogram}/>
+            <p className="cl-note">{label("가중 RGB로 계산해 ‘명암별 면적’과 수치가 다를 수 있어요.", "Computed from weighted RGB, so values may differ from Light & dark areas.")}</p>
+          </section>}
+          <div className="cl-card cl-ascii"><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={focusSource} /></div>
+        </div> : <div className="cl-card cl-panel-empty">
+          <p>{label("이미지를 올리면 색별 면적, 명암, 밝기 분포, 아스키 아트를 볼 수 있어요.", "Upload an image to see color areas, values, brightness and ASCII art.")}</p>
+          <button type="button" className="cl-btn cl-btn-primary" onClick={focusSource}>{label("이미지 올리기", "Upload an image")}</button>
+        </div>
+      case "study":
+        return <div className="cl-grid cl-grid-study"><ColorAttributeStudy hex={activeHex} onSelectColor={selectColor}/><ColorLightingStudy hex={activeHex} onSelectColor={selectColor}/></div>
+    }
+  }
+
+  const panelFootnote = (id: ToolTab) => id === "study"
+    ? <p className="cl-footnote">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <button type="button" onClick={() => openTab("image")}>{label("이미지 탭으로", "Open the Image tab")} →</button></p>
+    : id === "image"
+    ? <p className="cl-footnote" id="color-composition">{label("구도 · 명암 덩어리 실험은 Composition Lab에서 할 수 있어요.", "Frame and value-mass experiments live in Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
+    : null
 
   return (
-    <section className="color-lab color-overview" data-lab="color">
-      <div className="color-lab-heading">
-        <div className="overview-title"><p className="lab-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span>/</span>{label("색과 빛", "COLOR & LIGHT")}</p><h1>Color <b>Lab</b></h1></div>
-        <a className="heading-note learning-entry" href="#color-study">{label("피킹한 색으로, 빛과 명암까지 실험해보세요.", "Explore light and value with the color you pick.")} <span aria-hidden="true">↘</span></a>
-      </div>
+    <section className="color-lab" data-lab="color">
+      <header className="cl-title">
+        <p className="cl-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span aria-hidden="true">/</span>{label("색과 빛", "COLOR & LIGHT")}</p>
+        <h1>Color <b>Lab</b></h1>
+        <p className="cl-lede">{label("이미지에서 팔레트를 만들고, 한 색을 골라 분석부터 명암까지 살펴봅니다.", "Build a palette from an image, then study one color from values to shading.")}</p>
+      </header>
 
-      <nav className="color-context overview-jumps" aria-label={label("페이지 내 도구 바로가기", "Jump to tools on this page")}>
-        <div className="learning-jump-links">{categories.map((item,index) => <a key={item.id} href={`#color-${item.id}`}><span>0{index+1}</span>{ko ? item.ko : item.en}</a>)}</div>
-        <label className="learning-pinned-color"><input type="color" aria-label={label("실습 기준색 고르기", "Pick experiment reference color")} value={activeHex} onChange={event => selectColor(event.target.value)}/><code>{activeHex}</code></label>
-      </nav>
-
-      <div className="overview-start selection-workspace">
-        <section id="color-explore" tabIndex={-1} className="overview-panel selected-color-panel">
-          <div className="overview-section-heading"><h2><span>01</span>{label("탐색 중인 색", "Explored color")}</h2><span className="color-origin">{colorOrigin === "random" ? label("시작용 랜덤 색", "Random starting color") : colorOrigin === "pixel" ? label("이미지에서 피킹", "Picked from image") : colorOrigin === "palette" ? label("팔레트에서 선택", "Selected from palette") : label("직접 선택한 색", "Selected color")}</span></div>
-          <div className="selected-color-card" aria-busy={!ready}>
-            <input className="selected-color-swatch" type="color" aria-label={label("현재 색 고르기", "Pick current color")} value={activeHex} onChange={event => selectColor(event.target.value)} />
-            <div className="selected-color-controls">
-              <div className="selected-hex-row"><form onSubmit={event => { event.preventDefault(); commitHex() }}><label className="sr-only" htmlFor="selected-color-hex">{label("탐색 중인 색 HEX", "Explored color HEX")}</label><input id="selected-color-hex" className="hex-input" aria-invalid={hexError} value={hexInput} onChange={event => setHexInput(event.target.value)} onBlur={commitHex} maxLength={7} spellCheck={false} /></form><button className="lab-icon-button" onClick={copy} aria-label={label("현재 색 복사", "Copy current color")}>{copied ? <Check size={16} /> : <Copy size={16} />}</button></div>
-              <div className="inline-actions"><button className="lab-text-button" onClick={() => selectColor(randomHex(), undefined, "random")}>{label("랜덤 색", "Random color")}</button>{canEyedrop && <button className="lab-text-button" onClick={eyedrop}><Pipette size={14} />{label("화면 피킹", "Screen picker")}</button>}<button className="lab-text-button" disabled={!ready || busy} onClick={() => addColors([activeHex])} aria-label={label("탐색 색을 팔레트에 추가", "Add explored color to palette")}><Plus size={14}/>{label("팔레트에 추가", "Add to palette")}</button></div>
-            </div>
-          </div>
-          {hexError && <p className="hex-error" role="alert">{label("HEX는 #A8B5A2처럼 3자리 또는 6자리로 입력해주세요.", "Enter a 3- or 6-digit HEX, such as #A8B5A2.")}</p>}
-          <p className="color-scope-note">{label("분석·실험의 기준색이에요. 팔레트에는 추가 또는 교체로 적용하세요.", "The reference for analysis and experiments. Add or replace a palette color to apply it.")}</p>
-          <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="formats" onSelectColor={selectColor}/>
-          <div className="favorites-area"><div className="favorites-heading"><h3>{label("즐겨찾는 단색", "Favorite colors")}</h3><button className="lab-text-button" onClick={()=>savedColors.add(activeHex)}><Plus size={13}/>{label("탐색 색 보관", "Keep explored color")}</button></div><div className="favorite-colors">{savedColors.colors.map(hex=><button key={hex} title={hex} aria-label={`${label("색 선택","Select color")} ${hex}`} style={{background:hex}} onClick={()=>selectColor(hex)}/>)}</div></div>
-        </section>
-
-        <section id="color-edit" tabIndex={-1} className="overview-panel image-palette-panel">
-          <div className="overview-section-heading"><h2><span>02</span>{label("이미지 · 팔레트", "Image & palette")}</h2></div>
-          <div className="image-palette-flow">
-          <section id="color-import" tabIndex={-1} className="source-panel image-palette-group" aria-labelledby="palette-import-heading">
-            <div className="palette-group-heading"><h3 id="palette-import-heading">{label("이미지에서 색 가져오기", "Pick colors from an image")}</h3>{hasImage && imageMode === "pick" && <button className="lab-text-button" onClick={clearImage}>{label("이미지 지우기", "Clear image")}</button>}</div>
-            <div className="source-body">
-              <div className="image-workbench">
-                {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={hex=>selectColor(hex,undefined,"pixel")} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={stageHeight} onSelectionComplete={src => { extractionSource.current=src || store.sourceImageUrl; if(extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
+      <div className="cl-workspace">
+        <section id="color-import" tabIndex={-1} className="cl-card cl-source" aria-labelledby="cl-source-title">
+          <header className="cl-card-head">
+            <h2 id="cl-source-title" className="cl-label">{label("이미지", "Image")}</h2>
+            {hasImage && <div className="cl-head-tools">
+              <div className="cl-seg" role="group" aria-label={label("이미지에서 색을 고르는 방식", "How to take colors from the image")}>
+                <button type="button" aria-pressed={imageMode === "extract"} onClick={() => setImageMode("extract")}>{label("영역 추출", "Extract")}</button>
+                <button type="button" aria-pressed={imageMode === "pick"} onClick={() => setImageMode("pick")}>{label("픽셀 피킹", "Pick a pixel")}</button>
               </div>
-              {(hasImage || colors.length > 0) && <div className="extraction-controls">
-                {hasImage && <div className="lab-segment"><button aria-pressed={imageMode === "extract"} onClick={() => setImageMode("extract")}>{label("영역 추출", "Extract region")}</button><button aria-pressed={imageMode === "pick"} onClick={() => setImageMode("pick")}>{label("픽셀 피킹", "Pick a pixel")}</button></div>}
-                <label className="extraction-count" htmlFor="extract-count"><span>{countLabel}</span><input id="extract-count" type="range" aria-label={countLabel} min={hasImage ? 3 : 1} max={32} value={displayedCount} disabled={!palette} onChange={event => changeCount(Number(event.target.value))}/><output htmlFor="extract-count">{displayedCount}</output></label>
-                {hasImage && <select aria-label={label("추출 방식", "Extraction method")} value={store.extractionMethod} onChange={event => {const method=event.target.value as "histogram"|"kmeans";store.setExtractionMethod(method);if(extractionSource.current)void runExtraction(extractionSource.current,undefined,method)}}><option value="histogram">{label("색상 분포", "Hue histogram")}</option><option value="kmeans">{label("면적 기반 · K-Means", "Area-based · K-Means")}</option></select>}
-                <span className="lab-help extraction-status" role="status">{busy ? label("추출 중…", "Extracting…") : hasImage ? label("설정 변경 시 자동 추출", "Automatically re-extracts") : label("늘리면 어울리는 색을 추가합니다.", "Adds related colors as the palette grows.")}</span>
-              </div>}
-            </div>
-          </section>
-          <section className="image-palette-group" aria-labelledby="working-palette-heading">
-            <div className="palette-group-heading"><h3 id="working-palette-heading">{label("팔레트", "Palette")}</h3><span className="palette-count">{colors.length} {label("색", "colors")}</span></div>
-          {colors.length > 0 ? <div className="working-palette">
-            <div className="working-palette-heading"><input className="palette-name-input" aria-label={label("팔레트 이름", "Palette name")} value={palette?.name ?? "Untitled Palette"} onChange={event=>{if(palette)store.setCurrentPalette({...palette,name:event.target.value})}} maxLength={80}/></div>
-            <p className="palette-edit-note">{label("색을 눌러 수정하고, 순서와 스타일을 조정하세요.", "Select a color to edit, reorder, or style your palette.")}</p>
-            <div className="palette-canvas" role="group" aria-label={label("편집할 팔레트 색", "Editable palette colors")}>
-              {colors.map((color,index) => <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index+1} · ${color.hex}`} aria-pressed={selectedIndex===index && activeHex.toUpperCase()===color.hex.toUpperCase()} onClick={() => selectColor(color.hex,index)}><span className="palette-canvas-color" style={{background:color.hex}}/><span><b>{String(index+1).padStart(2,"0")}</b><code>{color.hex}</code></span></button>)}
-            </div>
-            <div className="overview-editor"><PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index=>selectColor(colors[index].hex,index)} onChange={changeColors} fallbackHex={activeHex}/>{colors[selectedIndex] && activeHex.toUpperCase()!==colors[selectedIndex].hex.toUpperCase() && <button className="lab-text-button replace-color" onClick={()=>changeColors(colors.map((color,index)=>index===selectedIndex?makeColor(activeHex):color),selectedIndex)}>{label(`팔레트 ${selectedIndex+1}번을 탐색 색으로 교체`, `Replace palette color ${selectedIndex+1} with explored color`)} <span style={{background:activeHex}}/></button>}</div>
-            <div className="style-section"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style=>{requestId.current++;setBusy(false);store.setCurrentStyle(style);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} customSettings={store.customSettings} onCustomSettingsChange={settings=>{requestId.current++;setBusy(false);store.setCustomSettings(settings);const updated=usePaletteStore.getState().currentPalette?.colors[selectedIndex];if(updated)selectColor(updated.hex,selectedIndex)}} /></div>
-          </div> : <div className="empty-palette" role="status"><p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 팔레트가 비어 있어요.", "Your palette is empty.")}</p><span>{label("탐색 중인 색으로 시작하거나, 이미지에서 색을 가져오세요.", "Start with the explored color, or extract colors from an image.")}</span><button type="button" className="lab-button" disabled={!ready || busy} onClick={() => addColors([activeHex])}><Plus size={14}/>{label("이 색으로 팔레트 시작", "Start a palette with this color")}<span className="palette-start-chip" style={{ backgroundColor: activeHex }} aria-hidden="true"/></button></div>}
-          </section>
-          <section id="color-save" tabIndex={-1} className="image-palette-group palette-save" aria-labelledby="palette-save-heading">
-            <div className="palette-group-heading"><h3 id="palette-save-heading">{label("보관 · 내보내기", "Save & export")}</h3></div>
-            <div className="inline-actions palette-save-actions">
-              <button className="lab-button primary" disabled={!colors.length} onClick={savePalette}>{label("라이브러리에 저장", "Save to library")}</button>
-              <button className="lab-button" disabled={!colors.length} onClick={()=>setExportOpen(true)}><ArrowDownToLine size={14}/>{label("파일 · 코드 내보내기", "Export files & code")}</button>
-              <Link className="lab-text-button" href="/library">{label("라이브러리", "Library")}<ArrowUpRight size={13}/></Link>
-            </div>
-            <p className="lab-help">{label("위 팔레트를 이 브라우저에 보관하거나, PNG · JSON · CSS · SCSS로 가져갈 수 있어요.", "Save the palette above in this browser, or export it as PNG, JSON, CSS or SCSS.")}</p>
-            {store.savedPalettes.length > 0 && <div className="recent-palettes">
-              <h4>{label("최근 보관한 팔레트", "Recently saved palettes")}</h4>
-              <div className="saved-palette-row">{store.savedPalettes.slice(-4).reverse().map(item=><Link key={item.id} href={`/palette/${item.id}`} className="saved-palette-card"><div>{item.colors.map((color,index)=><span key={index} style={{background:color.hex}}/>)}</div><p>{item.name}<span>{item.colors.length}</span></p></Link>)}</div>
+              {imageMode === "pick" && <button type="button" className="cl-btn cl-btn-ghost" onClick={clearImage}>{label("이미지 지우기", "Clear image")}</button>}
             </div>}
-          </section>
-          <section className="image-palette-group image-distribution" aria-labelledby="image-distribution-heading">
-            <div className="palette-group-heading"><h3 id="image-distribution-heading">{label("이미지 분포", "Image distribution")}</h3></div>
-            {hasImage && store.extractionMethod === "kmeans" && <div className="palette-area" aria-label={label("색별 면적 비율", "Color area proportions")} aria-busy={busy || areaBusy}>
-              <div className="palette-area-heading"><h4>{label("색별 면적 비율", "Color area proportions")}</h4>{currentArea?.percentages && <span>{currentArea.isRegion ? label("선택 영역 기준", "Selected region") : label("전체 이미지 기준", "Whole image")}</span>}</div>
-              {currentArea?.percentages ? <>
-                <div className="palette-area-bar" aria-hidden="true">{currentArea.colors.map((color, index) => <span key={index} style={{ backgroundColor: color.hex, width: `${currentArea.percentages![index]}%` }} />)}</div>
-                <ul className="palette-area-legend">{currentArea.colors.map((color,index) => <li key={index}><span className="palette-area-chip" style={{background:color.hex}} aria-hidden="true"/><code>{color.hex}</code><strong>{formatArea(currentArea.percentages![index])}</strong></li>)}</ul>
-                <p className="lab-help">{label("축소한 원본 이미지의 비슷한 색을 묶은 추정치예요. 팔레트 편집과는 별개이며, 불투명도 50% 미만은 제외합니다.", "Estimated from similar colors in a reduced source image, independently of palette edits. Pixels below 50% opacity are excluded.")}</p>
-              </> : <div className="palette-area-pending"><p className="lab-help">{busy || areaBusy ? label("색과 면적을 분석하고 있어요…", "Analyzing colors and area…") : currentArea ? label("분석할 불투명 픽셀이 없어 면적을 계산할 수 없어요.", "No opaque pixels are available to measure.") : label("이미지의 원래 색을 분석해 면적 비율을 확인하세요. 편집한 팔레트는 유지됩니다.", "Analyze source-image colors to see their area proportions. Your edited palette stays unchanged.")}</p>{!busy && !areaBusy && !currentArea && <button className="lab-text-button" onClick={() => void analyzeArea()}>{label("면적 다시 분석", "Analyze area again")}</button>}</div>}
-            </div>}
-            <div id="color-value-study" tabIndex={-1} className="image-value-anchor"><ImageValueStudy imageUrl={store.sourceImageUrl} headingLevel={4}/></div>
-                {histogram && <details className="legacy-brightness"><summary>{label("밝기 분포 · 히스토그램", "Brightness distribution · histogram")}</summary><p className="lab-help">{label("전체 이미지의 밝기 분포입니다. 가중 RGB 기준으로 계산해, 위 ‘명암별 면적’과 수치가 다를 수 있어요.", "Brightness distribution across the whole image. This uses weighted RGB, so values may differ from Light & dark areas above.")}</p><div className="compact-histogram"><HistogramSection histogram={histogram}/></div></details>}
-          </section>
+          </header>
+          <div className="image-workbench" style={{ "--cl-stage": `${stageHeight}px` } as CSSProperties}>
+            {!store.sourceImageUrl ? <ImageUploader onImageLoad={loadImage} /> : imageMode === "pick" ? <ImagePicker key={store.sourceImageUrl} src={store.sourceImageUrl} onPick={hex => selectColor(hex, undefined, "pixel")} /> : <ImageSelector imageUrl={store.sourceImageUrl} maxHeight={stageHeight} onSelectionComplete={src => { extractionSource.current = src || store.sourceImageUrl; if (extractionSource.current) void runExtraction(extractionSource.current) }} onClear={clearImage} />}
           </div>
+          {hasImage && <div className="cl-source-controls">
+            {countControl}
+            <label className="cl-select"><span>{label("추출 방식", "Method")}</span><select value={store.extractionMethod} onChange={event => changeMethod(event.target.value as "histogram" | "kmeans")}><option value="histogram">{label("색상 분포", "Hue histogram")}</option><option value="kmeans">{label("면적 기반 · K-Means", "Area-based · K-Means")}</option></select></label>
+            <span className="cl-status" role="status">{busy ? label("추출 중…", "Extracting…") : label("바꾸면 바로 다시 추출해요", "Re-extracts as you change it")}</span>
+          </div>}
         </section>
+
+        <section id="color-edit" tabIndex={-1} className="cl-card cl-palette" aria-labelledby="cl-palette-title">
+          <header className="cl-card-head">
+            <div className="cl-palette-title">
+              <h2 id="cl-palette-title" className="cl-label">{label("팔레트", "Palette")}</h2>
+              {colors.length > 0 && <input className="cl-palette-name" aria-label={label("팔레트 이름", "Palette name")} value={palette?.name ?? "Untitled Palette"} onChange={event => { if (palette) store.setCurrentPalette({ ...palette, name: event.target.value }) }} maxLength={80}/>}
+              <span className="cl-count" aria-label={label(`${colors.length}색`, `${colors.length} colors`)}>{colors.length}</span>
+            </div>
+            <div id="color-save" className="cl-palette-actions">
+              <Link className="cl-btn cl-btn-ghost" href="/library">{label("라이브러리", "Library")}<ArrowUpRight size={14} aria-hidden="true"/></Link>
+              {colors.length > 0 && <>
+                <button type="button" className="cl-btn" onClick={() => setExportOpen(true)} title={label("PNG · JSON · CSS · SCSS로 내보내기", "Export as PNG, JSON, CSS or SCSS")}><ArrowDownToLine size={15} aria-hidden="true"/>{label("내보내기", "Export")}</button>
+                <button type="button" className="cl-btn cl-btn-primary" onClick={savePalette} title={label("이 브라우저의 라이브러리에 보관", "Keep in this browser's library")}>{label("저장", "Save")}</button>
+              </>}
+            </div>
+          </header>
+          {colors.length > 0 ? <>
+            <div className="palette-canvas" role="group" aria-label={label("편집할 팔레트 색", "Editable palette colors")}>
+              {colors.map((color, index) => <button key={index} type="button" aria-label={`${label("편집할 색 선택", "Select color to edit")} ${index + 1} · ${color.hex}`} aria-pressed={selectedIndex === index && activeHex.toUpperCase() === color.hex.toUpperCase()} onClick={() => selectColor(color.hex, index)}><span className="palette-canvas-color" style={{ background: color.hex }}/><span><b>{String(index + 1).padStart(2, "0")}</b><code>{color.hex}</code></span></button>)}
+            </div>
+            <div className="cl-palette-edit">
+              <PaletteEditor dense colors={colors} selectedIndex={selectedIndex} onSelect={index => selectColor(colors[index].hex, index)} onChange={changeColors} fallbackHex={activeHex}/>
+              {colors[selectedIndex] && activeHex.toUpperCase() !== colors[selectedIndex].hex.toUpperCase() && <button type="button" className="cl-btn cl-replace" onClick={() => changeColors(colors.map((color, index) => index === selectedIndex ? makeColor(activeHex) : color), selectedIndex)}><span className="cl-chip-dot" style={{ background: activeHex }} aria-hidden="true"/>{label(`${selectedIndex + 1}번을 현재 색으로 교체`, `Replace ${selectedIndex + 1} with the current color`)}</button>}
+            </div>
+            <div className="cl-palette-foot">
+              <div className="cl-palette-style"><StyleFilter dense currentStyle={store.currentStyle} onStyleChange={style => { requestId.current++; setBusy(false); store.setCurrentStyle(style); const updated = usePaletteStore.getState().currentPalette?.colors[selectedIndex]; if (updated) selectColor(updated.hex, selectedIndex) }} customSettings={store.customSettings} onCustomSettingsChange={settings => { requestId.current++; setBusy(false); store.setCustomSettings(settings); const updated = usePaletteStore.getState().currentPalette?.colors[selectedIndex]; if (updated) selectColor(updated.hex, selectedIndex) }} /></div>
+              {!hasImage && countControl}
+            </div>
+            {store.savedPalettes.length > 0 && <div className="cl-recent">
+              <h3 className="cl-label">{label("최근 저장", "Recently saved")}</h3>
+              <div className="saved-palette-row">{store.savedPalettes.slice(-4).reverse().map(item => <Link key={item.id} href={`/palette/${item.id}`} className="saved-palette-card"><div>{item.colors.map((color, index) => <span key={index} style={{ background: color.hex }}/>)}</div><p>{item.name}<span>{item.colors.length}</span></p></Link>)}</div>
+            </div>}
+          </> : <div className="cl-empty-palette" role="status">
+            <p>{busy ? label("이미지에서 색을 가져오고 있어요.", "Extracting colors from your image.") : label("아직 팔레트가 비어 있어요.", "Your palette is empty.")}</p>
+            <span>{label("이미지에서 색을 뽑거나, 현재 색으로 시작하세요.", "Extract colors from an image, or start with the current color.")}</span>
+            <button type="button" className="cl-btn cl-btn-primary" disabled={!ready || busy} onClick={() => addColors([activeHex])}><span className="cl-chip-dot" style={{ backgroundColor: activeHex }} aria-hidden="true"/>{label("현재 색으로 시작", "Start with the current color")}</button>
+          </div>}
+        </section>
+
+        <aside id="color-explore" tabIndex={-1} className="cl-card cl-current" aria-labelledby="cl-current-title" aria-busy={!ready}>
+          <header className="cl-card-head">
+            <h2 id="cl-current-title" className="cl-label">{label("현재 색", "Current color")}</h2>
+            <span className="cl-meta">{originText}</span>
+          </header>
+          <input className="cl-current-swatch" type="color" aria-label={label("현재 색 고르기", "Pick the current color")} value={activeHex} onChange={event => selectColor(event.target.value)} />
+          <div className="cl-hex-row">
+            <form onSubmit={event => { event.preventDefault(); commitHex() }}><label className="sr-only" htmlFor="selected-color-hex">{label("현재 색 HEX", "Current color HEX")}</label><input id="selected-color-hex" className="cl-hex" aria-invalid={hexError} value={hexInput} onChange={event => setHexInput(event.target.value)} onBlur={commitHex} maxLength={7} spellCheck={false} /></form>
+            <button type="button" className="cl-icon" onClick={() => void copy(activeHex, "hex")} aria-label={label("HEX 복사", "Copy HEX")} title={label("HEX 복사", "Copy HEX")}>{copied === "hex" ? <Check size={16}/> : <Copy size={16}/>}</button>
+          </div>
+          {hexError && <p className="cl-error" role="alert">{label("HEX는 #A8B5A2처럼 3자리 또는 6자리로 입력해주세요.", "Enter a 3- or 6-digit HEX, such as #A8B5A2.")}</p>}
+          <p className="cl-name"><strong>{current.name}</strong><span>{ta(`family.${hueFamily(current)}`)} · {ta(`temp.${colorTemperature(current)}`)}</span></p>
+          <dl className="cl-values">{QUICK_FORMATS.map(format => {
+            const value = formatColor(current, format)
+            return <div key={format}><dt>{format}</dt><dd><code>{bareValue(value)}</code><button type="button" onClick={() => void copy(value, format)} aria-label={`${format} ${label("복사", "copy")} ${value}`} title={value}>{copied === format ? <Check size={14}/> : <Copy size={14}/>}</button></dd></div>
+          })}</dl>
+          <div className="cl-round-actions">
+            <button type="button" onClick={() => selectColor(randomHex(), undefined, "random")}><span aria-hidden="true"><Shuffle size={18}/></span>{label("랜덤", "Random")}</button>
+            {canEyedrop && <button type="button" onClick={eyedrop}><span aria-hidden="true"><Pipette size={18}/></span>{label("스포이트", "Eyedropper")}</button>}
+            <button type="button" disabled={!ready || busy} onClick={() => addColors([activeHex])} aria-label={label("현재 색을 팔레트에 추가", "Add the current color to the palette")}><span aria-hidden="true"><Plus size={18}/></span>{label("팔레트에", "To palette")}</button>
+            <button type="button" aria-pressed={kept} onClick={() => savedColors.toggle(activeHex)} aria-label={kept ? label("보관한 색에서 빼기", "Remove from kept colors") : label("현재 색 보관", "Keep the current color")}><span aria-hidden="true"><Star size={18} fill={kept ? "currentColor" : "none"}/></span>{kept ? label("보관됨", "Kept") : label("보관", "Keep")}</button>
+          </div>
+          <div className="cl-kept">
+            <h3 className="cl-label">{label("보관한 색", "Kept colors")}</h3>
+            {savedColors.colors.length ? <div className="favorite-colors">{savedColors.colors.map(hex => <button key={hex} type="button" title={hex} aria-label={`${label("색 선택", "Select color")} ${hex}`} aria-pressed={hex === activeHex.toUpperCase()} style={{ background: hex }} onClick={() => selectColor(hex)}/>)}</div>
+              : <p className="cl-note">{label("보관을 누르면 자주 쓰는 색이 여기에 모여요.", "Colors you keep gather here.")}</p>}
+          </div>
+        </aside>
       </div>
 
-      <section id="color-analyze" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>03</span>{label("탐색 색 분석", "Explored color analysis")}</h2></div>
-        <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="checks" onSelectColor={selectColor}/>
+      <section className="cl-tools" ref={toolsRef} aria-labelledby="cl-tools-title">
+        <h2 id="cl-tools-title" className="sr-only">{label("현재 색 도구", "Tools for the current color")}</h2>
+        <div className="cl-tabbar">
+          <div className="cl-tabs" role="tablist" aria-label={label("도구", "Tools")}>
+            {TOOL_TABS.map((item, index) => <button key={item.id} ref={element => { tabRefs.current[item.id] = element }} type="button" role="tab" id={`cl-tab-${item.id}`} aria-selected={tab === item.id} aria-controls={item.panel} tabIndex={tab === item.id ? 0 : -1} onClick={() => openTab(item.id)} onKeyDown={event => onTabKey(event, index)}>{ko ? item.ko : item.en}</button>)}
+          </div>
+          <label className="cl-current-chip" title={label("현재 색", "Current color")}><input type="color" aria-label={label("현재 색 고르기", "Pick the current color")} value={activeHex} onChange={event => selectColor(event.target.value)}/><code>{activeHex}</code></label>
+        </div>
+        {TOOL_TABS.map(item => <div key={item.id} id={item.panel} role="tabpanel" aria-labelledby={`cl-tab-${item.id}`} tabIndex={-1} hidden={tab !== item.id} className="cl-panel">
+          <p className="cl-panel-note">{ko ? item.koNote : item.enNote}</p>
+          {panelContent(item.id)}
+          {panelFootnote(item.id)}
+        </div>)}
       </section>
-
-      <section id="color-compose" tabIndex={-1} className="overview-section">
-        <div className="overview-section-heading"><h2><span>04</span>{label("배색 · 셰이딩", "Compose & shade")}</h2><p>{label("색상칩으로 탐색하고, 필요한 세트는 팔레트에 추가하세요.", "Select a swatch to explore it, or add a color set to your palette.")}</p></div>
-        <ColorLabTools overview hex={activeHex} mode="compose" onSelectColor={selectColor} onAddColors={ready && !busy ? addColors : undefined} extraCard={<ColorSphereStudy hex={activeHex} onSelectColor={selectColor} />} />
-        <details className="ascii-details"><summary>{label("아스키 아트", "ASCII art")}<span>{label("이미지를 문자와 팔레트 색으로 변환", "Turn an image into colored characters")}</span></summary><div><AsciiStudy imageUrl={store.sourceImageUrl} palette={palette} onImport={()=>jumpTo("import")} /></div></details>
-      </section>
-
-      <section id="color-study" tabIndex={-1} className="overview-section learning-workspace">
-        <div className="overview-section-heading"><h2><span>05</span>{label("색 · 빛 실험", "Color & light experiments")}</h2><p>{label("색값·주변색·조명을 바꾸며 색이 어떻게 보이는지 비교하세요.", "Compare how color values, surroundings and lighting change what you see.")}</p></div>
-        <div className="learning-workspace-grid"><ColorAttributeStudy hex={activeHex} onSelectColor={selectColor}/><ColorLightingStudy hex={activeHex} onSelectColor={selectColor}/></div>
-        <p className="learning-connection">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-value-study">{label("이미지 명암 실험으로 ↑", "Image value experiment ↑")}</a></p>
-      </section>
-
-      <p id="color-composition" tabIndex={-1} className="learning-connection composition-moved">{label("구도 · 명암 덩어리 실험은 Composition Lab으로 옮겼어요.", "Frame & value-mass experiments have moved to Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
 
       {currentPaletteForExport && <ExportModal open={exportOpen} onOpenChange={setExportOpen} palette={currentPaletteForExport}/>}
     </section>
