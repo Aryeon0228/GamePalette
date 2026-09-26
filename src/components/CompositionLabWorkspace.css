@@ -1,67 +1,97 @@
-.composition-lab { max-width:1640px; margin:0 auto; padding:0 var(--pad,48px) 38px; }
-.composition-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px 0; }
-.composition-heading>div { display:flex; align-items:center; gap:24px; }
-.composition-eyebrow { font:400 12px/1.7 var(--f-mono,monospace); letter-spacing:.08em; color:#888; }
-.composition-eyebrow a { text-decoration:none; }
-.composition-eyebrow span { margin:0 9px; color:#555; }
-.composition-heading h1 { margin:0; font:300 32px/1.15 var(--f-lat,sans-serif); letter-spacing:-.025em; }
-.composition-heading h1 b { font-weight:600; }
-.composition-heading>p { margin:0; color:#aaa; font-size:12px; line-height:1.8; text-align:right; }
-.composition-jumps { position:sticky; top:var(--lab-header-height,130px); z-index:25; display:flex; gap:28px; padding:0 14px; border:1px solid #303030; background:#080808; }
-.composition-jumps a { display:flex; align-items:center; gap:8px; min-height:42px; color:#bbb; font-size:12px; text-decoration:none; }
-.composition-jumps a>span { color:#777; font:12px var(--f-mono,monospace); }
-.composition-jumps a:hover { color:#fff; }
-.composition-section { min-width:0; margin-top:28px; scroll-margin-top:52px; }
-.composition-section+.composition-section { margin-top:44px; padding-top:26px; border-top:1px solid #292929; }
-.composition-section-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px 24px; margin-bottom:16px; }
-.composition-section-heading h2 { display:flex; align-items:center; gap:12px; flex-shrink:0; margin:0; font-size:16px; font-weight:400; }
-.composition-section-heading h2>span { color:#777; font:12px var(--f-mono,monospace); }
-.composition-section-heading p { margin:0; color:#999; font-size:12px; line-height:1.7; text-align:right; }
-.composition-lab .ics-stage { --ics-frame-height:clamp(240px,calc(100svh - 360px),460px); }
-.composition-lab .ics-visual { top:calc(var(--lab-header-height,130px) + 58px); }
-.composition-reference { display:flex; gap:18px; margin-top:32px; padding-top:18px; border-top:1px solid #292929; color:#888; font-size:12px; line-height:1.9; }
-.composition-reference>span { flex-shrink:0; }
-.composition-reference p { margin:0; }
-.composition-reference a { color:#bbb; }
-.composition-reference a:hover { color:#fff; }
-@media(max-width:1100px) { .composition-heading>div { display:block; } .composition-heading h1 { margin-top:6px; } }
-@media(max-width:759px) {
-  .composition-heading { align-items:flex-start; flex-direction:column; gap:10px; padding:20px 0; }
-  .composition-heading h1 { font-size:30px; }
-  .composition-heading>p { text-align:left; }
-  .composition-heading>p br { display:none; }
-  .composition-jumps { gap:24px; padding:0 10px; }
-  .composition-jumps a { min-height:44px; }
-  .composition-section-heading { flex-direction:column; gap:6px; }
-  .composition-section-heading p { text-align:left; }
-  .composition-section { margin-top:24px; }
-  .composition-lab .ics-stage { --ics-frame-height:min(310px,40svh); }
-  .composition-reference { gap:12px; }
-}
+/* Composition Lab — the same quiet workspace as Color Lab.
+   The frame stays in the 11-step gray wedge; the only tones that matter are the ones being arranged.
+   One type scale (12 · 14 · 16 · 20 · 28), pills for every choice, 20px cards instead of ruled boxes. */
 
-/* Stage first, as on the other labs: a one-row title, then the stage fills most of the first screen.
-   The lesson prompt and notes follow the stage and are reached by scrolling. */
-.composition-heading { align-items:baseline; padding:14px 0 12px; }
-.composition-heading>div { align-items:baseline; gap:18px; }
-.composition-heading h1 { font-size:26px; line-height:1.2; }
-.composition-heading>p { max-width:52ch; line-height:1.6; }
-.composition-heading>p br { display:none; }
-.composition-jumps a { min-height:40px; }
-.composition-section { margin-top:14px; }
-.composition-section-heading { margin-bottom:10px; }
-.composition-arrangement-study { display:flex; flex-direction:column; }
-.composition-arrangement-study>.cas-tabs { order:1; }
-.composition-arrangement-study>.cas-panel { order:2; display:flex; flex-direction:column; }
-.composition-arrangement-study>.cas-lesson-note { order:3; margin-top:8px; }
-.cas-panel>.cas-layout { order:1; margin-top:12px; }
-.cas-panel>.cas-intro { order:2; margin:18px 0 6px; }
-@media(min-width:760px) {
-  .composition-lab .cas-stage svg { height:clamp(320px,calc(100svh - 330px),760px); }
-  .composition-lab .ics-stage { --ics-frame-height:clamp(280px,calc(100svh - 300px),720px); }
+.composition-lab {
+  --k0: #000; --k1: #1a1a1a; --k2: #333; --k3: #4d4d4d; --k4: #666; --k5: #8f8f8f;
+  --k6: #a6a6a6; --k7: #bfbfbf; --k8: #d9d9d9; --k9: #ececec; --k10: #fff;
+  --co-radius: 20px;
+  --co-radius-m: 14px;
+  --co-sticky: var(--lab-header-height, 52px);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--pad, 48px) 72px;
+  color: var(--k9);
+  font-size: 14px;
+  line-height: 1.6;
 }
-@media(max-width:1100px) { .composition-heading>div { display:flex; } .composition-heading h1 { margin-top:0; } }
-@media(max-width:759px) {
-  .composition-heading { gap:6px; padding:12px 0 10px; }
-  .composition-heading>div { flex-wrap:wrap; gap:4px 14px; }
-  .composition-heading h1 { font-size:22px; }
+.composition-lab :is(h1, h2, h3, p) { margin: 0; }
+.composition-lab output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.composition-lab :is(button, a, input, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--k10); outline-offset: 3px; }
+
+/* ---------- shared controls ---------- */
+.composition-lab button { font: inherit; cursor: pointer; }
+.composition-lab input[type=range] {
+  -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; height: 32px;
+  margin: 0; padding: 0; border: 0; background: transparent; color: var(--k9); cursor: ew-resize; accent-color: var(--k10);
+}
+.composition-lab input[type=range]::-webkit-slider-runnable-track { height: 32px; border: 0; background: radial-gradient(circle, var(--k4) 0 1.5px, transparent 2px) 0 50% / 10px 100% repeat-x; }
+.composition-lab input[type=range]::-moz-range-track { height: 32px; border: 0; background: radial-gradient(circle, var(--k4) 0 1.5px, transparent 2px) 0 50% / 10px 100% repeat-x; }
+.composition-lab input[type=range]::-moz-range-progress { background: transparent; }
+.composition-lab input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 4px; height: 22px; margin-top: 5px; border: 0; border-radius: 2px; background: var(--k10); box-shadow: 0 0 0 5px rgb(255 255 255 / .1); }
+.composition-lab input[type=range]::-moz-range-thumb { width: 4px; height: 22px; border: 0; border-radius: 2px; background: var(--k10); box-shadow: 0 0 0 5px rgb(255 255 255 / .1); }
+.composition-lab input[type=range]:focus-visible { outline-offset: 2px; }
+.composition-lab summary { display: flex; align-items: center; gap: 10px; width: fit-content; min-height: 48px; color: var(--k8); font-size: 14px; list-style: none; cursor: pointer; }
+.composition-lab summary::-webkit-details-marker { display: none; }
+.composition-lab summary::before { content: ""; flex-shrink: 0; width: 6px; height: 6px; margin: 0 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+.composition-lab details[open] > summary::before { transform: rotate(45deg); }
+.composition-lab summary:hover { color: var(--k10); }
+
+/* ---------- title ---------- */
+.composition-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; padding: 28px 0 24px; }
+.composition-heading > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; }
+.composition-eyebrow { color: var(--k5); font: 400 12px/1.6 var(--f-mono); letter-spacing: .1em; }
+.composition-eyebrow a { color: inherit; text-decoration: none; }
+.composition-eyebrow a:hover { color: var(--k10); }
+.composition-eyebrow span { margin: 0 8px; color: var(--k4); }
+.composition-heading h1 { color: var(--k9); font: 300 28px/1.2 var(--f-lat); letter-spacing: -.02em; }
+.composition-heading h1 b { font-weight: 600; }
+.composition-heading > p { max-width: 560px; color: var(--k6); font-size: 14px; line-height: 1.6; text-align: right; }
+.composition-heading > p br { display: none; }
+
+/* ---------- jumps ---------- */
+.composition-jumps {
+  position: sticky; top: var(--co-sticky); z-index: 25; display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0 calc(-1 * var(--pad, 48px)); padding: 12px var(--pad, 48px); background: var(--k0);
+}
+.composition-jumps a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border-radius: 999px; background: var(--k1); color: var(--k8); font-size: 14px; text-decoration: none; transition: background-color .15s, color .15s; }
+.composition-jumps a > span { color: var(--k5); font: 12px var(--f-mono); }
+.composition-jumps a:hover { background: var(--k2); color: var(--k10); }
+
+/* ---------- sections ---------- */
+.composition-section { min-width: 0; margin-top: 16px; scroll-margin-top: calc(var(--co-sticky) + 64px); }
+.composition-section:focus { outline: 0; }
+.composition-section + .composition-section { margin-top: 56px; }
+.composition-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 16px; }
+.composition-section-heading h2 { display: flex; flex-shrink: 0; align-items: center; gap: 12px; color: var(--k9); font-size: 20px; font-weight: 400; }
+.composition-section-heading h2 > span { color: var(--k5); font: 12px var(--f-mono); }
+.composition-section-heading p { color: var(--k6); font-size: 14px; line-height: 1.7; text-align: right; }
+
+.composition-reference { display: flex; gap: 16px; margin-top: 40px; color: var(--k5); font-size: 12px; line-height: 1.9; }
+.composition-reference > span { flex-shrink: 0; }
+.composition-reference a { color: var(--k8); text-underline-offset: 4px; }
+.composition-reference a:hover { color: var(--k10); }
+
+@media (min-width: 760px) {
+  .composition-lab .cas-stage svg { height: clamp(320px, calc(100svh - 380px), 760px); }
+  .composition-lab .ics-stage { --ics-frame-height: clamp(280px, calc(100svh - 360px), 720px); }
+}
+@media (max-width: 999px) {
+  .composition-heading { flex-direction: column; align-items: flex-start; }
+  .composition-heading > p { text-align: left; }
+}
+@media (max-width: 759px) {
+  .composition-lab { padding-bottom: 56px; }
+  .composition-heading { padding: 20px 0 16px; }
+  .composition-heading h1 { font-size: 24px; }
+  .composition-jumps { padding-top: 8px; padding-bottom: 8px; }
+  .composition-jumps a { padding: 0 14px; }
+  .composition-section-heading { flex-direction: column; gap: 4px; }
+  .composition-section-heading p { text-align: left; }
+  .composition-section + .composition-section { margin-top: 40px; }
+  .composition-lab .ics-stage { --ics-frame-height: min(310px, 40svh); }
+  .composition-reference { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .composition-lab *, .composition-lab *::before { transition: none !important; }
 }
