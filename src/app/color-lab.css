@@ -172,6 +172,7 @@
 /* ---------- workspace ---------- */
 .color-lab .cl-workspace {
   display: grid; grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-rows: auto 1fr;
   grid-template-areas: "source current" "palette current";
   align-items: start; gap: 16px;
 }
@@ -223,7 +224,7 @@
 .color-lab .cl-status { color: var(--k5); font-size: 12px; }
 
 /* Palette */
-.color-lab .cl-palette { grid-area: palette; }
+.color-lab .cl-palette { grid-area: palette; align-self: stretch; }
 .color-lab .cl-palette-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
 .color-lab .cl-palette-name {
   width: 16ch; min-width: 0; height: 36px; padding: 0 12px; border: 0; border-radius: 999px;
@@ -305,8 +306,9 @@
 .color-lab .cl-empty-palette > span { color: var(--k5); font-size: 14px; }
 .color-lab .cl-empty-palette .cl-btn { margin-top: 8px; }
 
-/* Current color: an inspector that stays beside the work while it scrolls. */
-.color-lab .cl-current { grid-area: current; position: sticky; top: calc(var(--cl-sticky) + 16px); }
+/* Current color: an inspector as tall as the image and palette beside it, so it scrolls with
+   them; the kept colors take the room left at the bottom. */
+.color-lab .cl-current { grid-area: current; align-self: stretch; display: flex; flex-direction: column; }
 .color-lab .cl-current-swatch {
   display: block; width: 100%; height: clamp(120px, 20svh, 176px); padding: 0; border: 0;
   border-radius: var(--cl-radius-m); background: transparent; cursor: pointer;
@@ -343,9 +345,10 @@
 .color-lab .cl-round-actions > button:hover > span { background: var(--k3); }
 .color-lab .cl-round-actions > button[aria-pressed=true] > span { background: var(--k10); color: var(--k0); }
 .color-lab .cl-round-actions > button:disabled { opacity: .4; cursor: default; }
-.color-lab .cl-kept { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--k2); }
-.color-lab .cl-kept .cl-note { margin-top: 8px; }
-.color-lab .favorite-colors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.color-lab .cl-kept { flex: 1 0 auto; display: flex; flex-direction: column; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--k2); }
+/* The kept colors sit in a sunken tray that grows to the bottom of the card. */
+.color-lab .cl-kept > .favorite-colors, .color-lab .cl-kept > .cl-note { flex: 1 0 auto; margin-top: 10px; padding: 12px; border-radius: var(--cl-radius-m); background: var(--k0); }
+.color-lab .favorite-colors { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
 .color-lab .favorite-colors > button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--cl-edge); }
 .color-lab .favorite-colors > button[aria-pressed=true] { outline: 2px solid var(--k10); outline-offset: 2px; }
 
@@ -418,8 +421,8 @@
   .color-lab .saved-palette-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 999px) {
-  .color-lab .cl-workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: "source" "palette" "current"; }
-  .color-lab .cl-current { position: static; display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); column-gap: 20px; }
+  .color-lab .cl-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "source" "palette" "current"; }
+  .color-lab .cl-current { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); column-gap: 20px; }
   .color-lab .cl-current > .cl-card-head, .color-lab .cl-current > .cl-kept, .color-lab .cl-current > .cl-round-actions { grid-column: 1 / -1; }
   .color-lab .cl-current-swatch { grid-row: span 4; height: 100%; min-height: 160px; }
   .color-lab .cl-hex-row { margin-top: 0; }
