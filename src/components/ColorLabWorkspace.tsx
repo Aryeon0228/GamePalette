@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
 import { ArrowDownToLine, ArrowUpRight, Check, Copy, Pipette, Plus, Shuffle, Star } from "lucide-react"
@@ -28,19 +28,18 @@ import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@
 import type { Color } from "@/types"
 import "@/app/color-lab.css"
 
-// One workspace up top (image, palette, current color); the tools below sit behind five tabs,
-// so only one group of cards competes for attention at a time.
-type ToolTab = "analyze" | "combine" | "shade" | "image" | "study"
-const TOOL_TABS: Array<{ id: ToolTab; panel: string; ko: string; en: string; koNote: string; enNote: string }> = [
+// Keep every tool group in the page flow; the sticky menu is a shortcut to each section.
+type ToolSectionId = "analyze" | "combine" | "shade" | "image" | "study"
+const TOOL_SECTIONS: Array<{ id: ToolSectionId; panel: string; ko: string; en: string; koNote: string; enNote: string }> = [
   { id: "analyze", panel: "color-analyze", ko: "분석", en: "Analyze", koNote: "현재 색의 값, 대비, 색각 차이, 인상을 봅니다.", enNote: "Values, contrast, color vision and impression of the current color." },
   { id: "combine", panel: "color-compose", ko: "배색", en: "Combine", koNote: "현재 색과 함께 쓸 색을 만듭니다.", enNote: "Make colors to use with the current color." },
   { id: "shade", panel: "color-shade", ko: "명암", en: "Shade", koNote: "현재 색으로 밝고 어두운 단계를 만듭니다.", enNote: "Make light and dark steps from the current color." },
   { id: "image", panel: "color-image", ko: "이미지", en: "Image", koNote: "올린 이미지의 색 면적과 밝기 분포를 봅니다.", enNote: "Color areas and brightness across the uploaded image." },
   { id: "study", panel: "color-study", ko: "실험", en: "Experiment", koNote: "색값, 주변색, 조명을 바꾸며 보이는 색을 비교합니다.", enNote: "Compare how values, surroundings and light change what you see." },
 ]
-// Older links point at sections that now live inside a tab; open that tab first.
-const TAB_FOR_ANCHOR: Record<string, ToolTab> = {
-  ...Object.fromEntries(TOOL_TABS.map(tab => [tab.panel, tab.id])),
+// Older deep links still lead to the same tools, with an empty-image fallback.
+const SECTION_FOR_ANCHOR: Record<string, ToolSectionId> = {
+  ...Object.fromEntries(TOOL_SECTIONS.map(tab => [tab.panel, tab.id])),
   "color-value-study": "image",
   "color-lighting-study": "study",
 }
@@ -98,9 +97,8 @@ export function ColorLabWorkspace() {
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [tab, setTab] = useState<ToolTab>("analyze")
-  const tabRefs = useRef<Partial<Record<ToolTab, HTMLButtonElement | null>>>({})
-  const toolsRef = useRef<HTMLElement | null>(null)
+  const [activeSection, setActiveSection] = useState<ToolSectionId>("analyze")
+  const sectionLinks = useRef<Partial<Record<ToolSectionId, HTMLAnchorElement | null>>>({})
   // The image stage grows with the viewport, like the stages of the other labs.
   const [stageHeight, setStageHeight] = useState(240)
   useEffect(() => {
@@ -208,37 +206,62 @@ export function ColorLabWorkspace() {
 
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
 
-  // A link to an older section anchor opens the tab that now holds it.
+  // Follow section positions, not clicks, so wheel/touch scrolling updates the menu too.
   useEffect(() => {
+    const sections = TOOL_SECTIONS.map(item => ({ ...item, element: document.getElementById(item.panel)! }))
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+      const margin = parseFloat(getComputedStyle(sections[0].element).scrollMarginTop) || 0
+      const line = offset + margin + 24
+      let current = sections[0].id
+      for (const section of sections) {
+        if (section.element.getBoundingClientRect().top <= line) current = section.id
+      }
+      setActiveSection(current)
+    }
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    const observer = new ResizeObserver(schedule)
+    sections.forEach(section => observer.observe(section.element))
+    window.addEventListener("scroll", schedule, { passive: true })
+    window.addEventListener("resize", schedule)
+    schedule()
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener("scroll", schedule)
+      window.removeEventListener("resize", schedule)
+    }
+  }, [])
+
+  // Reveal the active shortcut horizontally on narrow screens without moving the page or focus.
+  useEffect(() => {
+    const link = sectionLinks.current[activeSection]
+    const menu = link?.parentElement
+    if (!link || !menu) return
+    const item = link.getBoundingClientRect(), bounds = menu.getBoundingClientRect()
+    if (item.left < bounds.left) menu.scrollLeft += item.left - bounds.left - 4
+    else if (item.right > bounds.right) menu.scrollLeft += item.right - bounds.right + 4
+  }, [activeSection])
+
+  useEffect(() => {
+    if (!ready) return
+    let frame = 0
     const openAnchor = () => {
       const anchor = window.location.hash.slice(1)
-      const next = TAB_FOR_ANCHOR[anchor]
-      if (!next) return
-      setTab(next)
-      requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: "start" }))
+      const section = TOOL_SECTIONS.find(item => item.id === SECTION_FOR_ANCHOR[anchor])
+      if (!section) return
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const target = document.getElementById(anchor) ?? document.getElementById(section.panel)
+        target?.scrollIntoView({ block: "start" })
+      })
     }
     openAnchor()
     window.addEventListener("hashchange", openAnchor)
-    return () => window.removeEventListener("hashchange", openAnchor)
-  }, [])
-
-  const openTab = (next: ToolTab, focus = false) => {
-    setTab(next)
-    if (focus) tabRefs.current[next]?.focus()
-    // Switching from deep inside a long panel keeps the new panel's start in view.
-    const tools = toolsRef.current
-    if (tools && tools.getBoundingClientRect().top < 0) tools.scrollIntoView({ block: "start" })
-  }
-
-  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const last = TOOL_TABS.length - 1
-    const target = event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
-      : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
-      : event.key === "Home" ? 0 : event.key === "End" ? last : -1
-    if (target < 0) return
-    event.preventDefault()
-    openTab(TOOL_TABS[target].id, true)
-  }
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("hashchange", openAnchor) }
+  }, [ready])
 
   const focusSource = () => {
     const source = document.getElementById("color-import")
@@ -420,7 +443,7 @@ export function ColorLabWorkspace() {
     </label>
   )
 
-  const panelContent = (id: ToolTab) => {
+  const panelContent = (id: ToolSectionId) => {
     switch (id) {
       case "analyze":
         return <ColorLabTools overview hex={activeHex} mode="analyze" analysisSection="all" onSelectColor={selectColor}/>
@@ -460,8 +483,8 @@ export function ColorLabWorkspace() {
     }
   }
 
-  const panelFootnote = (id: ToolTab) => id === "study"
-    ? <p className="cl-footnote">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <button type="button" onClick={() => openTab("image")}>{label("이미지 탭으로", "Open the Image tab")} →</button></p>
+  const panelFootnote = (id: ToolSectionId) => id === "study"
+    ? <p className="cl-footnote">{label("형태의 명암을 봤다면, 이미지 전체의 밝고 어두운 면적도 비교해보세요.", "After studying a form, compare the light and dark areas across an image.")} <a href="#color-image">{label("이미지 분석으로", "Go to image analysis")} →</a></p>
     : id === "image"
     ? <p className="cl-footnote" id="color-composition">{label("구도 · 명암 덩어리 실험은 Composition Lab에서 할 수 있어요.", "Frame and value-mass experiments live in Composition Lab.")} <Link href="/composition#composition-image">Composition Lab ↗</Link></p>
     : null
@@ -564,20 +587,23 @@ export function ColorLabWorkspace() {
         </aside>
       </div>
 
-      <section className="cl-tools" ref={toolsRef} aria-labelledby="cl-tools-title">
-        <h2 id="cl-tools-title" className="sr-only">{label("현재 색 도구", "Tools for the current color")}</h2>
+      <div className="cl-tools">
+        <p className="cl-tools-hint">{label("아래로 스크롤하거나 메뉴를 눌러 도구를 살펴보세요.", "Scroll through the tools below, or use the menu to jump to a section.")} <span aria-hidden="true">↓</span></p>
         <div className="cl-tabbar">
-          <div className="cl-tabs" role="tablist" aria-label={label("도구", "Tools")}>
-            {TOOL_TABS.map((item, index) => <button key={item.id} ref={element => { tabRefs.current[item.id] = element }} type="button" role="tab" id={`cl-tab-${item.id}`} aria-selected={tab === item.id} aria-controls={item.panel} tabIndex={tab === item.id ? 0 : -1} onClick={() => openTab(item.id)} onKeyDown={event => onTabKey(event, index)}>{ko ? item.ko : item.en}</button>)}
-          </div>
+          <nav className="cl-tabs" aria-label={label("도구 바로가기", "Tool shortcuts")}>
+            {TOOL_SECTIONS.map(item => <a key={item.id} ref={element => { sectionLinks.current[item.id] = element }} href={`#${item.panel}`} aria-current={activeSection === item.id ? "location" : undefined}>{ko ? item.ko : item.en}</a>)}
+          </nav>
           <label className="cl-current-chip" title={label("현재 색", "Current color")}><input type="color" aria-label={label("현재 색 고르기", "Pick the current color")} value={activeHex} onChange={event => selectColor(event.target.value)}/><code>{activeHex}</code></label>
         </div>
-        {TOOL_TABS.map(item => <div key={item.id} id={item.panel} role="tabpanel" aria-labelledby={`cl-tab-${item.id}`} tabIndex={-1} hidden={tab !== item.id} className="cl-panel">
-          <p className="cl-panel-note">{ko ? item.koNote : item.enNote}</p>
+        {TOOL_SECTIONS.map((item, index) => <section key={item.id} id={item.panel} aria-labelledby={`cl-heading-${item.id}`} tabIndex={-1} className="cl-panel">
+          <header className="cl-panel-heading">
+            <h2 id={`cl-heading-${item.id}`}><span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>{ko ? item.ko : item.en}</h2>
+            <p className="cl-panel-note">{ko ? item.koNote : item.enNote}</p>
+          </header>
           {panelContent(item.id)}
           {panelFootnote(item.id)}
-        </div>)}
-      </section>
+        </section>)}
+      </div>
 
       {currentPaletteForExport && <ExportModal open={exportOpen} onOpenChange={setExportOpen} palette={currentPaletteForExport}/>}
     </section>
