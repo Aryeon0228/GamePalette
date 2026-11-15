@@ -188,7 +188,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
     { value: "formats", label: label("색상 값", "Color values") },
     { value: "contrast", label: label("대비 · 가독성", "Contrast") },
     { value: "vision", label: label("색각 시뮬레이션", "Color vision") },
-    { value: "meaning", label: label("이름 · 인상", "Name & impression") },
+    { value: "meaning", label: label("색 계열 · 인상", "Color family & impression") },
   ]
 
   const renderCompactCopy = (value: string, token: string, text?: string) => (
@@ -297,8 +297,8 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
           <p className="overview-note">{t("bestText")} <strong>{textColor === "#FFFFFF" ? t("white") : t("black")}</strong></p>
         </>, undefined, "overview-contrast-card")}
         {analysisSection !== "formats" && renderCompactCard(t("cvdTitle"), <div className="overview-vision">{[{ hex: color.hex, name: t("cvdNormal") }, ...CVD_TYPES.map((type) => ({ hex: simulateColorBlindness(color.hex, type), name: t(`cvd.${type}`) }))].map((item, index) => <div key={index}><button type="button" className="overview-swatch" style={{ background: item.hex, height: 56 }} aria-label={`${label("색상 선택", "Select color")} ${item.name} ${item.hex}`} onClick={() => onSelectColor(item.hex)} /><p>{item.name}</p>{renderCompactCopy(item.hex, `overview-vision-${index}`, item.hex.toUpperCase())}</div>)}</div>, undefined, "overview-vision-card")}
-        {analysisSection !== "formats" && renderCompactCard(label("이름 · 인상", "Name & impression"), <>
-          <div className="overview-name"><span className="overview-dot" style={{ background: color.hex }} /><strong>{color.name}</strong><span>{t(`family.${family}`)} · {t(`temp.${colorTemperature(color)}`)}</span></div>
+        {analysisSection !== "formats" && renderCompactCard(label("색 계열 · 인상", "Color family & impression"), <>
+          <div className="overview-name"><span className="overview-dot" style={{ background: color.hex }} /><strong>{t(`family.${family}`)}</strong><span>{t(`temp.${colorTemperature(color)}`)}</span></div>
           <p className="overview-note">{t("psySub")}</p><h4 className="overview-meaning-title">{t(`psy.${family}.title`)}</h4><p className="overview-note">{t(`psy.${family}.desc`)}</p><p className="overview-note"><strong>{t("usage")}: </strong>{t(`psy.${family}.usage`)}</p>
         </>, undefined, "overview-meaning-card")}
         {extraCard}
@@ -343,7 +343,7 @@ export function ColorLabTools({ hex, mode, onSelectColor, onAddColors, overview 
       )}
 
       {mode === "compose" && composeTool === "gradient" && (
-        <ToolSection title={t("gradientTitle")} subtitle={label("짝 색상, 곡선, 색상 수를 조절해 그라디언트를 만드세요.", "Shape a gradient by choosing its partner, curve, and number of colors.")}
+        <ToolSection title={t("gradientTitle")} subtitle={label("함께 쓸 색과 색상 수를 골라 그라디언트를 만드세요.", "Shape a gradient by choosing its partner, curve, and number of colors.")}
           action={renderAddSet({ colors: gradient })}
         >
           <div className="h-14 border border-border" aria-hidden style={{ background: `linear-gradient(to right, ${gradient.map((item) => item.hex).join(", ")})` }} />

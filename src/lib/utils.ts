@@ -1,3 +1,4 @@
+import chroma from "chroma-js"
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -175,18 +176,12 @@ export function getColorName(hex: string): string {
     return colorNames[normalized];
   }
 
-  // Find closest color
-  const rgb = hexToRgb(hex);
+  // Compare perceived color difference instead of raw RGB distance.
   let closestName = 'Custom';
   let minDistance = Infinity;
 
   for (const [colorHex, name] of Object.entries(colorNames)) {
-    const colorRgb = hexToRgb(colorHex);
-    const distance = Math.sqrt(
-      Math.pow(rgb.r - colorRgb.r, 2) +
-      Math.pow(rgb.g - colorRgb.g, 2) +
-      Math.pow(rgb.b - colorRgb.b, 2)
-    );
+    const distance = chroma.deltaE(hex, colorHex);
     if (distance < minDistance) {
       minDistance = distance;
       closestName = name;

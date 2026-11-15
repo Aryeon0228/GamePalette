@@ -472,3 +472,7 @@
 @media (prefers-reduced-motion: reduce) {
   .color-lab *, .color-lab *::before { transition: none !important; }
 }
+
+/* Section titles should read before their metadata and help text. */
+.color-lab .cl-card-head h2.cl-label{font-size:16px;font-weight:500;color:var(--k9);letter-spacing:0}
+.color-lab .cl-note,.color-lab .cl-section-desc{color:var(--k7);font-size:14px;line-height:1.7}

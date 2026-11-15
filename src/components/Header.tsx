@@ -7,31 +7,22 @@ import { useLocale } from "next-intl"
 
 const STUDIO_URL = "https://studio-penumbra.com"
 const siteLinks = [
-  { section: "work", label: "Work", korean: "작품 · 도구" },
-  { section: "lab", label: "Lab", korean: "그래픽스 실험" },
+  { section: "career", label: "Career", korean: "실무 · 강의 경력" },
+  { section: "lab", label: "Lab", korean: "실험 · 제작 도구" },
   { section: "research", label: "Research", korean: "논문 · 연구" },
-  { section: "teaching", label: "Teaching", korean: "강의 · 멘토링" },
   { section: "education", label: "Education", korean: "학력 · 학위" },
-  { section: "career", label: "Career", korean: "실무 경력" },
   { section: "awards", label: "Awards", korean: "수상 내역" },
   { section: "about", label: "About / Contact", korean: "소개 · 연락처" },
 ]
-const labGroups = [
-  { korean: "색과 빛", english: "Color & light", labs: [
-    { label: "Color Lab", href: "/", development: false },
-    { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html`, development: false },
-    { label: "Focus Lab", href: `${STUDIO_URL}/focus-lab.html`, development: false },
-  ] },
-  { korean: "표면과 공간", english: "Surface & space", labs: [
-    { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html`, development: false },
-    { label: "Weathering Lab", href: `${STUDIO_URL}/weathering-lab.html`, development: true },
-    { label: "UV Lab", href: `${STUDIO_URL}/uv-lab.html`, development: false },
-    { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html`, development: false },
-  ] },
-  { korean: "화면 구성과 사용성", english: "Composition & usability", labs: [
-    { label: "Composition Lab", href: "/composition", development: false },
-    { label: "UI/UX Lab", href: `${STUDIO_URL}/uiux-lab.html`, development: false },
-  ] },
+const labs = [
+  { label: "Color Lab", href: "/" },
+  { label: "Light Lab", href: `${STUDIO_URL}/lighting-lab.html` },
+  { label: "Focus Lab", href: `${STUDIO_URL}/focus-lab.html` },
+  { label: "Material Lab", href: `${STUDIO_URL}/brdf-viewer.html` },
+  { label: "UV Lab", href: `${STUDIO_URL}/uv-lab.html` },
+  { label: "Interior Lab", href: `${STUDIO_URL}/interior-mapping.html` },
+  { label: "Composition Lab", href: "/composition" },
+  { label: "UI/UX Lab", href: `${STUDIO_URL}/uiux-lab.html` },
 ]
 
 export function Header() {
@@ -147,10 +138,10 @@ export function Header() {
       </nav>
       <div className="lab-navigation-bar has-lab-picker">
         <nav ref={labNavigation} className="lab-navigation" aria-label={isKorean ? "랩 이동" : "Switch labs"}>
-          {labGroups.flatMap((group) => group.labs).map((lab) => lab.href.startsWith("/") ? (
+          {labs.map((lab) => lab.href.startsWith("/") ? (
             <Link key={lab.href} href={lab.href} aria-current={currentLab === lab.href ? "page" : undefined} onClick={() => setMenuOpen(false)}>{lab.label}</Link>
           ) : (
-            <a key={lab.href} href={lab.href}>{lab.label}{lab.development && <span className="lab-development-status">(In Development)</span>}</a>
+            <a key={lab.href} href={lab.href}>{lab.label}</a>
           ))}
         </nav>
         <label className="lab-picker">
@@ -162,9 +153,7 @@ export function Header() {
             if (href.startsWith("/")) router.push(href)
             else window.location.assign(href)
           }}>
-            {labGroups.map((group) => <optgroup key={group.english} label={isKorean ? group.korean : group.english}>
-              {group.labs.map((lab) => <option key={lab.href} value={lab.href}>{lab.label}{lab.development ? " (In Development)" : ""}</option>)}
-            </optgroup>)}
+            {labs.map((lab) => <option key={lab.href} value={lab.href}>{lab.label}</option>)}
           </select>
         </label>
       </div>

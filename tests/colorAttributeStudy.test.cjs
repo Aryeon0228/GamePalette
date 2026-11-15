@@ -10,7 +10,7 @@ require.extensions['.ts'] = (module, filename) => {
   module._compile(outputText, filename);
 };
 const { attributeColor, luminanceGray, preciseStudyHsl } = require('../src/lib/colorAttributeStudy.ts');
-const { relativeLuminance, hexToRgb } = require('../src/lib/utils.ts');
+const { relativeLuminance, hexToRgb, getColorName } = require('../src/lib/utils.ts');
 
 test('equal HSL L does not claim equal relative luminance for yellow and blue', () => {
   const yellow = attributeColor({ h: 60, s: 100, l: 50 });
@@ -52,4 +52,10 @@ test('editing hue preserves unedited saturation and lightness even near black an
     assert.ok(Math.abs(after.l - hsl.l) < 0.001);
     assert.ok(Math.abs(after.s - hsl.s) < 0.001);
   }
+});
+
+test('warm ochre is not labeled gray, while exact named colors remain stable', () => {
+  assert.notEqual(getColorName('#B8915A'), 'Gray');
+  assert.equal(getColorName('#808080'), 'Gray');
+  assert.equal(getColorName('#FF0000'), 'Red');
 });

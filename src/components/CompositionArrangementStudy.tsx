@@ -170,7 +170,6 @@ export function CompositionArrangementStudy() {
   </label>
 
   return <section className={`composition-arrangement-study${showSelection ? "" : " is-observing"}`} aria-label={t("물건 배치 실습", "Object arrangement exercise")}>
-    <p className="cas-lesson-note">{t("주제마다 독립된 예제예요. 바꾼 배치는 각 주제에 그대로 남습니다.", "Each topic is an independent example. Your arrangement stays with its topic.")}</p>
     <div className="cas-tabs" role="tablist" aria-label={t("배치 관찰 주제", "Arrangement lessons")}>
       {LESSONS.map((item, index) => <button key={item} ref={node => { tabRefs.current[item] = node }} type="button" role="tab" id={`${uid}-tab-${item}`} aria-controls={`${uid}-panel`} aria-selected={lesson === item} tabIndex={lesson === item ? 0 : -1} onClick={() => changeLesson(item)} onKeyDown={event => {
         let next: Lesson | undefined
@@ -179,7 +178,7 @@ export function CompositionArrangementStudy() {
         if (event.key === "Home") next = LESSONS[0]
         if (event.key === "End") next = LESSONS[LESSONS.length - 1]
         if (next) { event.preventDefault(); changeLesson(next); tabRefs.current[next]?.focus() }
-      }}><span>0{index + 1}</span>{titles[item]}</button>)}
+      }}>{titles[item]}</button>)}
     </div>
 
     <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${lesson}`} className="cas-panel">
@@ -187,7 +186,6 @@ export function CompositionArrangementStudy() {
       <div className="cas-layout">
         <div className="cas-visual">
           <div className="cas-stage-toolbar">
-            <span>{preset === null ? t("직접 바꾼 배치", "Your arrangement") : presetNames[lesson][preset]}</span>
             <div className="cas-view-actions">
               <button type="button" aria-pressed={silhouette} onClick={() => setSilhouette(value => !value)}>{t("실루엣으로 보기", "Silhouette view")}</button>
               <button type="button" aria-pressed={!showSelection} onClick={() => { endDrag(); setShowSelection(value => !value) }}>{t("선택 표시 숨기기", "Hide selection marks")}</button>

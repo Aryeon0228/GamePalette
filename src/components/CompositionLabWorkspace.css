@@ -95,3 +95,7 @@
 @media (prefers-reduced-motion: reduce) {
   .composition-lab *, .composition-lab *::before { transition: none !important; }
 }
+
+.composition-heading>p,.composition-section-heading p{color:var(--k7)}
+.composition-section-heading h2{font-size:22px;font-weight:500}
+.composition-jumps a{background:transparent;border-radius:0;border-bottom:1px solid var(--k3);padding-inline:4px;margin-right:16px}

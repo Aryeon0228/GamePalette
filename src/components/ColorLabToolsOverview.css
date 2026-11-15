@@ -152,3 +152,7 @@
 @media (prefers-reduced-motion: reduce) {
   .overview-swatch { transition: none; }
 }
+
+/* Keep color names and copy actions intact when the wheel and list no longer fit. */
+.overview-harmony{flex-wrap:wrap}
+.overview-harmony-colors{flex:1 1 170px}

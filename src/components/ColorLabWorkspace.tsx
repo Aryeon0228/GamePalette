@@ -22,7 +22,6 @@ import { useSavedColors } from "@/stores/savedColorsStore"
 import { useToast } from "@/components/ui/toast"
 import { extractColorsWithArea, analyzeLuminosityHistogram, type LuminosityHistogram } from "@/lib/colorExtractor"
 import { colorFromHex, colorTemperature, hueFamily } from "@/lib/colorAnalysis"
-import { formatColor, type ColorFormat } from "@/lib/colorFormats"
 import { resizePaletteColors } from "@/lib/resizePalette"
 import { copyToClipboard, generateId, getColorName, hexToRgb, rgbToHsl } from "@/lib/utils"
 import type { Color } from "@/types"
@@ -43,11 +42,9 @@ const SECTION_FOR_ANCHOR: Record<string, ToolSectionId> = {
   "color-value-study": "image",
   "color-lighting-study": "study",
 }
-const QUICK_FORMATS: ColorFormat[] = ["RGB", "HSL", "OKLCH"]
 const randomHex = () => `#${Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, "0").toUpperCase()}`
 const formatArea = (percentage: number) => percentage > 0 && percentage < 0.1 ? "<0.1%" : `${percentage.toFixed(1)}%`
 // "rgb(157, 213, 238)" reads as "157 213 238" beside its label.
-const bareValue = (value: string) => value.replace(/^[a-z]+\(/i, "").replace(/\)$/, "").replace(/,\s*/g, " ")
 
 type AreaAnalysis = {
   colors: Color[]
@@ -492,7 +489,7 @@ export function ColorLabWorkspace() {
   return (
     <section className="color-lab" data-lab="color">
       <header className="cl-title">
-        <p className="cl-eyebrow"><a href="https://studio-penumbra.com/#lab">LAB</a><span aria-hidden="true">/</span>{label("색과 빛", "COLOR & LIGHT")}</p>
+        <p className="cl-eyebrow"><a href="https://studio-penumbra.com/#lab">Lab</a></p>
         <h1>Color <b>Lab</b></h1>
         <p className="cl-lede">{label("이미지에서 팔레트를 만들고, 한 색을 골라 분석부터 명암까지 살펴봅니다.", "Build a palette from an image, then study one color from values to shading.")}</p>
       </header>
@@ -568,11 +565,8 @@ export function ColorLabWorkspace() {
             <button type="button" className="cl-icon" onClick={() => void copy(activeHex, "hex")} aria-label={label("HEX 복사", "Copy HEX")} title={label("HEX 복사", "Copy HEX")}>{copied === "hex" ? <Check size={16}/> : <Copy size={16}/>}</button>
           </div>
           {hexError && <p className="cl-error" role="alert">{label("HEX는 #A8B5A2처럼 3자리 또는 6자리로 입력해주세요.", "Enter a 3- or 6-digit HEX, such as #A8B5A2.")}</p>}
-          <p className="cl-name"><strong>{current.name}</strong><span>{ta(`family.${hueFamily(current)}`)} · {ta(`temp.${colorTemperature(current)}`)}</span></p>
-          <dl className="cl-values">{QUICK_FORMATS.map(format => {
-            const value = formatColor(current, format)
-            return <div key={format}><dt>{format}</dt><dd><code>{bareValue(value)}</code><button type="button" onClick={() => void copy(value, format)} aria-label={`${format} ${label("복사", "copy")} ${value}`} title={value}>{copied === format ? <Check size={14}/> : <Copy size={14}/>}</button></dd></div>
-          })}</dl>
+          <p className="cl-name"><strong>{ta(`family.${hueFamily(current)}`)}</strong><span>{ta(`temp.${colorTemperature(current)}`)}</span></p>
+
           <div className="cl-round-actions">
             <button type="button" onClick={() => selectColor(randomHex(), undefined, "random")}><span aria-hidden="true"><Shuffle size={18}/></span>{label("랜덤", "Random")}</button>
             {canEyedrop && <button type="button" onClick={eyedrop}><span aria-hidden="true"><Pipette size={18}/></span>{label("스포이트", "Eyedropper")}</button>}

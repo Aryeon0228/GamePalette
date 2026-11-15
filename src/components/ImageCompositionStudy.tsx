@@ -147,17 +147,17 @@ export function ImageCompositionStudy({ imageUrl, onImageLoad }: { imageUrl: str
         <p className="ics-note">{t("구도 선은 정답이 아닌 비교 도구예요. 큰 덩어리, 여백, 시선이 모이는 위치를 관찰하세요.", "Guides help comparison, not grading. Look at large shapes, negative space, and the focal point.")}</p>
       </div>
       <div className="ics-controls">
-        <fieldset><legend>{t("01 / 명암 덩어리", "01 / Value masses")}</legend>
-          {range(t("흑백 경계 · Threshold", "Threshold"), threshold, setThreshold, 0, 255)}
+        <fieldset><legend>{t("명암 덩어리", "Value masses")}</legend>
+          {range(t("흑백을 나눌 밝기", "Threshold"), threshold, setThreshold, 0, 255)}
           <div className="ics-buttons"><button type="button" aria-pressed={inverted} onClick={() => setInverted(v => !v)}>{t("흑백 반전", "Invert mask")}</button></div>
-          <p>{t("밝기를 기준으로 배경과 내부 그림자까지 묶어 보여줍니다.", "Groups pixels by brightness, including backgrounds and interior shadows.")}</p>
+          <p>{t("이 값보다 어두우면 검정, 밝으면 흰색으로 표시합니다. 배경과 그림자도 함께 묶여요.", "Groups pixels by brightness, including backgrounds and interior shadows.")}</p>
         </fieldset>
-        <fieldset><legend>{t("02 / 화면 비율", "02 / Frame ratio")}</legend>
-          <div className="ics-buttons ics-ratios" role="group" aria-label={t("화면 비율", "Frame ratio")}>{[["original", t("원본", "Original")], ["1", "1:1"], [String(4 / 3), "4:3"], ["1.5", "3:2"], [String(16 / 9), "16:9"], [String(9 / 16), "9:16"], [String((1 + Math.sqrt(5)) / 2), "φ:1"]].map(([value, name]) => <button type="button" key={value} aria-pressed={ratio === value} onClick={() => { setRatio(value); setPanX(0); setPanY(0) }}>{name}</button>)}</div>
+        <fieldset><legend>{t("화면 비율", "Frame ratio")}</legend>
+          <div className="ics-buttons ics-ratios" role="group" aria-label={t("화면 비율", "Frame ratio")}>{[["original", t("원본", "Original")], ["1", "1:1"], [String(4 / 3), "4:3"], ["1.5", "3:2"], [String(16 / 9), "16:9"], [String(9 / 16), "9:16"], [String((1 + Math.sqrt(5)) / 2), t("황금비 1.62:1", "Golden 1.62:1")]].map(([value, name]) => <button type="button" key={value} aria-pressed={ratio === value} onClick={() => { setRatio(value); setPanX(0); setPanY(0) }}>{name}</button>)}</div>
           {ratio !== "original" && activeSource && <div>{originalAspect > aspect + 0.0001 ? range(t("크롭 위치 좌우", "Horizontal crop position"), panX, setPanX, -100, 100) : originalAspect < aspect - 0.0001 ? range(t("크롭 위치 상하", "Vertical crop position"), panY, setPanY, -100, 100) : null}</div>}
           <p>{t("비율을 바꿔 다른 프레임을 비교하세요. 원본 파일은 그대로 유지됩니다.", "Change the ratio to compare frames. Your original file stays unchanged.")}</p>
         </fieldset>
-        <fieldset><legend>{t("03 / 구도 가이드", "03 / Composition guides")}</legend>
+        <fieldset><legend>{t("구도 가이드", "Composition guides")}</legend>
           <div className="ics-buttons ics-guide-choices" role="group" aria-label={t("겹쳐 볼 구도 가이드", "Guide layers")}>{(Object.keys(guideNames) as Guide[]).map(kind => <button type="button" key={kind} aria-pressed={guides.includes(kind)} onClick={() => setGuides(current => current.includes(kind) ? current.filter(g => g !== kind) : [...current, kind])}>{guideNames[kind]}</button>)}<button type="button" aria-pressed={!guides.length} onClick={() => setGuides([])}>{t("선 끄기", "Hide guides")}</button></div>
           {range(t("가이드 불투명도", "Guide opacity"), opacity, setOpacity, 0, 100, "%")}
           {guides.includes("spiral") && <div className="ics-spiral-controls"><div className="ics-buttons"><button type="button" onClick={() => setRotation(v => (v + 90) % 360)}>{t("나선 회전", "Rotate spiral")} {rotation}°</button><button type="button" aria-pressed={flipped} onClick={() => setFlipped(v => !v)}>{t("나선 뒤집기", "Mirror spiral")}</button></div>{range(t("나선 크기", "Spiral scale"), scale, setScale, 50, 180, "%")}<div className="ics-pair">{range(t("나선 좌우", "Spiral horizontal"), offsetX, setOffsetX, -50, 50)}{range(t("나선 상하", "Spiral vertical"), offsetY, setOffsetY, -50, 50)}</div></div>}
